@@ -2,7 +2,7 @@
 
 **Code Documentation and RAG** — A standalone, multi-project semantic search and codebase intelligence platform.
 
-> *Like Ollama for code understanding: one daemon, multiple projects, shared AI resources.*
+> *Proprietary Software — All Rights Reserved*
 
 ---
 
@@ -18,13 +18,13 @@ CoDRAG is a **local-first, team-ready** application that provides:
 
 ### Why CoDRAG?
 
-| Problem | CoDRAG Solution |
+| Real Developer Problem | CoDRAG Solution |
 |---------|-----------------|
-| "I have 5 repos, each needs its own RAG setup" | Single daemon manages all projects |
-| "Ollama is running but each tool reconnects" | Shared LLM connection pool |
-| "I can't remember which port is which project" | One port (8400), project tabs in UI |
-| "New team members can't find anything" | Indexed codebase with semantic search |
-| "AI tools don't understand my code structure" | Trace index + AGENTS.md generation |
+| "Managing separate RAG indexes for 5+ repos is tedious" | Single daemon manages all projects |
+| "Each IDE tool spins up its own Ollama connection" | Shared LLM connection pool |
+| "Juggling multiple ports/processes per project" | One port (8400), project tabs in UI |
+| "Finding relevant code takes 20+ minutes for new devs" | Pre-indexed codebase with instant semantic search |
+| "AI assistants forget codebase context between sessions" | Persistent trace index + structural memory |
 
 ---
 
@@ -69,60 +69,55 @@ CoDRAG is a **local-first, team-ready** application that provides:
 ## Key Features
 
 ### Multi-Project Management
-- Add any number of local codebases
-- Each project has isolated index data
+- Add multiple local codebases to single daemon
+- Each project maintains isolated index data
 - Switch between projects via tabs or CLI
-- Optional: cross-project search (enterprise)
+- Cross-project search (enterprise tier only)
 
 ### Hybrid Index Mode
 - **Standalone mode** (default): Index stored in `~/.local/share/codrag/projects/`
 - **Embedded mode** (team): Index stored in project `.codrag/` directory
-- Teams can commit embedded indexes to git for instant onboarding
+- Teams can commit embedded indexes to git to skip initial indexing time
 
 ### Trace Index
 Beyond keyword/semantic search, CoDRAG builds a **structural graph**:
-- **Nodes:** Files, symbols, classes, functions, endpoints, docs sections
-- **Edges:** Imports, calls, implements, documented-by
-- Query: "What calls `generate_image()`?" or "What does this module depend on?"
+- **Nodes:** Files, symbols, classes, functions, endpoints
+- **Edges:** Imports, calls, inheritance relationships
+- Queries: Find all callers of a function, trace import chains, explore class hierarchies
 
 ### LLM Integration
-- **Embeddings:** Ollama (`nomic-embed-text` or custom)
-- **Compression:** CLaRa (optional, for large context assembly)
-- **Augmentation:** Mistral/Llama (optional, for summaries and tagging)
-- Shared connection pool across all projects
+- **Embeddings:** Ollama (`nomic-embed-text` recommended) for semantic search
+- **Compression:** CLaRa (optional) for context window optimization
+- **Augmentation:** Mistral/Llama (optional) for code summaries
+- Reuses single Ollama connection across all indexed projects
 
 ### AGENTS.md Generation
-Auto-generate [AGENTS.md](https://agents.md/) files from trace index:
-- Project structure overview
-- Key modules and their purposes
-- Build/test commands
-- API endpoints
+Generate [AGENTS.md](https://agents.md/) documentation from trace index:
+- Project structure with file counts and organization
+- Detected entry points and key modules
+- Discovered build/test commands from common files
+- API endpoints extracted from route definitions
 
 ---
 
 ## Installation
 
 ### Prerequisites
-- Python 3.11+
-- Node.js 18+ (for dashboard)
-- Ollama (for embeddings)
+- macOS 11+ or Windows 10+
+- 4GB free disk space
+- Ollama (optional, for embeddings)
 
 ### Quick Start
 
 ```bash
-# Clone the repo
-git clone https://github.com/anthropics/CoDRAG.git
-cd CoDRAG
+# Download and install from codrag.ai
+# Or install via package manager:
 
-# Install Python dependencies
-python3 -m venv .venv
-source .venv/bin/activate
-pip install -e .
+# macOS (Homebrew)
+brew install --cask codrag
 
-# Install dashboard dependencies
-cd dashboard
-npm install
-cd ..
+# Windows (winget)
+winget install MagneticAnomaly.CoDRAG
 
 # Start the daemon
 codrag serve
@@ -309,11 +304,12 @@ codrag add /path/to/team-project --embedded
 # Index lives in /path/to/team-project/.codrag/
 # Commit to git:
 git add .codrag/
-git commit -m "Add CoDRAG index for instant search"
+git commit -m "Add CoDRAG index"
 
-# Team members clone and have instant search
+# Team members clone and use existing index
 git clone <repo>
-codrag add /path/to/repo --embedded  # Recognizes existing index
+codrag add /path/to/repo --embedded  # Uses committed index, skips rebuild
+# Note: Index may need refresh if codebase has changed since commit
 ```
 
 ### Network Mode (Enterprise)
@@ -322,10 +318,11 @@ codrag add /path/to/repo --embedded  # Recognizes existing index
 # Run CoDRAG server on team machine
 codrag serve --host 0.0.0.0 --port 8400
 
-# Team members connect remotely
+# Team members connect remotely (read-only access to indexes)
 codrag config set server.remote_url http://team-server:8400
 
-# All search/context requests go to shared server
+# Search/context requests use shared server's indexes
+# Note: Each client still needs local CoDRAG installation
 ```
 
 ### Access Control (Roadmap)
@@ -416,17 +413,7 @@ See [ROADMAP.md](docs/ROADMAP.md) for detailed phases.
 ## Related Projects
 
 - **[Ollama](https://ollama.com/)** — Local LLM serving (CoDRAG uses for embeddings)
-- **[CLaRa](../CLaRa-Remembers-It-All/)** — Context compression (optional integration)
-- **[LinuxBrain](../LinuxBrain/)** — Test project / Halley codebase
+- **[CLaRa](https://github.com/apple/ml-clara)** — Context compression (optional integration)
 
 ---
 
-## License
-
-MIT License — See [LICENSE](LICENSE) for details.
-
----
-
-## Contributing
-
-See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.

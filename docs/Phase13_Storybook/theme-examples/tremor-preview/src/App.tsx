@@ -34,6 +34,13 @@ import {
   codragFeatures,
   marketingFeatures,
 } from './components';
+import { 
+  Brain, 
+  Folder, 
+  FileText, 
+  Sun, 
+  Moon 
+} from 'lucide-react';
 
 type ThemeId = 'a' | 'b' | 'c' | 'd' | 'e' | 'f' | 'g' | 'h' | 'i' | 'j' | 'k' | 'l';
 
@@ -225,7 +232,7 @@ export default function App() {
                       onClick={() => setHeroVariant('centered')}
                       className={heroVariant === 'centered' ? 'bg-primary text-white' : 'border border-border'}
                     >
-                      Centered
+                      Default
                     </Button>
                     <Button
                       size="xs"
@@ -349,7 +356,7 @@ export default function App() {
                         <Flex justifyContent="between" alignItems="start">
                           <div>
                             <Flex className="gap-3" alignItems="center">
-                              <span className="text-3xl">📁</span>
+                              <Folder className="w-8 h-8 text-primary" />
                               <div>
                                 <Title className="text-text">LinuxBrain</Title>
                                 <Text className="font-mono text-sm text-text-subtle">/Volumes/4TB-BAD/HumanAI/LinuxBrain</Text>
@@ -396,7 +403,7 @@ export default function App() {
                               <Flex justifyContent="between" alignItems="start" className="gap-4">
                                 <div className="flex-1 min-w-0">
                                   <Flex className="gap-2" alignItems="center">
-                                    <span className="text-lg">📄</span>
+                                    <FileText className="w-5 h-5 text-text-muted group-hover:text-primary transition-colors" />
                                     <div className="font-mono text-sm text-text truncate">{r.path}</div>
                                   </Flex>
                                   <div className="mt-1 text-xs text-text-subtle ml-7">Lines {r.lines}</div>

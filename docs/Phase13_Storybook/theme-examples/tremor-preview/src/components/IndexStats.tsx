@@ -1,4 +1,5 @@
 import { Badge, Flex, Text } from '@tremor/react';
+import { ArrowUp, ArrowDown, Minus } from 'lucide-react';
 
 interface StatItem {
   label: string;
@@ -34,7 +35,7 @@ export function IndexStats({ stats, variant = 'default' }: IndexStatsProps) {
           {stat.change && (
             <Flex className="mt-2 gap-1" alignItems="center">
               <span
-                className={`text-xs ${
+                className={`text-xs flex items-center gap-1 ${
                   stat.trend === 'up'
                     ? 'text-success'
                     : stat.trend === 'down'
@@ -42,7 +43,8 @@ export function IndexStats({ stats, variant = 'default' }: IndexStatsProps) {
                     : 'text-text-subtle'
                 }`}
               >
-                {stat.trend === 'up' ? '↑' : stat.trend === 'down' ? '↓' : '•'} {stat.change}
+                {stat.trend === 'up' ? <ArrowUp className="w-3 h-3" /> : stat.trend === 'down' ? <ArrowDown className="w-3 h-3" /> : <Minus className="w-3 h-3" />} 
+                {stat.change}
               </span>
             </Flex>
           )}

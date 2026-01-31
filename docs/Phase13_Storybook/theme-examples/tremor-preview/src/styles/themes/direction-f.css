@@ -42,6 +42,13 @@
   --font-mono: 'JetBrains Mono', monospace;
 }
 
+/* Swiss: Remove default card styling to emphasize grid/type */
+[data-codrag-theme='f'] .tremor-Card-root {
+  background-color: transparent;
+  box-shadow: none;
+  border: 1px solid hsl(var(--border));
+}
+
 [data-codrag-theme='f'].dark {
   --background: 0 0% 5%;
   --foreground: 0 0% 95%;

@@ -45,6 +45,14 @@
   --grid-color: rgba(0, 0, 0, 0.05);
 }
 
+/* Yale: Remove default card styling, keep it very flat/academic */
+[data-codrag-theme='j'] .tremor-Card-root {
+  background-color: transparent;
+  box-shadow: none;
+  border: 1px solid hsl(var(--border));
+  border-radius: 0;
+}
+
 [data-codrag-theme='j'].dark {
   --background: 210 10% 10%;
   --foreground: 210 10% 90%;

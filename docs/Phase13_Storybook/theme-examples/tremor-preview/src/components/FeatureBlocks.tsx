@@ -1,7 +1,11 @@
 import { Badge, Card, Flex, Text, Title } from '@tremor/react';
+import { 
+  Search, GitBranch, Zap, Lock, RefreshCw, Plug, 
+  AlertTriangle, Lightbulb, TrendingUp 
+} from 'lucide-react';
 
 interface Feature {
-  icon: string;
+  icon: React.ReactNode;
   title: string;
   description: string;
   badge?: string;
@@ -36,7 +40,7 @@ function FeatureCards({ features }: { features: Feature[] }) {
           }`}
         >
           <div className="flex items-start justify-between">
-            <span className="text-3xl">{feature.icon}</span>
+            <span className="text-primary">{feature.icon}</span>
             {feature.badge && (
               <Badge color="blue" size="xs">
                 {feature.badge}
@@ -63,7 +67,7 @@ function FeatureList({ features }: { features: Feature[] }) {
               : 'border-border bg-surface'
           }`}
         >
-          <div className="flex-shrink-0 w-16 h-16 rounded-xl bg-surface-raised border border-border-subtle flex items-center justify-center text-3xl">
+          <div className="flex-shrink-0 w-16 h-16 rounded-xl bg-surface-raised border border-border-subtle flex items-center justify-center text-primary">
             {feature.icon}
           </div>
           <div className="flex-1">
@@ -93,7 +97,9 @@ function BentoGrid({ features }: { features: Feature[] }) {
                 : 'border-border bg-surface'
             } ${isLarge ? 'col-span-2 row-span-2' : ''}`}
           >
-            <span className={`${isLarge ? 'text-5xl' : 'text-3xl'}`}>{feature.icon}</span>
+            <div className={isLarge ? 'text-primary [&>svg]:w-12 [&>svg]:h-12' : 'text-primary [&>svg]:w-8 [&>svg]:h-8'}>
+              {feature.icon}
+            </div>
             <Title className={`mt-4 text-text ${isLarge ? 'text-2xl' : 'text-base'}`}>
               {feature.title}
             </Title>
@@ -114,56 +120,56 @@ function BentoGrid({ features }: { features: Feature[] }) {
 
 export const codragFeatures: Feature[] = [
   {
-    icon: '🔍',
+    icon: <Search className="w-8 h-8" />,
     title: 'Semantic Search',
     description: 'Find code by meaning, not just keywords. Ask questions like "where does authentication happen?" and get accurate results.',
     badge: 'Core',
     highlight: true,
   },
   {
-    icon: '🌳',
+    icon: <GitBranch className="w-8 h-8" />,
     title: 'Trace Index',
     description: 'Understand code relationships. See imports, calls, and symbol dependencies at a glance.',
     badge: 'Pro',
   },
   {
-    icon: '⚡',
+    icon: <Zap className="w-8 h-8" />,
     title: 'Instant Context',
     description: 'Assemble LLM-ready context in under 200ms. Perfect chunks with citations, every time.',
   },
   {
-    icon: '🔒',
+    icon: <Lock className="w-8 h-8" />,
     title: 'Local-First',
     description: 'Your code never leaves your machine. No cloud, no telemetry, no compromises on privacy.',
     highlight: true,
   },
   {
-    icon: '🔄',
+    icon: <RefreshCw className="w-8 h-8" />,
     title: 'Auto-Rebuild',
     description: 'File watcher keeps your index fresh. Edit code, get updated search results instantly.',
   },
   {
-    icon: '🔌',
+    icon: <Plug className="w-8 h-8" />,
     title: 'MCP Integration',
     description: 'Works seamlessly with Cursor, Windsurf, and any MCP-compatible IDE.',
     badge: 'New',
   },
-];
+  ];
 
 export const marketingFeatures: Feature[] = [
   {
-    icon: '🎯',
+    icon: <AlertTriangle className="w-8 h-8" />,
     title: 'Problem: AI hallucinations from missing context',
     description: 'Your AI assistant makes mistakes because it can\'t see your entire codebase. Manual copy-pasting is slow and error-prone.',
     highlight: true,
   },
   {
-    icon: '💡',
+    icon: <Lightbulb className="w-8 h-8" />,
     title: 'Solution: Semantic indexing + smart context',
     description: 'CoDRAG builds a semantic understanding of your code and delivers exactly the right context to your AI tools.',
   },
   {
-    icon: '🚀',
+    icon: <TrendingUp className="w-8 h-8" />,
     title: 'Result: 60%+ fewer AI mistakes',
     description: 'Teams using CoDRAG report dramatically fewer hallucinations and faster iteration cycles.',
     badge: 'Measured',

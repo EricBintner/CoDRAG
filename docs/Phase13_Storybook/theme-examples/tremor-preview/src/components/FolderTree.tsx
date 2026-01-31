@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Text } from '@tremor/react';
+import { ChevronRight, ChevronDown, Folder, File } from 'lucide-react';
 
 type FileStatus = 'indexed' | 'pending' | 'ignored' | 'error';
 
@@ -44,15 +45,15 @@ function TreeItem({ node, depth = 0 }: { node: TreeNode; depth?: number }) {
         onClick={() => isFolder && setExpanded(!expanded)}
       >
         {isFolder ? (
-          <span className="w-4 text-text-subtle text-xs">
-            {expanded ? '▼' : '▶'}
+          <span className="text-text-subtle">
+            {expanded ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
           </span>
         ) : (
           <span className="w-4" />
         )}
         
-        <span className={`text-sm ${isFolder ? 'text-text font-medium' : 'text-text-muted font-mono'}`}>
-          {isFolder ? '📁' : '📄'} {node.name}
+        <span className={`text-sm flex items-center gap-2 ${isFolder ? 'text-text font-medium' : 'text-text-muted font-mono'}`}>
+          {isFolder ? <Folder className="w-4 h-4 text-primary" /> : <File className="w-4 h-4" />} {node.name}
         </span>
 
         {node.status && (

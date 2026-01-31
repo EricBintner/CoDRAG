@@ -1,4 +1,5 @@
 import { Badge, Flex, Text } from '@tremor/react';
+import { File, Zap, Link, ArrowDown, ArrowUp } from 'lucide-react';
 
 interface TraceNode {
   id: string;
@@ -28,10 +29,10 @@ const kindColors: Record<TraceNode['kind'], string> = {
   endpoint: 'purple',
 };
 
-const kindIcons: Record<TraceNode['kind'], string> = {
-  file: '📄',
-  symbol: '⚡',
-  endpoint: '🔗',
+const kindIcons: Record<TraceNode['kind'], React.ReactNode> = {
+  file: <File className="w-5 h-5" />,
+  symbol: <Zap className="w-5 h-5" />,
+  endpoint: <Link className="w-5 h-5" />,
 };
 
 export function TraceGraph({ nodes, selectedNode, onSelectNode }: TraceGraphProps) {
@@ -49,7 +50,7 @@ export function TraceGraph({ nodes, selectedNode, onSelectNode }: TraceGraphProp
         >
           <Flex justifyContent="between" alignItems="start">
             <div className="flex items-center gap-2">
-              <span className="text-lg">{kindIcons[node.kind]}</span>
+              <span className="text-text-muted">{kindIcons[node.kind]}</span>
               <div>
                 <Text className="font-mono text-sm text-text font-medium">{node.name}</Text>
                 {node.language && (
@@ -62,11 +63,11 @@ export function TraceGraph({ nodes, selectedNode, onSelectNode }: TraceGraphProp
             </Badge>
           </Flex>
           <Flex className="mt-2 gap-4" justifyContent="start">
-            <span className="text-xs text-text-subtle">
-              <span className="text-success">↓{node.inDegree}</span> in
+            <span className="text-xs text-text-subtle flex items-center gap-1">
+              <span className="text-success flex items-center"><ArrowDown className="w-3 h-3" />{node.inDegree}</span> in
             </span>
-            <span className="text-xs text-text-subtle">
-              <span className="text-info">↑{node.outDegree}</span> out
+            <span className="text-xs text-text-subtle flex items-center gap-1">
+              <span className="text-info flex items-center"><ArrowUp className="w-3 h-3" />{node.outDegree}</span> out
             </span>
           </Flex>
         </div>

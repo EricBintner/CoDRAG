@@ -1,4 +1,10 @@
 import { Badge, Button, Flex, Text, Title } from '@tremor/react';
+import { 
+  Terminal, Search, Cpu, Shield, Globe, Layers, Zap, Eye, 
+  Database, Server, Lock, Activity, FileText, Code, 
+  ChevronRight, Command, Hash, Download, ArrowRight, LayoutGrid,
+  AlertTriangle
+} from 'lucide-react';
 
 interface MarketingHeroProps {
   variant?: 'centered' | 'split' | 'neo' | 'swiss' | 'glass' | 'retro' | 'studio' | 'yale' | 'focus' | 'enterprise';
@@ -42,8 +48,9 @@ function CenteredHero() {
       <div className="relative z-10 px-8 py-16 md:px-16 md:py-24 text-center">
         {/* Eyebrow */}
         <div className="flex justify-center mb-6">
-          <Badge size="lg" className="bg-primary/10 text-primary border border-primary/20 px-4 py-1.5">
-            🚀 Local-first • No cloud required
+          <Badge size="lg" className="bg-primary/10 text-primary border border-primary/20 px-4 py-1.5 gap-2">
+            <Cpu className="w-4 h-4" />
+            Local-first • No cloud required
           </Badge>
         </div>
 
@@ -73,16 +80,16 @@ function CenteredHero() {
         {/* Trust indicators */}
         <div className="mt-12 flex flex-wrap justify-center gap-6 text-text-subtle text-sm">
           <span className="flex items-center gap-2">
-            <span className="text-success">✓</span> Works offline
+            <Zap className="w-4 h-4 text-success" /> Works offline
           </span>
           <span className="flex items-center gap-2">
-            <span className="text-success">✓</span> Bring your own LLM
+            <Database className="w-4 h-4 text-success" /> Bring your own LLM
           </span>
           <span className="flex items-center gap-2">
-            <span className="text-success">✓</span> Perpetual license available
+            <Lock className="w-4 h-4 text-success" /> Perpetual license available
           </span>
           <span className="flex items-center gap-2">
-            <span className="text-success">✓</span> macOS & Windows
+            <Server className="w-4 h-4 text-success" /> macOS & Windows
           </span>
         </div>
       </div>
@@ -125,8 +132,8 @@ function NeoBrutalistHero() {
     <div className="border-4 border-border bg-surface p-8 md:p-12 shadow-xl">
       <div className="flex flex-col md:flex-row gap-8 items-start">
         <div className="flex-1">
-          <div className="inline-block border-2 border-border bg-warning px-4 py-1 text-sm font-bold text-black mb-6 transform -rotate-2">
-            ⚠️ NO CLOUD REQUIRED
+          <div className="inline-flex items-center gap-2 border-2 border-border bg-warning px-4 py-1 text-sm font-bold text-black mb-6 transform -rotate-2">
+            <AlertTriangle className="w-4 h-4" /> NO CLOUD REQUIRED
           </div>
           
           <h1 className="text-5xl md:text-7xl font-bold text-text leading-none uppercase tracking-tighter">
@@ -142,11 +149,11 @@ function NeoBrutalistHero() {
           </p>
 
           <div className="mt-8 flex flex-col sm:flex-row gap-4">
-            <button className="border-2 border-border bg-primary text-white px-8 py-4 font-bold text-lg hover:translate-x-1 hover:translate-y-1 hover:shadow-none shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] transition-all">
-              DOWNLOAD_NOW.EXE
+            <button className="border-2 border-border bg-primary text-white px-8 py-4 font-bold text-lg hover:translate-x-1 hover:translate-y-1 hover:shadow-none shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] transition-all flex items-center gap-2">
+              <Download className="w-6 h-6" /> DOWNLOAD_NOW.EXE
             </button>
-            <button className="border-2 border-border bg-surface text-text px-8 py-4 font-bold text-lg hover:translate-x-1 hover:translate-y-1 hover:shadow-none shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] transition-all">
-              READ_MANIFESTO
+            <button className="border-2 border-border bg-surface text-text px-8 py-4 font-bold text-lg hover:translate-x-1 hover:translate-y-1 hover:shadow-none shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] transition-all flex items-center gap-2">
+              <FileText className="w-6 h-6" /> READ_MANIFESTO
             </button>
           </div>
         </div>
@@ -154,7 +161,7 @@ function NeoBrutalistHero() {
         <div className="flex-1 w-full">
           <div className="border-4 border-border bg-background p-2 shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]">
             <div className="border-b-4 border-border pb-2 mb-4 flex justify-between items-center px-2">
-              <span className="font-bold">TERMINAL_PREVIEW</span>
+              <span className="font-bold flex items-center gap-2"><Terminal className="w-4 h-4" /> TERMINAL_PREVIEW</span>
               <div className="flex gap-2">
                 <div className="w-4 h-4 bg-error border-2 border-black"></div>
                 <div className="w-4 h-4 bg-warning border-2 border-black"></div>
@@ -188,22 +195,22 @@ function SwissHero() {
           </h1>
           <div className="mt-12 grid grid-cols-2 gap-8 border-t border-text pt-6">
             <div>
-              <p className="text-sm font-bold uppercase mb-2">Problem</p>
+              <p className="text-sm font-bold uppercase mb-2 flex items-center gap-2"><Hash className="w-4 h-4" /> Problem</p>
               <p className="text-lg leading-snug text-text-muted">AI hallucinations due to missing context.</p>
             </div>
             <div>
-              <p className="text-sm font-bold uppercase mb-2">Solution</p>
+              <p className="text-sm font-bold uppercase mb-2 flex items-center gap-2"><LayoutGrid className="w-4 h-4" /> Solution</p>
               <p className="text-lg leading-snug text-text-muted">Semantic indexing on your own machine.</p>
             </div>
           </div>
         </div>
         <div className="col-span-12 md:col-span-4 bg-primary p-8 flex flex-col justify-between text-white">
-          <div className="text-6xl font-bold">Aa</div>
+          <div className="text-6xl font-bold"><LayoutGrid className="w-16 h-16" /></div>
           <div className="space-y-4">
             <p className="text-2xl font-medium">CoDRAG v1.0</p>
             <p className="opacity-80">International Typographic Style applied to developer tools.</p>
-            <button className="mt-8 bg-white text-primary px-6 py-3 rounded-full font-bold w-full">
-              Get Started -&gt;
+            <button className="mt-8 bg-white text-primary px-6 py-3 rounded-full font-bold w-full flex items-center justify-between group">
+              Get Started <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
             </button>
           </div>
         </div>
@@ -220,8 +227,8 @@ function GlassHero() {
       
       <div className="relative z-10 flex flex-col items-center text-center">
         <div className="backdrop-blur-xl bg-white/30 border border-white/50 shadow-xl rounded-2xl p-8 md:p-12 max-w-4xl w-full">
-          <Badge className="bg-white/50 text-text border-white/60 backdrop-blur-md mb-6 shadow-sm">
-            ✨ The future of local search
+          <Badge className="bg-white/50 text-text border-white/60 backdrop-blur-md mb-6 shadow-sm gap-2">
+            <Zap className="w-4 h-4 text-warning" /> The future of local search
           </Badge>
           
           <h1 className="text-5xl md:text-7xl font-bold text-text bg-clip-text text-transparent bg-gradient-to-r from-text to-primary mb-6">
@@ -249,19 +256,19 @@ function GlassHero() {
             className="backdrop-blur-lg bg-white/20 border border-white/30 p-4 rounded-xl shadow-lg"
             style={{ transform: 'rotateY(12deg) translateY(1rem)' }}
           >
-            <div className="w-12 h-12 bg-success/40 rounded-full mb-3 blur-sm"></div>
+            <div className="w-12 h-12 bg-success/40 rounded-full mb-3 blur-sm flex items-center justify-center"><Activity className="w-6 h-6 text-white" /></div>
             <div className="h-2 w-24 bg-white/40 rounded mb-2"></div>
             <div className="h-2 w-16 bg-white/30 rounded"></div>
           </div>
           <div className="backdrop-blur-lg bg-white/40 border border-white/50 p-6 rounded-xl shadow-2xl z-20 scale-110">
-            <div className="text-4xl mb-2">🧠</div>
+            <div className="text-4xl mb-2 flex justify-center"><Cpu className="w-12 h-12 text-primary" /></div>
             <div className="font-bold text-text">Deep Index</div>
           </div>
           <div 
             className="backdrop-blur-lg bg-white/20 border border-white/30 p-4 rounded-xl shadow-lg"
             style={{ transform: 'rotateY(-12deg) translateY(1rem)' }}
           >
-            <div className="w-12 h-12 bg-primary/40 rounded-full mb-3 blur-sm"></div>
+            <div className="w-12 h-12 bg-primary/40 rounded-full mb-3 blur-sm flex items-center justify-center"><Database className="w-6 h-6 text-white" /></div>
             <div className="h-2 w-24 bg-white/40 rounded mb-2"></div>
             <div className="h-2 w-16 bg-white/30 rounded"></div>
           </div>
@@ -289,7 +296,7 @@ function RetroHero() {
 
       <div className="relative z-10 px-8 py-20 text-center">
         <h1 className="text-6xl md:text-8xl font-black text-transparent bg-clip-text bg-gradient-to-b from-primary to-purple-800 drop-shadow-[0_0_10px_rgba(255,0,255,0.5)]"
-            style={{ fontFamily: "'Orbitron', sans-serif" }}>
+            style={{ fontFamily: "'Share Tech Mono', monospace" }}>
           CODRAG
         </h1>
         <p className="text-2xl text-primary font-bold tracking-[0.5em] mt-2 mb-12 uppercase drop-shadow-md">
@@ -302,7 +309,7 @@ function RetroHero() {
             &gt; LOCAL INDEX: <span className="text-success">ONLINE</span><br/>
             &gt; CLOUD UPLOAD: <span className="text-error">DISABLED</span><br/>
             &gt; SYMBOL TRACING: <span className="text-info">ACTIVE</span><br/><br/>
-            <span className="animate-pulse">_READY FOR INPUT</span>
+            <span className="animate-pulse flex items-center justify-center gap-2">_READY FOR INPUT <Terminal className="w-4 h-4" /></span>
           </p>
         </div>
 
@@ -319,8 +326,8 @@ function SplitHero() {
     <div className="grid lg:grid-cols-2 gap-12 items-center py-12">
       {/* Left: Content */}
       <div>
-        <Badge size="lg" className="bg-primary/10 text-primary border border-primary/20 mb-6">
-          Now in Public Beta
+        <Badge size="lg" className="bg-primary/10 text-primary border border-primary/20 mb-6 gap-2">
+          <Zap className="w-4 h-4" /> Now in Public Beta
         </Badge>
         
         <h1 className="text-4xl md:text-5xl font-bold text-text leading-tight">
@@ -335,10 +342,10 @@ function SplitHero() {
         </p>
 
         <div className="mt-8 space-y-4">
-          <FeaturePoint icon="🔍" text="Semantic search across all your projects" />
-          <FeaturePoint icon="🌳" text="Trace-aware context with symbol relationships" />
-          <FeaturePoint icon="⚡" text="Sub-100ms search, works completely offline" />
-          <FeaturePoint icon="🔒" text="Your code never leaves your machine" />
+          <FeaturePoint icon={<Search className="w-5 h-5 text-primary" />} text="Semantic search across all your projects" />
+          <FeaturePoint icon={<Layers className="w-5 h-5 text-primary" />} text="Trace-aware context with symbol relationships" />
+          <FeaturePoint icon={<Zap className="w-5 h-5 text-primary" />} text="Sub-100ms search, works completely offline" />
+          <FeaturePoint icon={<Shield className="w-5 h-5 text-primary" />} text="Your code never leaves your machine" />
         </div>
 
         <Flex className="mt-10 gap-4">
@@ -355,7 +362,7 @@ function SplitHero() {
       <div className="relative">
         <div className="absolute -inset-4 bg-gradient-to-r from-primary/20 to-info/20 rounded-3xl blur-3xl opacity-50" />
         <div className="relative rounded-2xl border border-border bg-surface p-6 shadow-xl">
-          <Text className="text-text-subtle text-sm mb-4">Search: "authentication middleware"</Text>
+          <Text className="text-text-subtle text-sm mb-4 flex items-center gap-2"><Search className="w-4 h-4" /> Search: "authentication middleware"</Text>
           
           <div className="space-y-3">
             {[
@@ -383,7 +390,7 @@ function SplitHero() {
   );
 }
 
-function FeaturePoint({ icon, text }: { icon: string; text: string }) {
+function FeaturePoint({ icon, text }: { icon: React.ReactNode; text: string }) {
   return (
     <div className="flex items-center gap-3">
       <span className="text-xl">{icon}</span>
@@ -402,8 +409,10 @@ function StudioHero() {
       <div className="relative z-10 w-full max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-12 gap-8 items-center">
         {/* Main Text Block - Asymmetric */}
         <div className="col-span-12 md:col-span-7 space-y-6">
-          <div className="inline-block bg-surface border border-border px-4 py-2 transform -rotate-2 shadow-sm">
-            <span className="font-mono text-xs uppercase tracking-widest text-text-muted">Experimental Build v0.9</span>
+          <div className="inline-block bg-surface border border-border px-4 py-2 shadow-sm">
+            <span className="font-mono text-xs uppercase tracking-widest text-text-muted flex items-center gap-2">
+              <Code className="w-3 h-3" /> Experimental Build v0.9
+            </span>
           </div>
           
           <h1 className="text-6xl md:text-8xl font-serif text-text leading-[0.9] tracking-tight">
@@ -419,19 +428,30 @@ function StudioHero() {
           </div>
 
           <div className="flex gap-4 pt-4">
-            <button className="px-8 py-3 bg-text text-background font-mono text-sm hover:bg-primary transition-colors">
-              [ DOWNLOAD_STUDIO ]
+            <button className="px-8 py-3 bg-text text-background font-mono text-sm hover:bg-primary transition-colors flex items-center gap-2">
+              <Download className="w-4 h-4" /> [ DOWNLOAD_STUDIO ]
             </button>
-            <button className="px-8 py-3 border border-text text-text font-serif italic hover:bg-surface-raised transition-colors">
-              Read the manifesto
+            <button className="px-8 py-3 border border-text text-text font-serif italic hover:bg-surface-raised transition-colors flex items-center gap-2">
+              Read the manifesto <ArrowRight className="w-4 h-4" />
             </button>
           </div>
         </div>
 
-        {/* Visual Collage Right */}
+        {/* Visual Collage Right (No Rotation, playful retro-future elements) */}
         <div className="col-span-12 md:col-span-5 relative h-[400px]">
-          <div className="absolute top-0 right-0 w-64 bg-surface border border-border p-4 shadow-xl z-20 transform rotate-3">
-            <div className="font-mono text-xs border-b border-border pb-2 mb-2">index_status.log</div>
+          {/* Retro Grid element */}
+          <div className="absolute top-0 right-10 w-48 h-48 opacity-20" 
+             style={{ 
+               backgroundImage: 'linear-gradient(currentColor 1px, transparent 1px), linear-gradient(90deg, currentColor 1px, transparent 1px)',
+               backgroundSize: '10px 10px'
+             }}>
+          </div>
+
+          <div className="absolute top-10 right-0 w-64 bg-surface border-2 border-border p-4 shadow-xl z-20">
+            <div className="font-mono text-xs border-b border-border pb-2 mb-2 flex justify-between">
+              <span>index_status.log</span>
+              <Activity className="w-3 h-3" />
+            </div>
             <div className="flex gap-1 mb-2">
               <div className="w-2 h-2 rounded-full bg-success"></div>
               <div className="w-2 h-2 rounded-full bg-success"></div>
@@ -441,15 +461,15 @@ function StudioHero() {
             <div className="h-2 bg-surface-raised w-1/2"></div>
           </div>
 
-          <div className="absolute top-20 left-0 w-72 bg-surface-raised border border-border p-6 shadow-lg z-10 transform -rotate-2">
-            <h3 className="font-serif text-2xl italic mb-2">Context Awareness</h3>
+          <div className="absolute top-32 left-0 w-72 bg-surface-raised border border-border p-6 shadow-lg z-10">
+            <h3 className="font-serif text-2xl italic mb-2 flex items-center gap-2"><Eye className="w-5 h-5" /> Context Awareness</h3>
             <p className="font-sans text-sm text-text-muted">
               The machine sees what you see. Local traces enable deep understanding without data egress.
             </p>
           </div>
 
-          <div className="absolute bottom-0 right-10 w-56 h-56 border-2 border-primary rounded-full flex items-center justify-center bg-background/50 backdrop-blur-sm z-30">
-            <span className="font-mono text-xs text-center">
+          <div className="absolute bottom-10 right-20 w-40 h-40 border-4 border-primary rounded-full flex items-center justify-center bg-background/50 backdrop-blur-sm z-30">
+            <span className="font-mono text-xs text-center font-bold">
               100%<br/>LOCAL<br/>STORAGE
             </span>
           </div>
@@ -466,7 +486,9 @@ function YaleHero() {
         {/* Strict Grid Layout */}
         <div className="grid grid-cols-12 gap-x-6 border-b border-border pb-12">
           <div className="col-span-12 md:col-span-3">
-            <span className="font-sans font-bold text-sm tracking-wide uppercase text-text-muted">CoDRAG Systems</span>
+            <span className="font-sans font-bold text-sm tracking-wide uppercase text-text-muted flex items-center gap-2">
+              <Command className="w-4 h-4" /> CoDRAG Systems
+            </span>
           </div>
           <div className="col-span-12 md:col-span-6">
             <h1 className="font-sans text-5xl md:text-6xl font-normal text-text leading-tight tracking-tight mb-8">
@@ -486,8 +508,8 @@ function YaleHero() {
               CoDRAG provides a unified interface for code retrieval and generation 
               context, operating entirely within the local filesystem to ensure data sovereignty.
             </p>
-            <a href="#" className="font-sans font-medium text-primary hover:underline underline-offset-4 decoration-2">
-              Documentation &rarr;
+            <a href="#" className="font-sans font-medium text-primary hover:underline underline-offset-4 decoration-2 flex items-center gap-1">
+              Documentation <ArrowRight className="w-3 h-3" />
             </a>
           </div>
 
@@ -513,16 +535,16 @@ function YaleHero() {
             </ul>
           </div>
 
-          {/* Column 3: Action */}
+          {/* Column 3: Action - Removed "Card", just text and minimal buttons */}
           <div className="col-span-12 md:col-span-3 flex flex-col justify-between">
-            <div className="bg-surface p-6 border border-border">
+            <div className="pl-6 md:border-l md:border-border">
               <span className="font-sans font-bold text-sm mb-4 block">Get Started</span>
-              <div className="flex gap-2">
-                <button className="flex-1 bg-primary text-white py-2 px-4 font-sans font-medium text-sm hover:opacity-90">
-                  Download
+              <div className="flex flex-col gap-2">
+                <button className="text-left py-2 font-sans font-medium text-sm hover:text-primary transition-colors flex items-center gap-2">
+                  <Download className="w-4 h-4" /> Download Installer
                 </button>
-                <button className="flex-1 bg-surface border border-border text-text py-2 px-4 font-sans font-medium text-sm hover:bg-surface-raised">
-                  Source
+                <button className="text-left py-2 font-sans font-medium text-sm hover:text-primary transition-colors flex items-center gap-2">
+                  <Code className="w-4 h-4" /> View Source
                 </button>
               </div>
             </div>
@@ -538,7 +560,7 @@ function FocusHero() {
     <div className="bg-background min-h-[600px] flex flex-col justify-center relative">
       <div className="w-full max-w-4xl mx-auto px-6 text-center z-10">
         <div className="mb-8 inline-flex items-center gap-2 px-4 py-2 rounded-full bg-info/10 text-info font-medium text-sm border border-info/20">
-          <span className="w-2 h-2 rounded-full bg-info"></span>
+          <Eye className="w-4 h-4" />
           <span>Accessible Context Intelligence</span>
         </div>
 
@@ -563,17 +585,17 @@ function FocusHero() {
 
         <div className="mt-16 grid grid-cols-1 md:grid-cols-3 gap-8 text-left">
           <div className="bg-surface p-6 rounded-xl border border-border shadow-sm">
-            <div className="w-12 h-12 bg-success/20 rounded-lg flex items-center justify-center text-2xl mb-4">🔒</div>
+            <div className="w-12 h-12 bg-success/20 rounded-lg flex items-center justify-center text-2xl mb-4 text-success"><Lock className="w-6 h-6" /></div>
             <h3 className="font-bold text-lg text-text mb-2">Private by Design</h3>
             <p className="text-text-muted">Your code never leaves your device. We prioritize privacy and security first.</p>
           </div>
           <div className="bg-surface p-6 rounded-xl border border-border shadow-sm">
-            <div className="w-12 h-12 bg-warning/20 rounded-lg flex items-center justify-center text-2xl mb-4">⚡</div>
+            <div className="w-12 h-12 bg-warning/20 rounded-lg flex items-center justify-center text-2xl mb-4 text-warning"><Zap className="w-6 h-6" /></div>
             <h3 className="font-bold text-lg text-text mb-2">Instant Retrieval</h3>
             <p className="text-text-muted">Sub-100ms semantic search means you never lose your flow state.</p>
           </div>
           <div className="bg-surface p-6 rounded-xl border border-border shadow-sm">
-            <div className="w-12 h-12 bg-primary/20 rounded-lg flex items-center justify-center text-2xl mb-4">👁️</div>
+            <div className="w-12 h-12 bg-primary/20 rounded-lg flex items-center justify-center text-2xl mb-4 text-primary"><Eye className="w-6 h-6" /></div>
             <h3 className="font-bold text-lg text-text mb-2">High Visibility</h3>
             <p className="text-text-muted">Trace-aware visualization shows you exactly how your code connects.</p>
           </div>
@@ -589,7 +611,7 @@ function EnterpriseHero() {
       {/* Top Bar */}
       <div className="bg-background border-b border-border px-6 py-3 flex justify-between items-center">
         <div className="flex items-center gap-4">
-          <span className="font-mono font-bold text-lg tracking-tight">CoDRAG</span>
+          <span className="font-mono font-bold text-lg tracking-tight flex items-center gap-2"><LayoutGrid className="w-5 h-5" /> CoDRAG</span>
           <span className="px-2 py-0.5 bg-surface-raised border border-border text-xs text-text-subtle uppercase">Enterprise</span>
         </div>
         <div className="flex gap-4 text-sm font-medium text-text-muted">
@@ -638,7 +660,7 @@ function EnterpriseHero() {
         <div className="col-span-12 md:col-span-7">
           <div className="bg-background border border-border shadow-md rounded-sm overflow-hidden h-full flex flex-col">
             <div className="bg-surface-raised border-b border-border p-3 flex justify-between items-center">
-              <span className="font-mono text-xs text-text-muted">admin_console</span>
+              <span className="font-mono text-xs text-text-muted flex items-center gap-2"><Lock className="w-3 h-3" /> admin_console</span>
               <div className="flex gap-2">
                 <span className="w-3 h-3 bg-border rounded-full"></span>
                 <span className="w-3 h-3 bg-border rounded-full"></span>

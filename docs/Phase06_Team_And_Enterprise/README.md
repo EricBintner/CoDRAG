@@ -32,6 +32,11 @@ Support team workflows as first-class: shared configurations, embedded indexes, 
 - API key authentication
 - Team onboarding workflow
 
+## Artifact set
+- [TEAM_TIER_TECHNICAL_SPEC.md](TEAM_TIER_TECHNICAL_SPEC.md)
+- [ENTERPRISE_POSTURE_AND_ROADMAP.md](ENTERPRISE_POSTURE_AND_ROADMAP.md)
+- [MARKETING_AND_COMMUNICATION.md](MARKETING_AND_COMMUNICATION.md)
+
 ## Functional specification
 
 ### Shared Configuration (Team Tier)

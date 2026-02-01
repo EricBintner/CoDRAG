@@ -18,7 +18,7 @@ CoDRAG is a **local-first, team-ready** application that provides:
 
 ### Why CoDRAG?
 
-| Real Developer Problem | CoDRAG Solution |
+| Developer Problem | CoDRAG Solution |
 |---------|-----------------|
 | "Managing separate RAG indexes for 5+ repos is tedious" | Single daemon manages all projects |
 | "Each IDE tool spins up its own Ollama connection" | Shared LLM connection pool |
@@ -31,37 +31,37 @@ CoDRAG is a **local-first, team-ready** application that provides:
 ## Architecture Overview
 
 ```
-┌─────────────────────────────────────────────────────────────────────────────┐
-│                              CoDRAG                                         │
-├─────────────────────────────────────────────────────────────────────────────┤
-│  Dashboard (React/Vite → Tauri for MVP)                                     │
-│  ├── Project Tabs (LinuxBrain, HalleyApp, Website, ...)                     │
-│  ├── Search / Context / Trace views                                         │
-│  └── Settings / LLM Status                                                  │
-├─────────────────────────────────────────────────────────────────────────────┤
-│  HTTP API (FastAPI @ :8400)                                                 │
-│  ├── /projects/*           Project management                               │
-│  ├── /projects/{id}/build  Index building                                   │
-│  ├── /projects/{id}/search Semantic search                                  │
-│  ├── /projects/{id}/trace  Structural queries                               │
-│  └── /llm/*                LLM service status                               │
-├─────────────────────────────────────────────────────────────────────────────┤
-│  Core Engine                                                                │
-│  ├── ProjectRegistry       SQLite-backed project config                     │
-│  ├── EmbeddingIndex        Semantic vector search (per project)             │
-│  ├── TraceIndex            Symbol graph + import edges                      │
-│  ├── FileWatcher           Auto-rebuild on changes                          │
-│  └── LLMCoordinator        Ollama/CLaRa connection management               │
-├─────────────────────────────────────────────────────────────────────────────┤
-│  CLI                                                                        │
-│  codrag serve | add | build | search | ui | mcp                             │
-└─────────────────────────────────────────────────────────────────────────────┘
-         │                    │                    │
-         ▼                    ▼                    ▼
-    ┌─────────┐         ┌─────────┐         ┌─────────┐
-    │ Ollama  │         │  CLaRa  │         │ Project │
-    │ :11434  │         │  :8765  │         │  Dirs   │
-    └─────────┘         └─────────┘         └─────────┘
+┌─────────────────────────────────────────────────────────────────────────┐
+│                              CoDRAG                                     │
+├─────────────────────────────────────────────────────────────────────────┤
+│  Dashboard (React/Vite → Tauri for MVP)                                 │
+│  ├── Project Tabs (LinuxBrain, HalleyApp, Website, ...)                 │
+│  ├── Search / Context / Trace views                                     │
+│  └── Settings / LLM Status                                              │
+├─────────────────────────────────────────────────────────────────────────┤   
+│  HTTP API (FastAPI @ :8400)                                             │
+│  ├── /projects/*           Project management                           │
+│  ├── /projects/{id}/build  Index building                               │
+│  ├── /projects/{id}/search Semantic search                              │
+│  ├── /projects/{id}/trace  Structural queries                           │
+│  └── /llm/*                LLM service status                           │
+├─────────────────────────────────────────────────────────────────────────┤
+│  Core Engine                                                            │
+│  ├── ProjectRegistry       SQLite-backed project config                 │
+│  ├── EmbeddingIndex        Semantic vector search (per project)         │
+│  ├── TraceIndex            Symbol graph + import edges                  │
+│  ├── FileWatcher           Auto-rebuild on changes                      │
+│  └── LLMCoordinator        Ollama/CLaRa connection management           │
+├─────────────────────────────────────────────────────────────────────────┤
+│  CLI                                                                    │
+│  codrag serve | add | build | search | ui | mcp                         │
+└─────────────────────────────────────────────────────────────────────────┘
+            │                    │                    │
+            ▼                    ▼                    ▼
+       ┌─────────┐         ┌─────────┐           ┌─────────┐
+       │ Ollama  │         │  CLaRa  │           │ Project │
+       │ :11434  │         │  :8765  │           │  Dirs   │
+       └─────────┘         └─────────┘           └─────────┘
 ```
 
 ---

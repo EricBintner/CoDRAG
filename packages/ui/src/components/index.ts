@@ -47,6 +47,9 @@ export { NodeDetailPanel } from './trace/NodeDetailPanel';
 
 // LLM Service Components
 export { LLMStatusCard } from './llm/LLMStatusCard';
+export { ModelCard } from './llm/ModelCard';
+export { EndpointManager } from './llm/EndpointManager';
+export { AIModelsSettings } from './llm/AIModelsSettings';
 
 // Team & Enterprise Components (Phase 06)
 export { ServerModeIndicator } from './team/ServerModeIndicator';

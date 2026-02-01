@@ -232,7 +232,7 @@ export type LicenseTier = 'free' | 'pro' | 'team' | 'enterprise';
 export type TeamConfigStatus = 'none' | 'applied' | 'overridden' | 'conflict';
 
 /**
- * LLM service status
+ * LLM service status (basic)
  */
 export interface LLMStatus {
   ollama: {
@@ -245,6 +245,105 @@ export interface LLMStatus {
     enabled: boolean;
     connected: boolean;
   };
+}
+
+// ============================================================
+// LLM Configuration Types (AI Models Settings)
+// ============================================================
+
+/**
+ * Provider types for LLM endpoints
+ */
+export type LLMProvider = 'ollama' | 'openai' | 'openai-compatible' | 'anthropic';
+
+/**
+ * Model source for embedding/CLaRa
+ */
+export type ModelSource = 'endpoint' | 'huggingface';
+
+/**
+ * Saved endpoint configuration
+ */
+export interface SavedEndpoint {
+  id: string;
+  name: string;
+  provider: LLMProvider;
+  url: string;
+  api_key?: string;
+}
+
+/**
+ * Embedding model configuration
+ */
+export interface EmbeddingConfig {
+  source: ModelSource;
+  // Endpoint mode
+  endpoint_id?: string;
+  model?: string;
+  // HuggingFace mode
+  hf_repo_id?: string;
+  hf_downloaded?: boolean;
+  hf_model_path?: string;
+  hf_download_progress?: number;
+}
+
+/**
+ * Generic LLM slot configuration (small/large models)
+ */
+export interface LLMSlotConfig {
+  enabled: boolean;
+  endpoint_id?: string;
+  model?: string;
+}
+
+/**
+ * CLaRa compression configuration
+ */
+export interface ClaraConfig {
+  enabled: boolean;
+  source: ModelSource;
+  // HuggingFace mode
+  hf_downloaded?: boolean;
+  hf_model_path?: string;
+  hf_download_progress?: number;
+  // Remote mode
+  remote_url?: string;
+}
+
+/**
+ * Full LLM configuration
+ */
+export interface LLMConfig {
+  embedding: EmbeddingConfig;
+  small_model: LLMSlotConfig;
+  large_model: LLMSlotConfig;
+  clara: ClaraConfig;
+  saved_endpoints: SavedEndpoint[];
+}
+
+/**
+ * Model slot type for UI
+ */
+export type ModelSlotType = 'embedding' | 'small' | 'large' | 'clara';
+
+/**
+ * HuggingFace download status
+ */
+export interface HFDownloadStatus {
+  model_type: ModelSlotType;
+  status: 'idle' | 'downloading' | 'complete' | 'error';
+  progress?: number;
+  bytes_downloaded?: string;
+  error?: string;
+}
+
+/**
+ * Endpoint test result
+ */
+export interface EndpointTestResult {
+  success: boolean;
+  message: string;
+  models?: string[];
 }
 
 /**

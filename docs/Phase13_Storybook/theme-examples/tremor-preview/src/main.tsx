@@ -14,6 +14,8 @@ import './styles/themes/direction-i.css';
 import './styles/themes/direction-j.css';
 import './styles/themes/direction-k.css';
 import './styles/themes/direction-l.css';
+import './styles/themes/direction-m.css';
+import './styles/themes/direction-n.css';
 import './styles/index.css';
 
 ReactDOM.createRoot(document.getElementById('root') as HTMLElement).render(

@@ -6,10 +6,11 @@ Provides heading-based markdown chunking and size-based code chunking.
 
 from __future__ import annotations
 
-import hashlib
 import re
 from dataclasses import dataclass, field
 from typing import Any, Dict, Generator, List, Optional, Tuple
+
+from .ids import stable_code_chunk_id, stable_markdown_chunk_id
 
 
 @dataclass
@@ -123,8 +124,7 @@ def chunk_markdown(
         if not content:
             return
 
-        id_src = f"{source_path}:{meta.get('section', '')}:{idx}"
-        chunk_id = hashlib.sha256(id_src.encode()).hexdigest()[:16]
+        chunk_id = stable_markdown_chunk_id(source_path, str(meta.get("section") or ""), idx)
 
         parts.append(Chunk(chunk_id=chunk_id, content=content, metadata=dict(meta)))
 
@@ -193,7 +193,7 @@ def chunk_code(
         List of Chunk objects
     """
     if len(text) <= max_chars:
-        chunk_id = hashlib.sha256(f"{source_path}:0".encode()).hexdigest()[:16]
+        chunk_id = stable_code_chunk_id(source_path, 0)
         return [
             Chunk(
                 chunk_id=chunk_id,
@@ -211,7 +211,7 @@ def chunk_code(
         end = min(start + max_chars, len(text))
         chunk_text = text[start:end]
 
-        chunk_id = hashlib.sha256(f"{source_path}:{idx}".encode()).hexdigest()[:16]
+        chunk_id = stable_code_chunk_id(source_path, idx)
         chunks.append(
             Chunk(
                 chunk_id=chunk_id,

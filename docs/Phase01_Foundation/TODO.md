@@ -1,0 +1,68 @@
+# Phase 01 — Foundation TODO
+
+## Links
+- Spec: `README.md`
+- Opportunities: `opportunities.md`
+- Master orchestrator: `../MASTER_TODO.md`
+- Research backlog: `../RESEARCH_BACKLOG.md`
+- Architecture: `../ARCHITECTURE.md`
+- API contract: `../API.md`
+- Decision log: `../DECISIONS.md`
+
+## Research completion checklist (P01-R*)
+These items are the Phase01-specific gates from `../PHASE_RESEARCH_GATES.md` and `../RESEARCH_BACKLOG.md`.
+
+- [ ] P01-R1 Define canonical `manifest.json` schema (required fields + meaning + forward-compat plan)
+- [ ] P01-R2 Define stable chunk/document ID strategy and guarantees
+- [ ] P01-R3 Define optional FTS capability detection + reporting (and fallback behavior)
+- [ ] P01-R4 Define interrupted/partial build detection + deterministic recovery behavior
+- [ ] P01-R5 Define baseline performance envelope (what repo sizes/counts are acceptable for MVP)
+
+## Implementation backlog (P01-I*)
+- [ ] P01-I1 ProjectRegistry schema + CRUD (multi-project foundations)
+- [ ] P01-I2 Project storage layout (standalone default; embedded later) aligned with ADR-003
+- [ ] P01-I3 Build pipeline correctness:
+  - scan (include/exclude, max file bytes)
+  - chunk
+  - embed
+  - persist (atomic swap)
+- [ ] P01-I4 `status` surface fields required by dashboard + MCP:
+  - index exists
+  - build running
+  - last successful build timestamp
+  - last error (code/message/hint)
+- [ ] P01-I5 Search primitives:
+  - query embedding
+  - vector similarity
+  - result shaping (chunk_id, path, span, preview, score)
+- [ ] P01-I6 Context assembly primitives:
+  - citations
+  - bounded output (`max_chars`)
+  - structured output option
+- [ ] P01-I7 Error envelope parity (HTTP) with Phase02 UI expectations
+- [ ] P01-I8 Ensure “last known-good snapshot” behavior: search/context remain available while builds run
+
+### Unification / reuse (P01-U*)
+- [ ] P01-U1 Confirm whether CoDRAG daemon should proxy to `code_index/` as a thin adapter (per Phase69 notes)
+- [ ] P01-U2 Remove duplicated indexing logic if both CoDRAG core and `code_index/` exist (single source of truth)
+
+## Testing & validation (P01-T*)
+- [ ] P01-T1 Unit tests for:
+  - chunking rules
+  - stable chunk IDs
+  - manifest read/write
+- [ ] P01-T2 Integration test: add project → build → search → context
+- [ ] P01-T3 Negative test: Ollama down → actionable error
+- [ ] P01-T4 Recovery test: interrupted build leaves index usable (last good) and rebuild repairs deterministically
+
+## Cross-phase strategy alignment
+Relevant entries in `../MASTER_TODO.md`:
+- [ ] STR-01 API envelope + error codes: confirm Phase01 shapes match `API.md`
+- [ ] STR-02 Stable IDs: confirm chunk ID derivation and document guarantees
+- [ ] STR-03 Manifest + versioning: confirm required fields + format bump policy
+- [ ] STR-04 Atomic build: document temp-dir swap + crash handling
+- [ ] STR-05 Budgets: define server-side caps for `k`, `max_chars`, `min_score`
+
+## Notes / blockers
+- [ ] Decide whether span info is mandatory for all chunk types (code vs markdown)
+- [ ] Decide whether “documents.json” schema is frozen for MVP or versioned behind `format_version`

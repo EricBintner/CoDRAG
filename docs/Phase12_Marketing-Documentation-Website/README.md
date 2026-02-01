@@ -52,16 +52,16 @@ Launch a placeholder public website and a user-facing documentation site that:
 - Operational simplicity (one canonical domain; no split-brain links)
 
 #### Recommendation
-- Primary domain: **`codrag.ai`**
-- Defensive purchase (if available): **`codrag.io`**
-- Redirect: **`codrag.io` → `codrag.ai`** (HTTP 301)
+- Primary domain: **`codrag.io`**
+- Defensive purchase (if available): **`codrag.ai`**
+- Redirect: **`codrag.ai` → `codrag.io`** (HTTP 301)
 
 Rationale:
-- CoDRAG’s core differentiator is AI-assisted retrieval (RAG + trace + MCP), so `.ai` is aligned with the product’s category.
-- `.io` remains useful as a defensive purchase and a redirect to prevent confusion and protect backlinks.
+- `.io` is familiar and trusted for developer tools.
+- `.ai` remains useful as a defensive purchase and a redirect to prevent confusion and protect backlinks.
 
 Fallback (availability-driven):
-- If `codrag.ai` is unavailable or prohibitively expensive, use `codrag.io` as the primary and redirect the other.
+- If `codrag.io` is unavailable or prohibitively expensive, use `codrag.ai` as the primary and redirect the other.
 
 ### Domain + subdomain infrastructure
 
@@ -72,20 +72,24 @@ Fallback (availability-driven):
 
 #### Proposed subdomain map
 
-- Root: `codrag.ai`
+- Root: `codrag.io`
   - marketing site
   - primary CTA(s): download/waitlist, docs
-- `www.codrag.ai`
+- `www.codrag.io`
   - optional; either canonicalize to root or to `www` (choose one)
-- `docs.codrag.ai`
+- `docs.codrag.io` (alias: `doc.codrag.io`)
   - documentation site (versionable)
-- `get.codrag.ai` (or `download.codrag.ai`)
+- `support.codrag.io`
+  - support hub (GitHub issues/discussions + email + troubleshooting links)
+- `payments.codrag.io`
+  - purchase + license delivery/recovery
+- `get.codrag.io` (or `download.codrag.io`)
   - installers, release links, checksums
-- `status.codrag.ai`
+- `status.codrag.io`
   - service status page (future; even if product is local-first, the site itself can have uptime)
-- `storybook.codrag.ai`
+- `storybook.codrag.io`
   - UI component docs (may be private)
-- `api.codrag.ai`
+- `api.codrag.io`
   - reserved (future; do not use unless we ship a hosted service)
 
 #### DNS + hosting approach (recommended)
@@ -93,7 +97,7 @@ Fallback (availability-driven):
 - Hosting for website/docs: Vercel or Netlify (static-first, easy previews)
 
 Routing note:
-- Prefer separate deploy targets for `codrag.ai` and `docs.codrag.ai` so docs can be versioned and deployed independently.
+- Prefer separate deploy targets for `codrag.io` and `docs.codrag.io` so docs can be versioned and deployed independently.
 
 ### Website information architecture
 
@@ -102,8 +106,8 @@ Routing note:
   - value prop: "Your Code, Your Keys, Your Context."
   - “Local-first” trust messaging: "No Token Markup. No Cloud Index."
   - “How it works” (high-level)
-  - CTA(s): “Get Founder’s Edition”, “Read docs”
-- Docs (link to `docs.codrag.ai`)
+  - CTA(s): “Read docs”, “Get Founder’s Edition”
+- Docs (link to `docs.codrag.io`)
 - Download (`/download`)
   - placeholder: “Not yet available” + links to GitHub releases when ready
 - Pricing (`/pricing`)
@@ -147,8 +151,8 @@ Docs should be honest: it’s OK to scaffold pages with “TBD”, as long as th
   - Performance tips
 
 #### Docs versioning strategy
-- Default: `docs.codrag.ai` shows “latest”.
-- Once releases exist, optionally version docs by major/minor: `docs.codrag.ai/v0.1/`, `docs.codrag.ai/v0.2/`.
+- Default: `docs.codrag.io` shows “latest”.
+- Once releases exist, optionally version docs by major/minor: `docs.codrag.io/v0.1/`, `docs.codrag.io/v0.2/`.
 
 ### Recommended implementation direction (for when we build the site)
 

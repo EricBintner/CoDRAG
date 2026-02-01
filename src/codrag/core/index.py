@@ -20,7 +20,10 @@ import numpy as np
 
 from .chunking import Chunk, chunk_code, chunk_markdown
 from .embedder import Embedder
-from .repo_profile import DEFAULT_ROLE_WEIGHTS, classify_rel_path, profile_repo
+from .ids import stable_file_hash, stable_file_node_id
+from .manifest import ManifestBuildStats, build_manifest, write_manifest
+from .repo_policy import ensure_repo_policy
+from .repo_profile import DEFAULT_ROLE_WEIGHTS, classify_rel_path
 
 logger = logging.getLogger(__name__)
 
@@ -109,6 +112,7 @@ class CodeIndex:
             "index_dir": str(self.index_dir),
             "model": self._manifest.get("model", "unknown"),
             "built_at": self._manifest.get("built_at"),
+            "roots": self._manifest.get("roots", []),
             "total_documents": len(self._documents or []),
             "embedding_dim": int(self._embeddings.shape[1]) if self._embeddings is not None else 0,
             "config": self._manifest.get("config", {}),
@@ -117,6 +121,7 @@ class CodeIndex:
     def build(
         self,
         repo_root: Path | str,
+        roots: Optional[List[str]] = None,
         include_globs: Optional[List[str]] = None,
         exclude_globs: Optional[List[str]] = None,
         max_file_bytes: int = 500_000,
@@ -137,36 +142,79 @@ class CodeIndex:
         """
         repo_root = Path(repo_root).resolve()
 
-        profile: Optional[Dict[str, Any]] = None
-        if not include_globs or not exclude_globs:
-            profile = profile_repo(repo_root)
+        policy = ensure_repo_policy(self.index_dir, repo_root)
+
+        if include_globs is None:
+            include_globs = list(policy.get("include_globs") or [])
+        if exclude_globs is None:
+            exclude_globs = list(policy.get("exclude_globs") or [])
 
         if not include_globs:
-            include_globs = list((profile or {}).get("recommended", {}).get("include_globs") or [])
-            if not include_globs:
-                include_globs = ["**/*.md", "**/*.py"]
-
+            include_globs = ["**/*.md", "**/*.py"]
         if not exclude_globs:
-            exclude_globs = list((profile or {}).get("recommended", {}).get("exclude_globs") or [])
-            if not exclude_globs:
-                exclude_globs = ["**/.git/**", "**/node_modules/**", "**/__pycache__/**", "**/.venv/**"]
+            exclude_globs = ["**/.git/**", "**/node_modules/**", "**/__pycache__/**", "**/.venv/**"]
 
+        rw = policy.get("role_weights")
         role_weights: Dict[str, float] = dict(DEFAULT_ROLE_WEIGHTS)
-        if profile:
-            rw = (profile.get("recommended") or {}).get("role_weights")
-            if isinstance(rw, dict) and rw:
+        if isinstance(rw, dict) and rw:
+            try:
                 role_weights = {str(k): float(v) for k, v in rw.items()}
+            except Exception:
+                role_weights = dict(DEFAULT_ROLE_WEIGHTS)
+
+        prev_docs = self._documents or []
+        prev_emb = self._embeddings
+        prev_model = str(self._manifest.get("model") or "")
+        cur_model = str(getattr(self.embedder, "model", "unknown"))
+        can_reuse = bool(prev_docs) and prev_emb is not None and prev_model == cur_model
+
+        prev_by_source: Dict[str, List[int]] = {}
+        prev_hash_by_source: Dict[str, str] = {}
+        if can_reuse:
+            for i, d in enumerate(prev_docs):
+                sp = str(d.get("source_path") or "")
+                if not sp:
+                    continue
+                prev_by_source.setdefault(sp, []).append(i)
+
+            for sp, idxs in prev_by_source.items():
+                h = str(prev_docs[idxs[0]].get("file_hash") or "")
+                if h:
+                    prev_hash_by_source[sp] = h
+
+        selected_roots: Optional[List[str]] = None
+        if roots:
+            cleaned = [str(r).strip().strip("/") for r in roots]
+            cleaned = [r for r in cleaned if r]
+            selected_roots = cleaned or None
 
         files: List[Path] = []
-        for pat in include_globs:
-            files.extend(repo_root.glob(pat))
+        if selected_roots:
+            for rel_root in selected_roots:
+                rel_path = Path(rel_root)
+                if rel_path.is_absolute() or ".." in rel_path.parts:
+                    continue
+
+                abs_root = (repo_root / rel_path).resolve()
+                if not abs_root.is_relative_to(repo_root):
+                    continue
+                if not abs_root.exists() or not abs_root.is_dir():
+                    continue
+                for pat in include_globs:
+                    files.extend(abs_root.glob(pat))
+        else:
+            for pat in include_globs:
+                files.extend(repo_root.glob(pat))
         files = sorted(set(files))
 
         filtered_files: List[Path] = []
         for f in files:
             if not f.is_file():
                 continue
-            rel_path = str(f.relative_to(repo_root))
+            try:
+                rel_path = str(f.relative_to(repo_root))
+            except ValueError:
+                continue
             if any(Path(rel_path).match(pat) for pat in exclude_globs):
                 continue
             if f.stat().st_size > max_file_bytes:
@@ -176,6 +224,11 @@ class CodeIndex:
         docs: List[Dict[str, Any]] = []
         vectors: List[List[float]] = []
         total_files = len(filtered_files)
+
+        files_reused = 0
+        files_embedded = 0
+        chunks_reused = 0
+        chunks_embedded = 0
 
         for i, file_path in enumerate(filtered_files):
             rel_path = str(file_path.relative_to(repo_root))
@@ -189,7 +242,24 @@ class CodeIndex:
             except Exception:
                 continue
 
-            file_hash = hashlib.sha256(raw.encode("utf-8")).hexdigest()[:16]
+            file_hash = stable_file_hash(raw)
+
+            if can_reuse:
+                prev_hash = prev_hash_by_source.get(rel_path)
+                if prev_hash and prev_hash == file_hash:
+                    idxs = prev_by_source.get(rel_path) or []
+                    for di in idxs:
+                        prev_doc = dict(prev_docs[int(di)])
+                        prev_doc["role"] = role
+                        prev_doc["file_hash"] = file_hash
+                        docs.append(prev_doc)
+                        vectors.append(prev_emb[int(di)].tolist())
+
+                    files_reused += 1
+                    chunks_reused += len(idxs)
+                    continue
+
+            files_embedded += 1
 
             if file_path.suffix.lower() in (".md", ".markdown"):
                 chunks = chunk_markdown(raw, source_path=rel_path)
@@ -210,6 +280,7 @@ class CodeIndex:
                 }
                 docs.append(doc)
                 vectors.append(emb)
+                chunks_embedded += 1
 
         if not docs:
             raise RuntimeError("No documents indexed")
@@ -226,27 +297,149 @@ class CodeIndex:
         except Exception as e:
             logger.warning(f"FTS rebuild failed (continuing without keyword index): {e}")
 
-        manifest = {
-            "version": "1.0",
-            "built_at": datetime.now(timezone.utc).isoformat(),
-            "model": getattr(self.embedder, "model", "unknown"),
-            "count": len(docs),
-            "embedding_dim": int(embeddings.shape[1]),
-            "config": {
+        manifest = build_manifest(
+            model=str(getattr(self.embedder, "model", "unknown")),
+            embedding_dim=int(embeddings.shape[1]),
+            roots=list(selected_roots or []),
+            count=len(docs),
+            build=ManifestBuildStats(
+                mode="incremental" if files_reused > 0 else "full",
+                files_total=total_files,
+                files_reused=files_reused,
+                files_embedded=files_embedded,
+                chunks_total=len(docs),
+                chunks_reused=chunks_reused,
+                chunks_embedded=chunks_embedded,
+            ),
+            config={
                 "include_globs": include_globs,
                 "exclude_globs": exclude_globs,
                 "max_file_bytes": max_file_bytes,
                 "role_weights": role_weights,
             },
-        }
-        with open(self.manifest_path, "w") as f:
-            json.dump(manifest, f, indent=2)
+            built_at=datetime.now(timezone.utc).isoformat(),
+        )
+        write_manifest(self.manifest_path, manifest)
 
         self._documents = docs
         self._embeddings = embeddings
         self._manifest = manifest
 
         return manifest
+
+    def _classify_query_intent(self, query: str) -> str:
+        q = query.lower()
+        tokens = set(re.findall(r"[a-zA-Z0-9_./-]{2,}", q))
+        if not tokens:
+            return "default"
+
+        docs_tokens = {
+            "doc",
+            "docs",
+            "documentation",
+            "readme",
+            "guide",
+            "tutorial",
+            "manual",
+            "architecture",
+            "design",
+            "adr",
+            "adrs",
+            "decision",
+            "decisions",
+            "rfc",
+            "rfcs",
+            "spec",
+            "specs",
+            "specification",
+        }
+
+        tests_tokens = {
+            "test",
+            "tests",
+            "pytest",
+            "unittest",
+            "jest",
+            "vitest",
+            "cypress",
+            "playwright",
+            "e2e",
+            "integration",
+            "unit",
+        }
+
+        debug_tokens = {
+            "bug",
+            "error",
+            "exception",
+            "traceback",
+            "stack",
+            "crash",
+            "fix",
+            "broken",
+            "fails",
+            "failing",
+        }
+
+        code_tokens = {
+            "function",
+            "class",
+            "module",
+            "import",
+            "entry",
+            "entrypoint",
+            "main",
+            "api",
+            "endpoint",
+            "handler",
+            "implementation",
+        }
+
+        if tokens & tests_tokens:
+            return "tests"
+        if tokens & docs_tokens:
+            return "docs"
+        if tokens & debug_tokens:
+            return "code"
+        if tokens & code_tokens:
+            return "code"
+
+        return "default"
+
+    def _intent_role_multipliers(self, intent: str) -> Dict[str, float]:
+        if intent == "docs":
+            return {"docs": 1.15, "code": 0.98, "tests": 0.98, "other": 0.95}
+        if intent == "tests":
+            return {"tests": 1.12, "code": 1.0, "docs": 0.95, "other": 0.95}
+        if intent == "code":
+            return {"code": 1.08, "tests": 1.0, "docs": 0.93, "other": 0.9}
+        return {}
+
+    def query_policy(self, query: str) -> Dict[str, Any]:
+        intent = self._classify_query_intent(query)
+        intent_multipliers = self._intent_role_multipliers(intent)
+        role_weights = (self._manifest.get("config") or {}).get("role_weights")
+        if not isinstance(role_weights, dict):
+            role_weights = {}
+
+        roles = set(role_weights.keys()) | set(intent_multipliers.keys())
+        effective: Dict[str, float] = {}
+        for r in roles:
+            try:
+                base = float(role_weights.get(r, 1.0))
+            except (TypeError, ValueError):
+                base = 1.0
+            try:
+                mult = float(intent_multipliers.get(r, 1.0))
+            except (TypeError, ValueError):
+                mult = 1.0
+            effective[str(r)] = base * mult
+
+        return {
+            "intent": intent,
+            "intent_multipliers": intent_multipliers,
+            "effective_role_weights": effective,
+        }
 
     def search(
         self,
@@ -285,17 +478,34 @@ class CodeIndex:
         sims = sims + self._keyword_boosts(query, docs)
         sims = sims + self._fts_boosts(query, docs, limit=max(10, k * 4))
 
-        role_weights = (self._manifest.get("config") or {}).get("role_weights") or {}
-        if isinstance(role_weights, dict) and role_weights:
+        intent = self._classify_query_intent(query)
+        intent_mult = self._intent_role_multipliers(intent)
+        role_weights = (self._manifest.get("config") or {}).get("role_weights")
+        if not isinstance(role_weights, dict):
+            role_weights = {}
+
+        if role_weights or intent_mult:
             for i, d in enumerate(docs):
                 role = str(d.get("role") or "")
-                w = role_weights.get(role)
-                if w is None:
-                    continue
-                try:
-                    sims[i] = sims[i] * float(w)
-                except (TypeError, ValueError):
-                    continue
+                if not role:
+                    sp = str(d.get("source_path") or "")
+                    role = classify_rel_path(sp) if sp else "other"
+
+                w = 1.0
+                base = role_weights.get(role)
+                if base is not None:
+                    try:
+                        w *= float(base)
+                    except (TypeError, ValueError):
+                        pass
+                mult = intent_mult.get(role)
+                if mult is not None:
+                    try:
+                        w *= float(mult)
+                    except (TypeError, ValueError):
+                        pass
+                if w != 1.0:
+                    sims[i] = sims[i] * w
 
         top_idx = np.argsort(sims)[::-1]
         out: List[SearchResult] = []
@@ -362,6 +572,7 @@ class CodeIndex:
         max_chars: int = 6000,
         min_score: float = 0.15,
     ) -> Dict[str, Any]:
+        policy = self.query_policy(query)
         results = self.search(query, k=k, min_score=min_score)
         if not results:
             return {
@@ -369,6 +580,7 @@ class CodeIndex:
                 "chunks": [],
                 "total_chars": 0,
                 "estimated_tokens": 0,
+                "meta": {"query": query, "policy": policy},
             }
 
         parts: List[str] = []
@@ -418,6 +630,7 @@ class CodeIndex:
             "chunks": chunks_meta,
             "total_chars": total,
             "estimated_tokens": total // 4,
+            "meta": {"query": query, "policy": policy},
         }
 
     def get_chunk(self, chunk_id: str) -> Optional[Dict[str, Any]]:
@@ -428,6 +641,111 @@ class CodeIndex:
             if d.get("id") == chunk_id:
                 return d
         return None
+
+    def get_context_with_trace_expansion(
+        self,
+        query: str,
+        trace_index: Any,
+        k: int = 5,
+        max_chars: int = 6000,
+        min_score: float = 0.15,
+        trace_hops: int = 1,
+        trace_direction: str = "both",
+        trace_edge_kinds: Optional[List[str]] = None,
+        max_additional_nodes: int = 10,
+        max_additional_chars: int = 2000,
+    ) -> Dict[str, Any]:
+        """
+        Get context with optional trace-based expansion.
+        
+        After retrieving initial chunks, expands context by following trace edges
+        to find related symbols/files and including their chunks.
+        """
+        base_result = self.get_context_structured(query, k=k, max_chars=max_chars - max_additional_chars, min_score=min_score)
+        
+        if trace_index is None or not trace_index.is_loaded():
+            base_result["trace_expanded"] = False
+            base_result["trace_nodes_added"] = 0
+            return base_result
+        
+        source_paths = set()
+        for chunk in base_result.get("chunks", []):
+            sp = chunk.get("source_path")
+            if sp:
+                source_paths.add(sp)
+        
+        if not source_paths:
+            base_result["trace_expanded"] = False
+            base_result["trace_nodes_added"] = 0
+            return base_result
+        
+        related_paths: set = set()
+        for sp in source_paths:
+            file_node_id = stable_file_node_id(sp)
+            neighbors = trace_index.get_neighbors(
+                file_node_id,
+                direction=trace_direction,
+                edge_kinds=trace_edge_kinds,
+                max_nodes=max_additional_nodes,
+            )
+            
+            for node in neighbors.get("in_nodes", []):
+                fp = node.get("file_path")
+                if fp and fp not in source_paths:
+                    related_paths.add(fp)
+            
+            for node in neighbors.get("out_nodes", []):
+                fp = node.get("file_path")
+                if fp and fp not in source_paths:
+                    related_paths.add(fp)
+        
+        if not related_paths:
+            base_result["trace_expanded"] = True
+            base_result["trace_nodes_added"] = 0
+            return base_result
+        
+        additional_chunks: List[Dict[str, Any]] = []
+        additional_chars = 0
+        
+        for rp in sorted(related_paths):
+            if additional_chars >= max_additional_chars:
+                break
+            
+            for d in self._documents or []:
+                if d.get("source_path") == rp:
+                    content = str(d.get("content") or "")
+                    if additional_chars + len(content) > max_additional_chars:
+                        continue
+                    additional_chunks.append({
+                        "source_path": rp,
+                        "section": d.get("section", ""),
+                        "score": 0.0,
+                        "truncated": False,
+                        "trace_expanded": True,
+                    })
+                    additional_chars += len(content)
+                    break
+        
+        if additional_chunks:
+            additional_parts: List[str] = []
+            for chunk in additional_chunks:
+                sp = chunk["source_path"]
+                for d in self._documents or []:
+                    if d.get("source_path") == sp:
+                        header = f"[trace-expanded | @{sp}]"
+                        block = f"{header}\n{d.get('content', '')}"
+                        additional_parts.append(block)
+                        break
+            
+            if additional_parts:
+                base_result["context"] += "\n\n---\n\n" + "\n\n---\n\n".join(additional_parts)
+                base_result["chunks"].extend(additional_chunks)
+                base_result["total_chars"] += additional_chars
+                base_result["estimated_tokens"] = base_result["total_chars"] // 4
+        
+        base_result["trace_expanded"] = True
+        base_result["trace_nodes_added"] = len(additional_chunks)
+        return base_result
 
     def _format_chunk_for_embedding(self, chunk: Chunk, file_hash: str) -> str:
         """Format a chunk for embedding."""

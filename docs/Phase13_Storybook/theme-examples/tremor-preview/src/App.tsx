@@ -42,7 +42,7 @@ import {
   Moon 
 } from 'lucide-react';
 
-type ThemeId = 'a' | 'b' | 'c' | 'd' | 'e' | 'f' | 'g' | 'h' | 'i' | 'j' | 'k' | 'l';
+type ThemeId = 'a' | 'b' | 'c' | 'd' | 'e' | 'f' | 'g' | 'h' | 'i' | 'j' | 'k' | 'l' | 'm' | 'n';
 
 type ThemeOption = {
   id: ThemeId;
@@ -59,6 +59,8 @@ const themeOptions: ThemeOption[] = [
   { id: 'f', label: 'F: Swiss Minimal', description: 'Clean grids, international red, whitespace' },
   { id: 'g', label: 'G: Glass-Morphic', description: 'Translucent layers, blurs, soft shadows' },
   { id: 'h', label: 'H: Retro-Futurism', description: 'Synthwave, neon glows, dark grids' },
+  { id: 'm', label: 'M: Retro Aurora', description: 'Retro-future with teal/blue/purple glows' },
+  { id: 'n', label: 'N: Retro Mirage', description: 'Retro-future variant with layered neon haze' },
   { id: 'i', label: 'I: Studio Collage', description: 'Expressive, layered, Cranbrook-inspired' },
   { id: 'j', label: 'J: Yale Grid', description: 'Typographic discipline, quiet, semantic' },
   { id: 'k', label: 'K: Inclusive Focus', description: 'High contrast, clear focus, accessible' },
@@ -103,6 +105,7 @@ function getThemeDefaultHeroVariant(theme: ThemeId): HeroVariant {
   if (theme === 'f') return 'swiss';
   if (theme === 'g') return 'glass';
   if (theme === 'h') return 'retro';
+  if (theme === 'm' || theme === 'n') return 'retro';
   if (theme === 'i') return 'studio';
   if (theme === 'j') return 'yale';
   if (theme === 'k') return 'focus';

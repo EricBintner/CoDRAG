@@ -1,0 +1,49 @@
+# Phase 08 — Tauri MVP TODO
+
+## Links
+- Spec: `README.md`
+- Opportunities: `opportunities.md`
+- Master orchestrator: `../MASTER_TODO.md`
+- Research backlog: `../RESEARCH_BACKLOG.md`
+- Deployment spec: `../Phase11_Deployment/README.md`
+
+## Research completion checklist (P08-R*)
+- [ ] P08-R1 Choose packaging approach (PyInstaller vs PyOxidizer) and document rationale
+- [ ] P08-R2 Specify port/binding strategy and single-instance behavior
+- [ ] P08-R3 Specify OS-specific data directories and signing/notarization requirements
+
+## Implementation backlog (P08-I*)
+### Sidecar lifecycle
+- [ ] P08-I1 Startup sequence:
+  - determine API base
+  - connect to existing daemon if healthy
+  - else launch bundled python sidecar and wait for `/health`
+- [ ] P08-I2 Shutdown sequence:
+  - graceful shutdown endpoint (if available) or terminate sidecar
+  - avoid orphan processes
+- [ ] P08-I3 Crash recovery UX:
+  - banner when backend stopped
+  - actions: restart backend / view logs
+
+### Port strategy
+- [ ] P08-I4 Prefer `127.0.0.1:8400`
+- [ ] P08-I5 If port occupied, detect whether it’s CoDRAG; otherwise use fallback port
+- [ ] P08-I6 Expose chosen base URL to WebView reliably
+
+### UX surfaces
+- [ ] P08-I7 “Backend starting…” screen with timeout + actionable failure state
+- [ ] P08-I8 Optional backend lifecycle panel (PID/port local-only)
+
+## Testing & validation (P08-T*)
+- [ ] P08-T1 Install and first-run: backend starts automatically and dashboard loads
+- [ ] P08-T2 Port conflict test: occupied 8400 handled correctly
+- [ ] P08-T3 Crash recovery test: sidecar dies mid-run → UI surfaces and can restart
+
+## Cross-phase strategy alignment
+Relevant entries in `../MASTER_TODO.md`:
+- [ ] STR-08 Packaging strategy (python sidecar)
+- [ ] STR-03 Format versioning (upgrade/rebuild prompts in app UX)
+
+## Notes / blockers
+- [ ] Decide whether “keep backend running after app close” exists in MVP
+- [ ] Decide minimum platform support for MVP packaging

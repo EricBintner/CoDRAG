@@ -110,7 +110,7 @@ Generate [AGENTS.md](https://agents.md/) documentation from trace index:
 ### Quick Start
 
 ```bash
-# Download and install from codrag.ai
+# Download and install from codrag.io
 # Or install via package manager:
 
 # macOS (Homebrew)

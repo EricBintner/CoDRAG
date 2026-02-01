@@ -34,5 +34,9 @@ export type { IndexStatusCardProps, IndexStats, BuildCardProps } from './compone
 // Components - LLM
 export { LLMStatusCard, ModelCard, EndpointManager, AIModelsSettings } from './components/llm';
 
+// Components - Project
+export { FolderTree, sampleFileTree } from './components/project';
+export type { FolderTreeProps, TreeNode, FileStatus } from './components/project';
+
 // API (typed client + Storybook mocking helpers)
 export * from './api';

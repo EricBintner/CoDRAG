@@ -92,8 +92,30 @@ Sections:
 - `/workflows/*` (case studies)
 - `/enterprise` (roadmap + posture + “talk to us”)
 
+## Support IA (v0)
+Hosted at `support.codrag.io`.
+
+Primary entry options:
+- Troubleshooting (link to `docs.codrag.io`)
+- Report a bug (link to GitHub Issue Form)
+- Ask a question (link to GitHub Discussions Q&A)
+- Billing / license help (link to `payments.codrag.io` + contact email)
+
+V0 support hub sections:
+- “Before you file a bug” checklist (version, OS, logs, repro)
+- Links to GitHub Issues, GitHub Discussions, and contact email
+- Security reporting link
+
+## Payments IA (v0)
+Hosted at `payments.codrag.io`.
+
+V0 payments surfaces:
+- Purchase / checkout entry (redirect to hosted checkout)
+- Success page (receipt + next steps)
+- License recovery (resend key / receipt lookup)
+
 ## Docs IA (v0 scaffold)
-Hosted at `docs.codrag.ai`.
+Hosted at `docs.codrag.io`.
 
 ### Getting Started
 - What is CoDRAG?

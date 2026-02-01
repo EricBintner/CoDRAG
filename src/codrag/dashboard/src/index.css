@@ -1,7 +1,6 @@
+@import '@codrag/ui/tokens/index.css';
+@import '@codrag/ui/styles/themes/index.css';
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
-
-body {
-  @apply bg-gray-900 text-gray-100;
-}

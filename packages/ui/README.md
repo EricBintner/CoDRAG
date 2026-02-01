@@ -12,7 +12,7 @@ This package provides:
 ## Usage
 
 This package is consumed by:
-- `website/` — CoDRAG marketing site and documentation
+- `websites/` — CoDRAG marketing site and documentation
 - Dashboard app (when scaffolded)
 
 ### Styles

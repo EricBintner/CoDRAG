@@ -16,6 +16,7 @@ TODO:
 from .embedder import Embedder, OllamaEmbedder, EmbeddingResult
 from .chunking import Chunk, chunk_markdown, chunk_code
 from .index import CodeIndex, SearchResult
+from .trace import TraceBuilder, TraceIndex, TraceNode, TraceEdge, build_trace
 
 __all__ = [
     "CodeIndex",
@@ -26,4 +27,9 @@ __all__ = [
     "Chunk",
     "chunk_markdown",
     "chunk_code",
+    "TraceBuilder",
+    "TraceIndex",
+    "TraceNode",
+    "TraceEdge",
+    "build_trace",
 ]

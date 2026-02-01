@@ -27,7 +27,7 @@ This document outlines the operational financial structure for **Magnetic Anomal
 - **Setup:**
   - **Account:** One Stripe account for "Magnetic Anomaly LLC".
   - **Descriptors:** Use dynamic statement descriptors if possible (e.g., `MAGANOM* CODRAG`) or generic `MAGNETIC ANOMALY`.
-  - **Domain:** `buy.codrag.com` (or similar subdomain).
+  - **Domain:** `payments.codrag.io` (or similar subdomain).
 - **Checkout Flow:**
   1. User clicks "Buy License" on landing page.
   2. Redirects to Stripe Checkout (hosted session).

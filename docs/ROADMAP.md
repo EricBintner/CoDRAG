@@ -20,16 +20,21 @@ Workflow backbone:
 
 | Phase | Name | Duration | Cumulative |
 |-------|------|----------|------------|
-| 0 | Foundation | 2 weeks | Week 2 |
-| 1 | Dashboard | 2 weeks | Week 4 |
-| 2 | Auto-Rebuild | 1 week | Week 5 |
-| 3 | Trace Index | 2 weeks | Week 7 |
-| 4 | MCP Integration | 1 week | Week 8 |
-| 6 | Polish & Testing | 1 week | Week 9 |
-| MVP | Tauri Wrapper | 1 week | Week 10 |
-| Post-MVP | Team/Enterprise Features | 2+ weeks | TBD |
+| 01 | Foundation | 2 weeks | Week 2 |
+| 02 | Dashboard | 2 weeks | Week 4 |
+| 03 | Auto-Rebuild | 1 week | Week 5 |
+| 04 | Trace Index | 2 weeks | Week 7 |
+| 05 | MCP Integration | 1 week | Week 8 |
+| 06 | Team & Enterprise | 1 week | Week 9 |
+| 07 | Polish & Testing | 1 week | Week 10 |
+| 08 | Tauri MVP (MVP milestone) | 2 weeks | Week 12 |
+| 09 | Post-MVP | TBD | TBD |
+| 10 | Business & Competitive Research | TBD | TBD |
+| 11 | Deployment | TBD | TBD |
+| 12 | Marketing / Docs / Website | TBD | TBD |
+| 13 | Storybook | TBD | TBD |
 
-**Total: ~10 weeks to MVP**
+**Total: ~12 weeks to MVP**
 
 ---
 

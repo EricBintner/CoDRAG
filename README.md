@@ -396,17 +396,23 @@ npm run test --prefix dashboard
 
 ## Roadmap
 
-See [ROADMAP.md](docs/ROADMAP.md) for detailed phases.
+See [PHASES.md](docs/PHASES.md) for the authoritative phase index and [ROADMAP.md](docs/ROADMAP.md) for detailed phase writeups.
 
 | Phase | Focus | Timeline |
 |-------|-------|----------|
-| **0: Foundation** | Core engine, CLI, basic API | Week 1-2 |
-| **1: Dashboard** | React UI, project tabs, search | Week 3-4 |
-| **2: Auto-Rebuild** | File watching, incremental builds | Week 5 |
-| **3: Trace Index** | Symbol extraction, graph queries | Week 6-7 |
-| **4: MCP Integration** | IDE tool support | Week 8 |
-| **5: Team Features** | Embedded mode, network mode | Week 9-10 |
-| **MVP: Tauri** | Native app wrapper | Week 11-12 |
+| **01: Foundation** | Core engine, CLI, basic API | |
+| **02: Dashboard** | UI, project management, search/context views | |
+| **03: Auto-Rebuild** | File watching, incremental builds | |
+| **04: Trace Index** | Symbol extraction, graph queries | |
+| **05: MCP Integration** | IDE tool support | |
+| **06: Team & Enterprise** | Embedded mode + enterprise guardrails | |
+| **07: Polish & Testing** | Reliability, UX, regression coverage | |
+| **08: Tauri MVP** | Native app wrapper (MVP milestone) | |
+| **09: Post-MVP** | Structured expansion proposals | |
+| **10: Business & Competitive Research** | Pricing, positioning, licensing | |
+| **11: Deployment** | Packaging, distribution, updates | |
+| **12: Marketing / Docs / Website** | Documentation + public-facing assets | |
+| **13: Storybook** | Design system + UI component library | |
 
 ---
 
@@ -414,6 +420,5 @@ See [ROADMAP.md](docs/ROADMAP.md) for detailed phases.
 
 - **[Ollama](https://ollama.com/)** — Local LLM serving (CoDRAG uses for embeddings)
 - **[CLaRa](https://github.com/apple/ml-clara)** — Context compression (optional integration)
-
 ---
 

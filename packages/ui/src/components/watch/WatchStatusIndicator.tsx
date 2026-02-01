@@ -24,6 +24,7 @@ export function WatchStatusIndicator({
   className,
 }: WatchStatusIndicatorProps) {
   const config = stateConfig[status.state];
+  const pendingPathsCount = status.pending_paths_count ?? 0;
 
   return (
     <div className={cn('codrag-watch-status', className)}>
@@ -41,8 +42,8 @@ export function WatchStatusIndicator({
 
       {showDetails && (
         <div className="mt-2 space-y-1 text-xs text-gray-500">
-          {status.pending_paths_count > 0 && (
-            <p>{status.pending_paths_count} files changed since last build</p>
+          {pendingPathsCount > 0 && (
+            <p>{pendingPathsCount} files changed since last build</p>
           )}
           
           {status.state === 'debouncing' && status.next_rebuild_at && (

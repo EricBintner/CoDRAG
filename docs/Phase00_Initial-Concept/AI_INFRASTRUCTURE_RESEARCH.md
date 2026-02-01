@@ -41,6 +41,9 @@ Alternatives if we want to avoid Ollama dependency:
 
 ## 2. CLaRa: Context Compression
 
+ Recommended checkpoint for CoDRAG-style query-time context compression:
+ - `apple/CLaRa-7B-Instruct`: https://huggingface.co/apple/CLaRa-7B-Instruct
+
 ### How CLaRa runs (from `@/Volumes/4TB-BAD/HumanAI/CLaRa-Remembers-It-All/src/clara_server/model.py`)
 
 CLaRa is **NOT** a llama.cpp model. It runs on **PyTorch + HuggingFace Transformers**:

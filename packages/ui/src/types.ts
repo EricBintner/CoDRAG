@@ -83,13 +83,13 @@ export type BuildPhase =
 export interface WatchStatus {
   enabled: boolean;
   state: WatchState;
-  debounce_ms: number;
-  stale: boolean;
-  pending: boolean;
-  pending_paths_count: number;
-  next_rebuild_at: string | null;
-  last_event_at: string | null;
-  last_rebuild_at: string | null;
+  debounce_ms?: number;
+  stale?: boolean;
+  pending?: boolean;
+  pending_paths_count?: number;
+  next_rebuild_at?: string | null;
+  last_event_at?: string | null;
+  last_rebuild_at?: string | null;
 }
 
 /**

@@ -1,6 +1,5 @@
-import * as React from 'react';
-import { Tab, TabGroup, TabList } from '@tremor/react';
 import { cn } from '../../lib/utils';
+import { X } from 'lucide-react';
 
 export interface ProjectTab {
   id: string;
@@ -19,7 +18,7 @@ export interface ProjectTabsProps {
 /**
  * ProjectTabs - Open project tabs for quick switching
  * 
- * Wireframe component - displays:
+ * Displays:
  * - Open project tabs with close buttons
  * - Active tab highlighting
  * - Tab overflow handling (scroll)
@@ -31,43 +30,46 @@ export function ProjectTabs({
   onTabClose,
   className,
 }: ProjectTabsProps) {
-  const activeIndex = tabs.findIndex((t) => t.id === activeTabId);
-
   if (tabs.length === 0) {
     return null;
   }
 
   return (
-    <div className={cn('codrag-project-tabs', 'border-b', className)}>
-      <TabGroup
-        index={activeIndex >= 0 ? activeIndex : 0}
-        onIndexChange={(idx) => onTabSelect(tabs[idx]?.id ?? '')}
-      >
-        <TabList variant="line" className="overflow-x-auto">
-          {tabs.map((tab) => (
-            <Tab key={tab.id} className="group relative pr-8">
-              <span className="truncate max-w-[150px]">{tab.name}</span>
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onTabClose(tab.id);
-                }}
-                className={cn(
-                  'absolute right-1 top-1/2 -translate-y-1/2',
-                  'w-5 h-5 rounded-full',
-                  'flex items-center justify-center',
-                  'opacity-0 group-hover:opacity-100',
-                  'hover:bg-gray-200 dark:hover:bg-gray-700',
-                  'transition-opacity'
-                )}
-                aria-label={`Close ${tab.name}`}
-              >
-                ×
-              </button>
-            </Tab>
-          ))}
-        </TabList>
-      </TabGroup>
+    <div className={cn('flex border-b border-border overflow-x-auto bg-surface-raised/50 hide-scrollbar', className)}>
+      {tabs.map((tab) => {
+        const isActive = tab.id === activeTabId;
+        return (
+          <div
+            key={tab.id}
+            onClick={() => onTabSelect(tab.id)}
+            className={cn(
+              'group relative flex items-center min-w-[120px] max-w-[200px] h-10 px-4 border-r border-border cursor-pointer select-none transition-colors',
+              isActive 
+                ? 'bg-surface text-primary font-medium border-t-2 border-t-primary -mt-px pt-px' 
+                : 'bg-transparent text-text-muted hover:bg-surface hover:text-text border-t-2 border-t-transparent'
+            )}
+          >
+            <span className="truncate text-sm pr-6 w-full">
+              {tab.name}
+            </span>
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onTabClose(tab.id);
+              }}
+              className={cn(
+                'absolute right-2 top-1/2 -translate-y-1/2 p-0.5 rounded-full',
+                'text-text-subtle hover:text-text hover:bg-surface-raised',
+                'opacity-0 group-hover:opacity-100 transition-opacity',
+                isActive && 'opacity-100' // Always show close on active tab
+              )}
+              title={`Close ${tab.name}`}
+            >
+              <X className="w-3.5 h-3.5" />
+            </button>
+          </div>
+        );
+      })}
     </div>
   );
 }

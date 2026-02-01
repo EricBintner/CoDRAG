@@ -1,6 +1,6 @@
-import { Badge, Button } from '@tremor/react';
 import { cn } from '../../lib/utils';
 import type { WatchState, WatchStatus } from '../../types';
+import { Eye, Clock, AlertTriangle, PlayCircle, Loader2 } from 'lucide-react';
 
 export interface WatchStatusIndicatorProps {
   status: WatchStatus;
@@ -9,12 +9,32 @@ export interface WatchStatusIndicatorProps {
   className?: string;
 }
 
-const stateConfig: Record<WatchState, { label: string; color: 'gray' | 'blue' | 'yellow' | 'green' | 'orange' }> = {
-  disabled: { label: 'Watch Off', color: 'gray' },
-  idle: { label: 'Watching', color: 'green' },
-  debouncing: { label: 'Changes Detected', color: 'yellow' },
-  building: { label: 'Rebuilding', color: 'blue' },
-  throttled: { label: 'Throttled', color: 'orange' },
+const stateConfig: Record<WatchState, { label: string; icon: any; classes: string }> = {
+  disabled: { 
+    label: 'Watch Off', 
+    icon: Eye,
+    classes: 'bg-surface-raised text-text-muted border-border' 
+  },
+  idle: { 
+    label: 'Watching', 
+    icon: Clock,
+    classes: 'bg-success-muted/10 text-success border-success-muted/20' 
+  },
+  debouncing: { 
+    label: 'Changes Detected', 
+    icon: AlertTriangle,
+    classes: 'bg-warning-muted/10 text-warning border-warning-muted/20' 
+  },
+  building: { 
+    label: 'Rebuilding', 
+    icon: Loader2,
+    classes: 'bg-info-muted/10 text-info border-info-muted/20' 
+  },
+  throttled: { 
+    label: 'Throttled', 
+    icon: Clock,
+    classes: 'bg-warning-muted/10 text-warning border-warning-muted/20' 
+  },
 };
 
 export function WatchStatusIndicator({
@@ -24,24 +44,35 @@ export function WatchStatusIndicator({
   className,
 }: WatchStatusIndicatorProps) {
   const config = stateConfig[status.state];
+  const Icon = config.icon;
   const pendingPathsCount = status.pending_paths_count ?? 0;
 
   return (
-    <div className={cn('codrag-watch-status', className)}>
-      <div className="flex items-center gap-2">
-        <Badge color={config.color}>{config.label}</Badge>
+    <div className={cn('flex flex-col gap-2', className)}>
+      <div className="flex items-center gap-2 flex-wrap">
+        <span className={cn(
+          "inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium border",
+          config.classes
+        )}>
+          <Icon className={cn("w-3.5 h-3.5", status.state === 'building' && "animate-spin")} />
+          {config.label}
+        </span>
         
         {status.stale && status.state !== 'building' && (
-          <Badge color="yellow">Stale</Badge>
+          <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium border bg-warning-muted/10 text-warning border-warning-muted/20">
+            Stale
+          </span>
         )}
         
         {status.pending && (
-          <Badge color="blue">Pending</Badge>
+          <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium border bg-info-muted/10 text-info border-info-muted/20">
+            Pending
+          </span>
         )}
       </div>
 
       {showDetails && (
-        <div className="mt-2 space-y-1 text-xs text-gray-500">
+        <div className="space-y-1 text-xs text-text-muted bg-surface-raised/50 p-2 rounded border border-border/50">
           {pendingPathsCount > 0 && (
             <p>{pendingPathsCount} files changed since last build</p>
           )}
@@ -57,14 +88,13 @@ export function WatchStatusIndicator({
       )}
 
       {status.stale && status.state !== 'building' && onRebuildNow && (
-        <Button
-          size="xs"
-          variant="secondary"
+        <button
           onClick={onRebuildNow}
-          className="mt-2"
+          className="self-start inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-surface hover:bg-surface-raised border border-border text-xs font-medium text-text transition-colors shadow-sm"
         >
+          <PlayCircle className="w-3.5 h-3.5" />
           Rebuild Now
-        </Button>
+        </button>
       )}
     </div>
   );

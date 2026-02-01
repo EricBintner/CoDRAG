@@ -1,7 +1,7 @@
-import { Button } from '@tremor/react';
 import type { ProjectSummary } from '../../types';
 import { StatusBadge } from '../status/StatusBadge';
 import { cn } from '../../lib/utils';
+import { FolderPlus } from 'lucide-react';
 
 export interface ProjectListProps {
   projects: ProjectSummary[];
@@ -25,18 +25,18 @@ function ProjectListItem({ project, selected, onClick }: ProjectListItemProps) {
     <button
       onClick={onClick}
       className={cn(
-        'codrag-project-list-item',
-        'w-full text-left px-4 py-3 border-b',
-        'hover:bg-gray-50 dark:hover:bg-gray-800',
-        'transition-colors',
-        selected && 'bg-gray-100 dark:bg-gray-800'
+        'w-full text-left px-4 py-3 border-b border-border',
+        'hover:bg-surface-raised transition-colors',
+        selected ? 'bg-surface-raised border-l-4 border-l-primary' : 'border-l-4 border-l-transparent'
       )}
     >
       <div className="flex items-center justify-between">
-        <span className="font-medium truncate">{project.name}</span>
+        <span className={cn("font-medium truncate text-sm", selected ? "text-primary" : "text-text")}>
+          {project.name}
+        </span>
         <StatusBadge status={project.status} showLabel={false} />
       </div>
-      <span className="text-sm text-gray-500 truncate block mt-1">
+      <span className="text-xs text-text-muted truncate block mt-1">
         {project.path}
       </span>
     </button>
@@ -46,7 +46,7 @@ function ProjectListItem({ project, selected, onClick }: ProjectListItemProps) {
 /**
  * ProjectList - List of registered projects in sidebar
  * 
- * Wireframe component - displays:
+ * Displays:
  * - List of projects with status indicators
  * - Selected state highlighting
  * - Add project button
@@ -59,10 +59,13 @@ export function ProjectList({
   className,
 }: ProjectListProps) {
   return (
-    <div className={cn('codrag-project-list', 'flex flex-col h-full', className)}>
+    <div className={cn('flex flex-col h-full bg-surface', className)}>
       <div className="flex-1 overflow-y-auto">
         {projects.length === 0 ? (
-          <div className="p-4 text-center text-gray-500">
+          <div className="p-4 text-center text-sm text-text-muted flex flex-col items-center gap-2 mt-4">
+            <div className="p-3 rounded-full bg-surface-raised">
+              <FolderPlus className="w-6 h-6 text-text-subtle" />
+            </div>
             No projects yet
           </div>
         ) : (
@@ -76,14 +79,14 @@ export function ProjectList({
           ))
         )}
       </div>
-      <div className="p-4 border-t">
-        <Button
+      <div className="p-4 border-t border-border">
+        <button
           onClick={onAddProject}
-          variant="secondary"
-          className="w-full"
+          className="w-full flex items-center justify-center gap-2 py-2 px-4 rounded-md border border-border bg-surface hover:bg-surface-raised text-text text-sm font-medium transition-colors"
         >
-          + Add Project
-        </Button>
+          <FolderPlus className="w-4 h-4" />
+          Add Project
+        </button>
       </div>
     </div>
   );

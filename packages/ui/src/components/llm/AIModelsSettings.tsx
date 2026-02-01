@@ -1,4 +1,3 @@
-import { Card } from '@tremor/react';
 import { cn } from '../../lib/utils';
 import { ModelCard } from './ModelCard';
 import { EndpointManager } from './EndpointManager';
@@ -8,6 +7,7 @@ import type {
   EndpointTestResult,
   ModelSource 
 } from '../../types';
+import { Cpu, Info } from 'lucide-react';
 
 export interface AIModelsSettingsProps {
   config: LLMConfig;
@@ -140,26 +140,24 @@ export function AIModelsSettings({
   };
 
   return (
-    <div className={cn('codrag-ai-models-settings space-y-6', className)}>
+    <div className={cn('codrag-ai-models-settings space-y-8', className)}>
       {/* Header */}
       <div>
-        <h2 className="text-lg font-semibold flex items-center gap-2">
-          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-          </svg>
+        <h2 className="text-xl font-semibold flex items-center gap-2 text-text">
+          <Cpu className="w-6 h-6 text-primary" />
           AI Models
         </h2>
-        <p className="text-sm text-gray-500">Configure LLMs for embedding, analysis, and compression</p>
+        <p className="text-sm text-text-muted mt-1">Configure LLMs for embedding, analysis, and compression</p>
       </div>
 
       {/* Model Cards Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Embedding Model */}
         <ModelCard
           title="Embedding Model"
           description="Vector encoding for semantic search"
           icon={
-            <svg className="w-4 h-4 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="w-5 h-5 text-info" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01" />
             </svg>
           }
@@ -189,7 +187,7 @@ export function AIModelsSettings({
           title="Small Model"
           description="Fast analysis & parsing (4B)"
           icon={
-            <svg className="w-4 h-4 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="w-5 h-5 text-warning" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
             </svg>
           }
@@ -212,7 +210,7 @@ export function AIModelsSettings({
           title="Large Model"
           description="Complex reasoning & summaries"
           icon={
-            <svg className="w-4 h-4 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="w-5 h-5 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
             </svg>
           }
@@ -235,7 +233,7 @@ export function AIModelsSettings({
           title="CLaRa (Compression)"
           description="16x context compression (optional)"
           icon={
-            <svg className="w-4 h-4 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="w-5 h-5 text-success" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
             </svg>
           }
@@ -265,15 +263,18 @@ export function AIModelsSettings({
       />
 
       {/* Info Card */}
-      <Card className="bg-gray-50 dark:bg-gray-800/50">
-        <h4 className="text-sm font-semibold mb-2">Model Recommendations</h4>
-        <ul className="text-xs text-gray-600 dark:text-gray-400 space-y-1">
-          <li><strong>Embedding:</strong> nomic-embed-text (via Ollama or HuggingFace download)</li>
-          <li><strong>Small:</strong> qwen3:4b-instruct, phi-3-mini for fast parsing</li>
-          <li><strong>Large:</strong> mistral, qwen3:30b, deepseek-coder for complex analysis</li>
-          <li><strong>CLaRa:</strong> Optional - enables 16x context compression for large codebases</li>
-        </ul>
-      </Card>
+      <div className="rounded-lg bg-surface-raised border border-border p-4 flex gap-3">
+        <Info className="w-5 h-5 text-info shrink-0 mt-0.5" />
+        <div>
+          <h4 className="text-sm font-semibold mb-2 text-text">Model Recommendations</h4>
+          <ul className="text-xs text-text-muted space-y-1.5 list-disc pl-4">
+            <li><strong>Embedding:</strong> nomic-embed-text (via Ollama or HuggingFace download)</li>
+            <li><strong>Small:</strong> qwen3:4b-instruct, phi-3-mini for fast parsing</li>
+            <li><strong>Large:</strong> mistral, qwen3:30b, deepseek-coder for complex analysis</li>
+            <li><strong>CLaRa:</strong> Optional - enables 16x context compression for large codebases</li>
+          </ul>
+        </div>
+      </div>
     </div>
   );
 }

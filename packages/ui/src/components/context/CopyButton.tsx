@@ -1,6 +1,6 @@
-import * as React from 'react';
-import { Button } from '@tremor/react';
+import { useState } from 'react';
 import { cn } from '../../lib/utils';
+import { Copy, Check } from 'lucide-react';
 
 export interface CopyButtonProps {
   text: string;
@@ -11,7 +11,7 @@ export interface CopyButtonProps {
 /**
  * CopyButton - Copy text to clipboard
  * 
- * Wireframe component - provides:
+ * Provides:
  * - Click to copy functionality
  * - Feedback state (copied confirmation)
  */
@@ -20,7 +20,7 @@ export function CopyButton({
   label = 'Copy',
   className,
 }: CopyButtonProps) {
-  const [copied, setCopied] = React.useState(false);
+  const [copied, setCopied] = useState(false);
 
   const handleCopy = async () => {
     try {
@@ -33,13 +33,19 @@ export function CopyButton({
   };
 
   return (
-    <Button
-      variant="secondary"
-      size="xs"
+    <button
       onClick={handleCopy}
-      className={cn('codrag-copy-button', className)}
+      className={cn(
+        'inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium rounded-md transition-colors',
+        'border border-border',
+        copied 
+          ? 'bg-success-muted/10 text-success border-success-muted/30' 
+          : 'bg-surface hover:bg-surface-raised text-text-muted hover:text-text',
+        className
+      )}
     >
+      {copied ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
       {copied ? 'Copied!' : label}
-    </Button>
+    </button>
   );
 }

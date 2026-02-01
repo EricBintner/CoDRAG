@@ -11,12 +11,13 @@
       "import": "./dist/index.js",
       "types": "./dist/index.d.ts"
     },
-    "./styles": "./dist/styles/index.css",
+    "./styles": "./src/styles/index.css",
     "./tokens": "./src/tokens/index.css"
   },
   "files": [
     "dist",
-    "src/tokens"
+    "src/tokens",
+    "src/styles"
   ],
   "scripts": {
     "dev": "vite build --watch",
@@ -35,6 +36,7 @@
     "@tremor/react": "^3.14.0",
     "class-variance-authority": "^0.7.0",
     "clsx": "^2.1.0",
+    "keyboard-css": "^1.2.4",
     "lucide-react": "^0.312.0",
     "tailwind-merge": "^2.2.0"
   },

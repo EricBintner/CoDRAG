@@ -1,7 +1,7 @@
 import { useState } from 'react';
-import { Card, Button, TextInput, Select, SelectItem, Badge } from '@tremor/react';
 import { cn } from '../../lib/utils';
 import type { SavedEndpoint, LLMProvider, EndpointTestResult } from '../../types';
+import { Plus, Trash2, Edit2, Play, CheckCircle, AlertCircle, Server } from 'lucide-react';
 
 export interface EndpointManagerProps {
   endpoints: SavedEndpoint[];
@@ -97,108 +97,148 @@ export function EndpointManager({
     provider === 'openai' || provider === 'anthropic' || provider === 'openai-compatible';
 
   return (
-    <Card className={cn('codrag-endpoint-manager', className)}>
-      <div className="flex items-center justify-between mb-4">
+    <div className={cn('rounded-lg border border-border bg-surface p-6', className)}>
+      <div className="flex items-center justify-between mb-6">
         <div>
-          <h3 className="text-sm font-semibold">Saved Endpoints</h3>
-          <p className="text-xs text-gray-500">Add endpoints for local or remote LLM servers</p>
+          <h3 className="text-lg font-semibold text-text flex items-center gap-2">
+            <Server className="w-5 h-5 text-primary" />
+            Saved Endpoints
+          </h3>
+          <p className="text-sm text-text-muted mt-1">Manage local and remote LLM server connections</p>
         </div>
       </div>
 
       {/* Endpoint List */}
-      <div className="space-y-2 mb-4">
+      <div className="space-y-3 mb-6">
         {endpoints.length === 0 ? (
-          <p className="text-xs text-gray-400 py-4 text-center">No saved endpoints</p>
+          <div className="text-sm text-text-muted py-8 text-center bg-surface-raised rounded-lg border border-dashed border-border">
+            No saved endpoints found
+          </div>
         ) : (
           endpoints.map((ep) => (
             <div
               key={ep.id}
-              className="p-3 border rounded-lg hover:border-gray-300 dark:hover:border-gray-600 transition-colors"
+              className={cn(
+                "p-4 border rounded-lg transition-colors",
+                editingId === ep.id 
+                  ? "bg-surface-raised border-primary/50" 
+                  : "border-border hover:border-border-subtle bg-surface"
+              )}
             >
               {editingId === ep.id ? (
                 // Edit form inline
-                <div className="space-y-3">
-                  <div className="grid grid-cols-2 gap-2">
-                    <TextInput
-                      placeholder="Display Name"
-                      value={formName}
-                      onChange={(e) => setFormName(e.target.value)}
-                    />
-                    <Select
-                      value={formProvider}
-                      onValueChange={(val) => setFormProvider(val as LLMProvider)}
-                    >
-                      {PROVIDER_OPTIONS.map((opt) => (
-                        <SelectItem key={opt.value} value={opt.value}>
-                          {opt.label}
-                        </SelectItem>
-                      ))}
-                    </Select>
+                <div className="space-y-4">
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-xs font-medium text-text-muted mb-1">Display Name</label>
+                      <input
+                        placeholder="Display Name"
+                        value={formName}
+                        onChange={(e) => setFormName(e.target.value)}
+                        className="w-full bg-surface border border-border rounded px-3 py-2 text-sm text-text focus:outline-none focus:ring-2 focus:ring-primary"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-medium text-text-muted mb-1">Provider</label>
+                      <select
+                        value={formProvider}
+                        onChange={(e) => setFormProvider(e.target.value as LLMProvider)}
+                        className="w-full bg-surface border border-border rounded px-3 py-2 text-sm text-text focus:outline-none focus:ring-2 focus:ring-primary"
+                      >
+                        {PROVIDER_OPTIONS.map((opt) => (
+                          <option key={opt.value} value={opt.value}>
+                            {opt.label}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
                   </div>
-                  <TextInput
-                    placeholder="Endpoint URL"
-                    value={formUrl}
-                    onChange={(e) => setFormUrl(e.target.value)}
-                  />
-                  {providerNeedsApiKey(formProvider) && (
-                    <TextInput
-                      placeholder="API Key"
-                      type="password"
-                      value={formApiKey}
-                      onChange={(e) => setFormApiKey(e.target.value)}
+                  <div>
+                    <label className="block text-xs font-medium text-text-muted mb-1">Endpoint URL</label>
+                    <input
+                      placeholder="Endpoint URL"
+                      value={formUrl}
+                      onChange={(e) => setFormUrl(e.target.value)}
+                      className="w-full bg-surface border border-border rounded px-3 py-2 text-sm text-text focus:outline-none focus:ring-2 focus:ring-primary"
                     />
+                  </div>
+                  {providerNeedsApiKey(formProvider) && (
+                    <div>
+                      <label className="block text-xs font-medium text-text-muted mb-1">API Key</label>
+                      <input
+                        placeholder="API Key"
+                        type="password"
+                        value={formApiKey}
+                        onChange={(e) => setFormApiKey(e.target.value)}
+                        className="w-full bg-surface border border-border rounded px-3 py-2 text-sm text-text focus:outline-none focus:ring-2 focus:ring-primary"
+                      />
+                    </div>
                   )}
-                  <div className="flex gap-2">
-                    <Button size="xs" onClick={handleSaveEdit}>Save</Button>
-                    <Button size="xs" variant="secondary" onClick={resetForm}>
+                  <div className="flex gap-2 justify-end">
+                    <button 
+                      onClick={resetForm}
+                      className="px-3 py-1.5 text-xs font-medium rounded-md bg-surface border border-border text-text hover:bg-surface-raised transition-colors"
+                    >
                       Cancel
-                    </Button>
+                    </button>
+                    <button 
+                      onClick={handleSaveEdit}
+                      className="px-3 py-1.5 text-xs font-medium rounded-md bg-primary text-white hover:bg-primary-hover transition-colors"
+                    >
+                      Save Changes
+                    </button>
                   </div>
                 </div>
               ) : (
                 // Display mode
                 <div className="flex items-center justify-between">
                   <div className="min-w-0 flex-1">
-                    <div className="flex items-center gap-2">
-                      <span className="font-medium text-sm">{ep.name}</span>
-                      <Badge color="gray" size="xs">{ep.provider}</Badge>
+                    <div className="flex items-center gap-2 mb-1">
+                      <span className="font-medium text-sm text-text">{ep.name}</span>
+                      <span className="text-xs px-2 py-0.5 rounded-full bg-surface-raised text-text-muted border border-border">
+                        {ep.provider}
+                      </span>
                     </div>
-                    <p className="text-xs text-gray-500 truncate">{ep.url}</p>
+                    <code className="text-xs text-text-subtle font-mono block truncate max-w-md">
+                      {ep.url}
+                    </code>
                     {testResults[ep.id] && (
-                      <p
-                        className={cn(
-                          'text-xs mt-1',
-                          testResults[ep.id].success ? 'text-green-600' : 'text-red-600'
+                      <div className={cn(
+                        'text-xs mt-2 flex items-center gap-1.5',
+                        testResults[ep.id].success ? 'text-success' : 'text-error'
+                      )}>
+                        {testResults[ep.id].success ? (
+                          <CheckCircle className="w-3.5 h-3.5" />
+                        ) : (
+                          <AlertCircle className="w-3.5 h-3.5" />
                         )}
-                      >
                         {testResults[ep.id].message}
-                      </p>
+                      </div>
                     )}
                   </div>
-                  <div className="flex gap-1 ml-2">
-                    <Button
-                      size="xs"
-                      variant="secondary"
+                  <div className="flex gap-2 ml-4">
+                    <button
                       onClick={() => handleTest(ep)}
-                      loading={testingId === ep.id}
+                      disabled={testingId === ep.id}
+                      className="p-1.5 rounded-md text-text-muted hover:text-text hover:bg-surface-raised transition-colors disabled:opacity-50"
+                      title="Test Connection"
                     >
-                      Test
-                    </Button>
-                    <Button
-                      size="xs"
-                      variant="secondary"
+                      <Play className={cn("w-4 h-4", testingId === ep.id && "animate-pulse")} />
+                    </button>
+                    <button
                       onClick={() => handleEdit(ep)}
+                      className="p-1.5 rounded-md text-text-muted hover:text-text hover:bg-surface-raised transition-colors"
+                      title="Edit"
                     >
-                      Edit
-                    </Button>
-                    <Button
-                      size="xs"
-                      variant="secondary"
-                      color="red"
+                      <Edit2 className="w-4 h-4" />
+                    </button>
+                    <button
                       onClick={() => onDelete(ep.id)}
+                      className="p-1.5 rounded-md text-text-muted hover:text-error hover:bg-error-muted/10 transition-colors"
+                      title="Delete"
                     >
-                      ×
-                    </Button>
+                      <Trash2 className="w-4 h-4" />
+                    </button>
                   </div>
                 </div>
               )}
@@ -209,60 +249,78 @@ export function EndpointManager({
 
       {/* Add New Endpoint */}
       {showAddForm ? (
-        <div className="p-3 border border-dashed rounded-lg space-y-3">
-          <h4 className="text-xs font-semibold">Add Endpoint</h4>
-          <div className="grid grid-cols-2 gap-2">
-            <TextInput
-              placeholder="Display Name"
-              value={formName}
-              onChange={(e) => setFormName(e.target.value)}
-            />
-            <Select
-              value={formProvider}
-              onValueChange={(val) => setFormProvider(val as LLMProvider)}
-            >
-              {PROVIDER_OPTIONS.map((opt) => (
-                <SelectItem key={opt.value} value={opt.value}>
-                  {opt.label}
-                </SelectItem>
-              ))}
-            </Select>
+        <div className="p-4 border border-border rounded-lg bg-surface-raised/50 space-y-4 animate-in fade-in slide-in-from-top-2">
+          <h4 className="text-sm font-semibold text-text">Add New Endpoint</h4>
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block text-xs font-medium text-text-muted mb-1">Display Name</label>
+              <input
+                placeholder="e.g. Local Ollama"
+                value={formName}
+                onChange={(e) => setFormName(e.target.value)}
+                className="w-full bg-surface border border-border rounded px-3 py-2 text-sm text-text focus:outline-none focus:ring-2 focus:ring-primary"
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-text-muted mb-1">Provider</label>
+              <select
+                value={formProvider}
+                onChange={(e) => setFormProvider(e.target.value as LLMProvider)}
+                className="w-full bg-surface border border-border rounded px-3 py-2 text-sm text-text focus:outline-none focus:ring-2 focus:ring-primary"
+              >
+                {PROVIDER_OPTIONS.map((opt) => (
+                  <option key={opt.value} value={opt.value}>
+                    {opt.label}
+                  </option>
+                ))}
+              </select>
+            </div>
           </div>
-          <TextInput
-            placeholder="Endpoint URL (e.g., http://localhost:11434)"
-            value={formUrl}
-            onChange={(e) => setFormUrl(e.target.value)}
-          />
-          {providerNeedsApiKey(formProvider) && (
-            <TextInput
-              placeholder="API Key"
-              type="password"
-              value={formApiKey}
-              onChange={(e) => setFormApiKey(e.target.value)}
+          <div>
+            <label className="block text-xs font-medium text-text-muted mb-1">Endpoint URL</label>
+            <input
+              placeholder="e.g., http://localhost:11434"
+              value={formUrl}
+              onChange={(e) => setFormUrl(e.target.value)}
+              className="w-full bg-surface border border-border rounded px-3 py-2 text-sm text-text focus:outline-none focus:ring-2 focus:ring-primary"
             />
+          </div>
+          {providerNeedsApiKey(formProvider) && (
+            <div>
+              <label className="block text-xs font-medium text-text-muted mb-1">API Key</label>
+              <input
+                placeholder="sk-..."
+                type="password"
+                value={formApiKey}
+                onChange={(e) => setFormApiKey(e.target.value)}
+                className="w-full bg-surface border border-border rounded px-3 py-2 text-sm text-text focus:outline-none focus:ring-2 focus:ring-primary"
+              />
+            </div>
           )}
-          <div className="flex gap-2">
-            <Button size="xs" onClick={handleAdd}>Save Endpoint</Button>
-            <Button size="xs" variant="secondary" onClick={resetForm}>
+          <div className="flex gap-2 pt-2">
+            <button 
+              onClick={handleAdd}
+              className="px-4 py-2 text-sm font-medium rounded-md bg-primary text-white hover:bg-primary-hover transition-colors"
+            >
+              Add Endpoint
+            </button>
+            <button 
+              onClick={resetForm}
+              className="px-4 py-2 text-sm font-medium rounded-md bg-surface border border-border text-text hover:bg-surface-raised transition-colors"
+            >
               Cancel
-            </Button>
+            </button>
           </div>
         </div>
       ) : (
-        <Button
-          size="xs"
-          variant="secondary"
+        <button
           onClick={() => setShowAddForm(true)}
-          className="w-full"
-          icon={() => (
-            <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-            </svg>
-          )}
+          className="w-full py-3 border border-dashed border-border rounded-lg text-sm text-text-muted hover:text-text hover:border-primary/50 hover:bg-surface-raised transition-all flex items-center justify-center gap-2 group"
         >
-          Add Endpoint
-        </Button>
+          <Plus className="w-4 h-4 group-hover:scale-110 transition-transform" />
+          Add New Endpoint
+        </button>
       )}
-    </Card>
+    </div>
   );
 }

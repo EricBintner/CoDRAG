@@ -1,6 +1,5 @@
-import * as React from 'react';
-import { Card, Text } from '@tremor/react';
 import { cn } from '../../lib/utils';
+import { Loader2 } from 'lucide-react';
 
 export interface LoadingStateProps {
   message?: string;
@@ -11,7 +10,7 @@ export interface LoadingStateProps {
 /**
  * LoadingState - Loading indicator component
  * 
- * Wireframe component - displays:
+ * Displays:
  * - Spinner/animation placeholder
  * - Optional loading message
  * 
@@ -27,15 +26,14 @@ export function LoadingState({
 }: LoadingStateProps) {
   const content = (
     <div className="flex flex-col items-center justify-center gap-3">
-      {/* Placeholder spinner - will be styled later */}
-      <div className="w-8 h-8 border-2 border-gray-300 border-t-blue-500 rounded-full animate-spin" />
-      {message && <Text>{message}</Text>}
+      <Loader2 className="w-8 h-8 text-primary animate-spin" />
+      {message && <p className="text-sm text-text-muted font-medium">{message}</p>}
     </div>
   );
 
   if (variant === 'inline') {
     return (
-      <div className={cn('codrag-loading-state codrag-loading-state--inline', 'py-4', className)}>
+      <div className={cn('py-4 flex items-center justify-center', className)}>
         {content}
       </div>
     );
@@ -45,8 +43,7 @@ export function LoadingState({
     return (
       <div
         className={cn(
-          'codrag-loading-state codrag-loading-state--fullscreen',
-          'fixed inset-0 bg-white/80 dark:bg-gray-900/80 flex items-center justify-center z-50',
+          'fixed inset-0 bg-background/80 backdrop-blur-sm flex items-center justify-center z-50',
           className
         )}
       >
@@ -56,8 +53,11 @@ export function LoadingState({
   }
 
   return (
-    <Card className={cn('codrag-loading-state codrag-loading-state--card', 'py-12', className)}>
+    <div className={cn(
+      'py-12 rounded-lg border border-border bg-surface shadow-sm flex items-center justify-center',
+      className
+    )}>
       {content}
-    </Card>
+    </div>
   );
 }

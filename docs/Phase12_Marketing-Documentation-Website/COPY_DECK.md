@@ -51,6 +51,11 @@ Copy:
 - CoDRAG complements your AI IDE. It focuses on local indexing, inspectable retrieval, and bounded context assembly.
 - Use it as a reliable context source inside agent loops via MCP.
 
+## Differentiation bullets (vs CLI-first local indexers)
+- CoDRAG is a desktop app with an inspectable UI: search results, citations, and project status are visible and debuggable.
+- Curate what gets retrieved: control scoping and context assembly so assistants receive bounded, relevant context.
+- Freshness is first-class: clear stale vs fresh signals and rebuild paths so you can trust what the assistant is seeing.
+
 ## Security & Privacy page copy
 
 ### Short statement

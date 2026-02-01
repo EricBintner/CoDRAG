@@ -24,6 +24,7 @@
  ## Related (optional)
  - `./CURATED_TRACEABILITY_FRAMEWORK.md` (curated traceability layer: plans/decisions/research ↔ code)
  - `./TRACEABILITY_AUTOMATION_STRATEGY.md` (automation options: deterministic + IR + hybrid local/remote LLM)
+ - `./REPO_DISCOVERY_AND_POLICY.md` (repo discovery: pick roots + include/exclude + retrieval weighting without assuming folder structure)
  
  ## Deliverables
  - Trace data model (nodes/edges/manifest) persisted per project

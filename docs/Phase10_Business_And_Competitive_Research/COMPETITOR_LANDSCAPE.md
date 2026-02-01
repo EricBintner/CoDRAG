@@ -207,6 +207,29 @@ These are the "basic version for a single codebase" tools you found:
 Source:
 - https://github.com/Neverdecel/CodeRAG
 
+ #### ChunkHound
+ ChunkHound is the closest OSS-style tool to CoDRAG's core loop because it combines:
+ - local indexing (`chunkhound index`)
+ - incremental re-indexing (re-running only processes changed files)
+ - `.gitignore` awareness
+ - MCP integration (Claude Code / Cursor / Continue)
+ 
+ Source:
+ - https://chunkhound.github.io/quickstart/
+ 
+ What they do well:
+ - Simple CLI-first onboarding (Python toolchain).
+ - Multiple embedding backends (VoyageAI / OpenAI / Ollama).
+ - Optional "code research" workflows (`chunkhound research ...`) to generate higher-level reports.
+ 
+ Differences vs CoDRAG (our differentiation to keep sharpening):
+ - **UI + inspectability:** CoDRAG is dashboard-first, designed to make retrieval inspectable (citations, status, errors), not just "a CLI that works".
+ - **Curated retrieval controls:** CoDRAG's UI/CLI direction includes user-driven control over what data is retrieved and how it is assembled into bounded context.
+ - **Freshness mechanisms:** CoDRAG explicitly treats freshness/staleness as a first-class invariant (auto-rebuild loops, stale indicators, rebuild affordances). ChunkHound emphasizes incremental re-indexing, but not (from quickstart) a full freshness UX model.
+ - **Multi-project registry:** CoDRAG is built around multiple codebases and per-project configuration; ChunkHound's quickstart is oriented around a single project directory.
+ - **Team posture:** CoDRAG is planning embedded/team config and later enterprise posture; ChunkHound is primarily a developer tool surface.
+ - **Config safety posture:** ChunkHound's manual config examples include an `api_key` field in `.chunkhound.json` (easy to accidentally commit). CoDRAG should keep provider keys per-user/local and keep shared configs secret-free.
+
 #### Similar OSS patterns
 Many "local RAG for code" projects exist (LanceDB tutorials, txtai examples, etc.) but they share common limitations:
 - Single repo focus.

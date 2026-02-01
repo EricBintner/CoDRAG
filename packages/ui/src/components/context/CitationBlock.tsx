@@ -1,4 +1,3 @@
-import * as React from 'react';
 import { cn } from '../../lib/utils';
 
 export interface CitationBlockProps {
@@ -15,7 +14,7 @@ export interface CitationBlockProps {
 /**
  * CitationBlock - Source attribution for context chunks
  * 
- * Wireframe component - displays:
+ * Displays:
  * - Source file path
  * - Line range (when available)
  * - Relevance score (optional)
@@ -30,21 +29,22 @@ export function CitationBlock({
   return (
     <div
       className={cn(
-        'codrag-citation-block',
         'flex items-center gap-2 text-sm',
-        'px-3 py-2 bg-gray-100 dark:bg-gray-800 rounded',
-        'font-mono',
+        'px-3 py-2 bg-surface-raised border border-border rounded-md',
+        'font-mono text-text-muted',
         className
       )}
     >
-      <span className="text-gray-600 dark:text-gray-300">{sourcePath}</span>
+      <span className="text-text font-medium truncate max-w-[300px]" title={sourcePath}>
+        {sourcePath}
+      </span>
       {span && (
-        <span className="text-gray-400">
+        <span className="text-text-subtle">
           :{span.start_line}–{span.end_line}
         </span>
       )}
       {showScore && score !== undefined && (
-        <span className="ml-auto text-gray-400">
+        <span className="ml-auto text-xs px-1.5 py-0.5 rounded bg-surface border border-border text-text-subtle">
           {(score * 100).toFixed(0)}%
         </span>
       )}

@@ -1,6 +1,6 @@
-import { Badge, Callout, Button } from '@tremor/react';
 import { cn } from '../../lib/utils';
 import type { TeamConfigStatus as TeamConfigStatusType, TeamConfig } from '../../types';
+import { Users, FileText, AlertTriangle, RefreshCw, Eye, AlertCircle } from 'lucide-react';
 
 export interface TeamConfigStatusProps {
   status: TeamConfigStatusType;
@@ -10,11 +10,27 @@ export interface TeamConfigStatusProps {
   className?: string;
 }
 
-const statusConfig: Record<TeamConfigStatusType, { label: string; color: 'gray' | 'green' | 'yellow' | 'red' }> = {
-  none: { label: 'No Team Config', color: 'gray' },
-  applied: { label: 'Team Config Applied', color: 'green' },
-  overridden: { label: 'Local Overrides', color: 'yellow' },
-  conflict: { label: 'Config Conflict', color: 'red' },
+const statusConfig: Record<TeamConfigStatusType, { label: string; color: string; icon: any }> = {
+  none: { 
+    label: 'No Team Config', 
+    color: 'bg-surface-raised text-text-muted border-border',
+    icon: FileText
+  },
+  applied: { 
+    label: 'Team Config Applied', 
+    color: 'bg-success-muted/10 text-success border-success-muted/20',
+    icon: Users
+  },
+  overridden: { 
+    label: 'Local Overrides', 
+    color: 'bg-warning-muted/10 text-warning border-warning-muted/20',
+    icon: AlertTriangle
+  },
+  conflict: { 
+    label: 'Config Conflict', 
+    color: 'bg-error-muted/10 text-error border-error-muted/20',
+    icon: AlertCircle
+  },
 };
 
 export function TeamConfigStatus({
@@ -24,43 +40,72 @@ export function TeamConfigStatus({
   onReapply,
   className,
 }: TeamConfigStatusProps) {
-  const { label, color } = statusConfig[status];
+  const { label, color, icon: Icon } = statusConfig[status];
   
   return (
-    <div className={cn('codrag-team-config-status', className)}>
-      <div className="flex items-center gap-2">
-        <Badge color={color}>{label}</Badge>
+    <div className={cn('space-y-3', className)}>
+      <div className="flex items-center justify-between">
+        <span className={cn("inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium border", color)}>
+          <Icon className="w-3.5 h-3.5" />
+          {label}
+        </span>
         
         {status !== 'none' && onViewConfig && (
-          <Button size="xs" variant="secondary" onClick={onViewConfig}>
+          <button 
+            onClick={onViewConfig}
+            className="flex items-center gap-1 text-xs font-medium text-text-muted hover:text-text transition-colors"
+          >
+            <Eye className="w-3.5 h-3.5" />
             View Config
-          </Button>
+          </button>
         )}
       </div>
       
       {status === 'overridden' && (
-        <Callout title="Local Settings Differ" color="yellow" className="mt-2">
-          Your local project settings differ from the team configuration. 
+        <div className="rounded-md bg-warning-muted/10 p-3 border border-warning-muted/20">
+          <p className="text-sm font-medium text-warning mb-1">Local Settings Differ</p>
+          <p className="text-xs text-warning/90 mb-2">
+            Your local project settings differ from the team configuration.
+          </p>
           {onReapply && (
-            <Button size="xs" className="mt-2" onClick={onReapply}>
+            <button 
+              onClick={onReapply}
+              className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded bg-surface hover:bg-surface-raised text-warning border border-warning/20 text-xs font-medium transition-colors shadow-sm"
+            >
+              <RefreshCw className="w-3.5 h-3.5" />
               Re-apply Team Config
-            </Button>
+            </button>
           )}
-        </Callout>
+        </div>
       )}
       
       {status === 'conflict' && (
-        <Callout title="Configuration Conflict" color="red" className="mt-2">
-          The team configuration file has conflicts. Please resolve them manually.
-        </Callout>
+        <div className="rounded-md bg-error-muted/10 p-3 border border-error-muted/20">
+          <p className="text-sm font-medium text-error mb-1">Configuration Conflict</p>
+          <p className="text-xs text-error/90">
+            The team configuration file has conflicts. Please resolve them manually.
+          </p>
+        </div>
       )}
       
       {status === 'applied' && config && (
-        <div className="mt-2 text-xs text-gray-500 space-y-1">
-          <p>Embedding model: <code>{config.embedding_model}</code></p>
-          <p>Trace enabled: {config.trace_enabled ? 'Yes' : 'No'}</p>
-          <p>Include patterns: {config.include_globs.length}</p>
-          <p>Exclude patterns: {config.exclude_globs.length}</p>
+        <div className="text-xs text-text-muted space-y-1.5 bg-surface-raised p-3 rounded-md border border-border">
+          <div className="flex justify-between">
+            <span className="text-text-subtle">Embedding model:</span>
+            <code className="bg-surface px-1 rounded border border-border text-text font-mono">{config.embedding_model}</code>
+          </div>
+          <div className="flex justify-between">
+            <span className="text-text-subtle">Trace enabled:</span>
+            <span className="font-medium text-text">{config.trace_enabled ? 'Yes' : 'No'}</span>
+          </div>
+          <div className="flex justify-between">
+            <span className="text-text-subtle">Include patterns:</span>
+            <span className="font-medium text-text">{config.include_globs.length}</span>
+          </div>
+          <div className="flex justify-between">
+            <span className="text-text-subtle">Exclude patterns:</span>
+            <span className="font-medium text-text">{config.exclude_globs.length}</span>
+          </div>
         </div>
       )}
     </div>

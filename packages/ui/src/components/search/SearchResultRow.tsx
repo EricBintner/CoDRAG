@@ -1,7 +1,6 @@
-import * as React from 'react';
-import { TableRow, TableCell, Badge } from '@tremor/react';
 import type { SearchResult } from '../../types';
 import { cn } from '../../lib/utils';
+import { FileCode } from 'lucide-react';
 
 export interface SearchResultRowProps {
   result: SearchResult;
@@ -14,7 +13,7 @@ export interface SearchResultRowProps {
 /**
  * SearchResultRow - Single search result display
  * 
- * Wireframe component - displays:
+ * Displays:
  * - File path (relative to project root)
  * - Preview snippet
  * - Score (optional)
@@ -28,39 +27,45 @@ export function SearchResultRow({
   className,
 }: SearchResultRowProps) {
   return (
-    <TableRow
+    <div
       className={cn(
-        'codrag-search-result-row',
-        'cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800',
-        selected && 'bg-gray-100 dark:bg-gray-800',
+        'group flex flex-col gap-2 p-3 rounded-lg border transition-all duration-200 cursor-pointer',
+        selected 
+          ? 'bg-surface-raised border-primary/50 shadow-sm' 
+          : 'bg-surface border-border hover:bg-surface-raised hover:border-border-subtle',
         className
       )}
       onClick={onClick}
     >
-      <TableCell>
-        <div className="flex flex-col gap-1">
-          <div className="flex items-center gap-2">
-            <span className="font-mono text-sm text-gray-600 dark:text-gray-300">
-              {result.source_path}
+      <div className="flex items-center justify-between gap-2">
+        <div className="flex items-center gap-2 min-w-0">
+          <FileCode className={cn("w-4 h-4 flex-shrink-0", selected ? "text-primary" : "text-text-subtle")} />
+          <span className={cn("font-mono text-sm truncate", selected ? "text-primary font-medium" : "text-text")}>
+            {result.source_path}
+          </span>
+          {result.span && (
+            <span className="text-xs text-text-subtle bg-surface px-1.5 py-0.5 rounded border border-border">
+              L{result.span.start_line}–{result.span.end_line}
             </span>
-            {result.span && (
-              <Badge color="gray" size="xs">
-                L{result.span.start_line}–{result.span.end_line}
-              </Badge>
-            )}
-          </div>
-          <p className="text-sm text-gray-500 line-clamp-2">
-            {result.preview}
-          </p>
+          )}
         </div>
-      </TableCell>
-      {showScore && (
-        <TableCell className="text-right">
-          <span className="text-sm text-gray-400">
+        {showScore && (
+          <span className={cn(
+            "text-xs font-medium px-1.5 py-0.5 rounded",
+            result.score > 0.8 ? "bg-success-muted/20 text-success" :
+            result.score > 0.5 ? "bg-info-muted/20 text-info" :
+            "bg-surface-raised text-text-muted"
+          )}>
             {(result.score * 100).toFixed(0)}%
           </span>
-        </TableCell>
+        )}
+      </div>
+      
+      {result.preview && (
+        <p className="text-xs text-text-muted line-clamp-2 font-mono bg-surface-raised/50 p-2 rounded border border-border/50 group-hover:border-border transition-colors">
+          {result.preview}
+        </p>
       )}
-    </TableRow>
+    </div>
   );
 }

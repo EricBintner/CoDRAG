@@ -1,5 +1,3 @@
-import * as React from 'react';
-import { Badge } from '@tremor/react';
 import type { StatusState } from '../../types';
 import { cn } from '../../lib/utils';
 
@@ -9,39 +7,50 @@ export interface StatusBadgeProps {
   showLabel?: boolean;
 }
 
-const statusConfig: Record<StatusState, { label: string; variant: 'default' | 'success' | 'warning' | 'error' }> = {
-  fresh: { label: 'Fresh', variant: 'success' },
-  stale: { label: 'Stale', variant: 'warning' },
-  building: { label: 'Building', variant: 'default' },
-  pending: { label: 'Pending', variant: 'default' },
-  error: { label: 'Error', variant: 'error' },
-  disabled: { label: 'Disabled', variant: 'default' },
+const statusConfig: Record<StatusState, { label: string; classes: string }> = {
+  fresh: { 
+    label: 'Fresh', 
+    classes: 'bg-success-muted text-success border-success/20' 
+  },
+  stale: { 
+    label: 'Stale', 
+    classes: 'bg-warning-muted text-warning border-warning/20' 
+  },
+  building: { 
+    label: 'Building', 
+    classes: 'bg-info-muted text-info border-info/20 animate-pulse' 
+  },
+  pending: { 
+    label: 'Pending', 
+    classes: 'bg-surface-raised text-text-muted border-border' 
+  },
+  error: { 
+    label: 'Error', 
+    classes: 'bg-error-muted text-error border-error/20' 
+  },
+  disabled: { 
+    label: 'Disabled', 
+    classes: 'bg-surface-raised text-text-subtle border-border opacity-60' 
+  },
 };
 
 /**
  * StatusBadge - Displays index/build status
  * 
- * Wireframe component - final styling TBD after visual direction is chosen.
- * Maps StatusState to appropriate badge variant and label.
+ * Maps StatusState to appropriate semantic theme colors.
  */
 export function StatusBadge({ status, className, showLabel = true }: StatusBadgeProps) {
   const config = statusConfig[status];
   
   return (
-    <Badge
+    <span
       className={cn(
-        'codrag-status-badge',
-        `codrag-status-badge--${status}`,
+        'inline-flex items-center justify-center rounded-full px-2.5 py-0.5 text-xs font-medium border',
+        config.classes,
         className
       )}
-      color={
-        config.variant === 'success' ? 'green' :
-        config.variant === 'warning' ? 'amber' :
-        config.variant === 'error' ? 'red' :
-        'gray'
-      }
     >
       {showLabel && config.label}
-    </Badge>
+    </span>
   );
 }

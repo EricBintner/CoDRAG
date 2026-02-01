@@ -1,8 +1,9 @@
-import * as React from 'react';
+import type { ReactNode } from 'react';
 import { cn } from '../../lib/utils';
+import { PanelLeftClose, PanelLeftOpen, Box } from 'lucide-react';
 
 export interface SidebarProps {
-  children: React.ReactNode;
+  children: ReactNode;
   collapsed?: boolean;
   onCollapseToggle?: () => void;
   className?: string;
@@ -11,7 +12,7 @@ export interface SidebarProps {
 /**
  * Sidebar - Main navigation sidebar container
  * 
- * Wireframe component - provides structure for:
+ * Provides structure for:
  * - Project list
  * - Add project action
  * - Collapse/expand toggle
@@ -25,28 +26,32 @@ export function Sidebar({
   return (
     <aside
       className={cn(
-        'codrag-sidebar',
-        'flex flex-col border-r h-full',
+        'flex flex-col border-r border-border h-full bg-surface transition-[width] duration-300 ease-in-out',
         collapsed ? 'w-16' : 'w-64',
-        'transition-[width] duration-200',
         className
       )}
     >
-      <div className="flex items-center justify-between p-4 border-b">
+      <div className={cn(
+        "flex items-center p-4 border-b border-border h-16",
+        collapsed ? "justify-center" : "justify-between"
+      )}>
         {!collapsed && (
-          <span className="font-semibold text-lg">CoDRAG</span>
+          <span className="font-semibold text-lg flex items-center gap-2 text-text">
+            <Box className="w-5 h-5 text-primary" />
+            CoDRAG
+          </span>
         )}
         {onCollapseToggle && (
           <button
             onClick={onCollapseToggle}
-            className="p-1 rounded hover:bg-gray-100 dark:hover:bg-gray-800"
-            aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+            className="p-1.5 rounded-md hover:bg-surface-raised text-text-muted hover:text-text transition-colors"
+            title={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
           >
-            {collapsed ? '→' : '←'}
+            {collapsed ? <PanelLeftOpen className="w-5 h-5" /> : <PanelLeftClose className="w-5 h-5" />}
           </button>
         )}
       </div>
-      <div className="flex-1 overflow-y-auto">
+      <div className="flex-1 overflow-y-auto py-2">
         {children}
       </div>
     </aside>

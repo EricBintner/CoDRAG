@@ -15,6 +15,19 @@ This package is consumed by:
 - `website/` — CoDRAG marketing site and documentation
 - Dashboard app (when scaffolded)
 
+### Styles
+
+For public-facing docs pages, import the UI stylesheet:
+
+```ts
+import '@codrag/ui/styles';
+```
+
+This currently includes:
+
+- Design tokens (`src/tokens/index.css`)
+- `keyboard-css` for `<kbd>` / shortcut rendering
+
 ### Install
 
 ```bash

@@ -1,5 +1,4 @@
-import * as React from 'react';
-import { Card, Title, Text, Button } from '@tremor/react';
+import type { ReactNode } from 'react';
 import { cn } from '../../lib/utils';
 
 export interface EmptyStateProps {
@@ -9,14 +8,14 @@ export interface EmptyStateProps {
     label: string;
     onClick: () => void;
   };
-  icon?: React.ReactNode;
+  icon?: ReactNode;
   className?: string;
 }
 
 /**
  * EmptyState - Placeholder for empty data states
  * 
- * Wireframe component - displays:
+ * Displays:
  * - Title and description
  * - Optional icon
  * - Optional primary action
@@ -31,23 +30,29 @@ export function EmptyState({
   className,
 }: EmptyStateProps) {
   return (
-    <Card className={cn('codrag-empty-state', 'text-center py-12', className)}>
+    <div className={cn(
+      'text-center py-12 px-6 rounded-lg border border-dashed border-border bg-surface-raised/30',
+      className
+    )}>
       {icon && (
-        <div className="mb-4 text-gray-400 flex justify-center">
+        <div className="mb-4 text-text-subtle flex justify-center [&>svg]:w-10 [&>svg]:h-10">
           {icon}
         </div>
       )}
-      <Title>{title}</Title>
+      <h3 className="text-lg font-semibold text-text">{title}</h3>
       {description && (
-        <Text className="mt-2 max-w-md mx-auto">{description}</Text>
+        <p className="mt-2 max-w-md mx-auto text-sm text-text-muted">{description}</p>
       )}
       {action && (
         <div className="mt-6">
-          <Button onClick={action.onClick}>
+          <button 
+            onClick={action.onClick}
+            className="px-4 py-2 rounded-md bg-primary hover:bg-primary-hover text-white text-sm font-medium transition-colors shadow-sm"
+          >
             {action.label}
-          </Button>
+          </button>
         </div>
       )}
-    </Card>
+    </div>
   );
 }

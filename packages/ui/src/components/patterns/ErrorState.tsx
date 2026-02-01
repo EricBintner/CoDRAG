@@ -1,6 +1,6 @@
-import * as React from 'react';
-import { Card, Title, Text, Button, Flex } from '@tremor/react';
+import { useState } from 'react';
 import { cn } from '../../lib/utils';
+import { AlertCircle, ChevronDown, ChevronUp, RefreshCw, X } from 'lucide-react';
 
 export interface ErrorStateProps {
   title?: string;
@@ -17,7 +17,7 @@ export interface ErrorStateProps {
 /**
  * ErrorState - Error display with actionable recovery
  * 
- * Wireframe component - displays:
+ * Displays:
  * - Error title
  * - Error code and message
  * - Hint/recommendation
@@ -32,55 +32,80 @@ export function ErrorState({
   onDismiss,
   className,
 }: ErrorStateProps) {
-  const [showDetails, setShowDetails] = React.useState(false);
+  const [showDetails, setShowDetails] = useState(false);
 
   return (
-    <Card
+    <div
       className={cn(
-        'codrag-error-state',
-        'border-red-200 dark:border-red-800',
+        'rounded-lg border border-error/20 bg-error-muted/5 p-6 shadow-sm',
         className
       )}
     >
-      <Title className="text-red-600 dark:text-red-400">{title}</Title>
-      
-      <Text className="mt-2">{error.message}</Text>
-      
-      {error.hint && (
-        <Text className="mt-2 text-sm text-gray-600 dark:text-gray-400">
-          {error.hint}
-        </Text>
-      )}
-
-      {/* Details toggle */}
-      <button
-        onClick={() => setShowDetails(!showDetails)}
-        className="mt-3 text-sm text-gray-500 underline"
-      >
-        {showDetails ? 'Hide details' : 'Show details'}
-      </button>
-
-      {showDetails && (
-        <div className="mt-2 p-3 bg-gray-100 dark:bg-gray-800 rounded font-mono text-sm">
-          <Text>Code: {error.code}</Text>
+      <div className="flex items-start gap-3">
+        <div className="p-2 rounded-full bg-error-muted/10 text-error shrink-0">
+          <AlertCircle className="w-5 h-5" />
         </div>
-      )}
+        <div className="flex-1 min-w-0">
+          <h3 className="text-base font-semibold text-error mb-1">{title}</h3>
+          
+          <p className="text-sm text-text-muted mb-2">{error.message}</p>
+          
+          {error.hint && (
+            <div className="text-xs text-text-subtle mb-3 p-2 bg-surface/50 rounded border border-border/50">
+              <span className="font-medium text-text-muted">Hint: </span>
+              {error.hint}
+            </div>
+          )}
 
-      {/* Actions */}
-      {(onRetry || onDismiss) && (
-        <Flex className="mt-4 gap-2">
-          {onRetry && (
-            <Button onClick={onRetry} size="sm">
-              Retry
-            </Button>
+          {/* Details toggle */}
+          <button
+            onClick={() => setShowDetails(!showDetails)}
+            className="flex items-center gap-1 text-xs font-medium text-text-muted hover:text-text transition-colors mb-3"
+          >
+            {showDetails ? (
+              <>
+                <ChevronUp className="w-3 h-3" />
+                Hide details
+              </>
+            ) : (
+              <>
+                <ChevronDown className="w-3 h-3" />
+                Show details
+              </>
+            )}
+          </button>
+
+          {showDetails && (
+            <div className="mb-4 p-3 bg-surface border border-border rounded-md font-mono text-xs text-text overflow-x-auto">
+              <span className="text-text-subtle">Code:</span> {error.code}
+            </div>
           )}
-          {onDismiss && (
-            <Button onClick={onDismiss} variant="secondary" size="sm">
-              Dismiss
-            </Button>
+
+          {/* Actions */}
+          {(onRetry || onDismiss) && (
+            <div className="flex gap-2">
+              {onRetry && (
+                <button 
+                  onClick={onRetry} 
+                  className="px-3 py-1.5 rounded-md bg-error text-white text-xs font-medium hover:bg-error-hover transition-colors flex items-center gap-1.5 shadow-sm"
+                >
+                  <RefreshCw className="w-3 h-3" />
+                  Retry
+                </button>
+              )}
+              {onDismiss && (
+                <button 
+                  onClick={onDismiss} 
+                  className="px-3 py-1.5 rounded-md bg-surface hover:bg-surface-raised border border-border text-text text-xs font-medium transition-colors flex items-center gap-1.5"
+                >
+                  <X className="w-3 h-3" />
+                  Dismiss
+                </button>
+              )}
+            </div>
           )}
-        </Flex>
-      )}
-    </Card>
+        </div>
+      </div>
+    </div>
   );
 }

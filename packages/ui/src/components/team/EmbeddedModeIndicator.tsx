@@ -1,5 +1,5 @@
-import { Badge, Callout, Button } from '@tremor/react';
 import { cn } from '../../lib/utils';
+import { HardDrive, GitBranch, AlertTriangle, CheckCircle, Folder, RefreshCw } from 'lucide-react';
 
 export interface EmbeddedModeIndicatorProps {
   isEmbedded: boolean;
@@ -20,50 +20,90 @@ export function EmbeddedModeIndicator({
 }: EmbeddedModeIndicatorProps) {
   if (!isEmbedded) {
     return (
-      <div className={cn('codrag-embedded-mode', className)}>
-        <Badge color="gray">Standalone Mode</Badge>
-        <p className="text-xs text-gray-500 mt-1">
-          Index stored in application data directory
-        </p>
+      <div className={cn('flex items-center gap-2 text-sm', className)}>
+        <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium bg-surface-raised text-text-muted border border-border">
+          <HardDrive className="w-3.5 h-3.5" />
+          Standalone Mode
+        </span>
+        <span className="text-xs text-text-subtle">
+          Index in app data
+        </span>
       </div>
     );
   }
 
   return (
-    <div className={cn('codrag-embedded-mode', className)}>
-      <div className="flex items-center gap-2">
-        <Badge color="blue">Embedded Mode</Badge>
-        {indexExists && <Badge color="green">Index Ready</Badge>}
-        {!indexExists && <Badge color="yellow">Not Built</Badge>}
+    <div className={cn('space-y-3', className)}>
+      <div className="flex items-center gap-2 flex-wrap">
+        <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium bg-info-muted/10 text-info border border-info-muted/20">
+          <Folder className="w-3.5 h-3.5" />
+          Embedded Mode
+        </span>
+        
+        {indexExists ? (
+          <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium bg-success-muted/10 text-success border border-success-muted/20">
+            <CheckCircle className="w-3.5 h-3.5" />
+            Index Ready
+          </span>
+        ) : (
+          <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium bg-warning-muted/10 text-warning border border-warning-muted/20">
+            <AlertTriangle className="w-3.5 h-3.5" />
+            Not Built
+          </span>
+        )}
+        
         {isCommitted !== undefined && (
-          <Badge color="gray">{isCommitted ? 'Committed' : 'Gitignored'}</Badge>
+          <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium bg-surface-raised text-text-muted border border-border">
+            <GitBranch className="w-3.5 h-3.5" />
+            {isCommitted ? 'Committed' : 'Gitignored'}
+          </span>
         )}
       </div>
       
-      <p className="text-xs text-gray-500 mt-1">
-        Index stored in <code>.codrag/</code> directory
+      <p className="text-xs text-text-muted">
+        Index stored in <code className="bg-surface-raised px-1 py-0.5 rounded border border-border text-text font-mono">.codrag/</code> directory
       </p>
       
       {hasConflicts && (
-        <Callout title="Merge Conflicts Detected" color="red" className="mt-2">
-          The embedded index has git merge conflicts and is invalid.
-          {onRebuild && (
-            <Button size="xs" className="mt-2" onClick={onRebuild}>
-              Rebuild Index
-            </Button>
-          )}
-        </Callout>
+        <div className="rounded-md bg-error-muted/10 p-3 border border-error-muted/20">
+          <div className="flex gap-2">
+            <AlertTriangle className="w-4 h-4 text-error shrink-0 mt-0.5" />
+            <div className="text-sm">
+              <p className="font-medium text-error mb-1">Merge Conflicts Detected</p>
+              <p className="text-error/90 text-xs mb-2">The embedded index has git merge conflicts and is invalid.</p>
+              {onRebuild && (
+                <button 
+                  onClick={onRebuild}
+                  className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded bg-error text-white text-xs font-medium hover:bg-error-hover transition-colors"
+                >
+                  <RefreshCw className="w-3.5 h-3.5" />
+                  Rebuild Index
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
       )}
       
       {!indexExists && !hasConflicts && (
-        <Callout title="Index Not Built" color="yellow" className="mt-2">
-          Build the index to enable search.
-          {onRebuild && (
-            <Button size="xs" className="mt-2" onClick={onRebuild}>
-              Build Index
-            </Button>
-          )}
-        </Callout>
+        <div className="rounded-md bg-warning-muted/10 p-3 border border-warning-muted/20">
+          <div className="flex gap-2">
+            <AlertTriangle className="w-4 h-4 text-warning shrink-0 mt-0.5" />
+            <div className="text-sm">
+              <p className="font-medium text-warning mb-1">Index Not Built</p>
+              <p className="text-warning/90 text-xs mb-2">Build the index to enable search.</p>
+              {onRebuild && (
+                <button 
+                  onClick={onRebuild}
+                  className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded bg-surface hover:bg-surface-raised text-warning border border-warning/20 text-xs font-medium transition-colors shadow-sm"
+                >
+                  <RefreshCw className="w-3.5 h-3.5" />
+                  Build Index
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

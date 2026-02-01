@@ -1,8 +1,7 @@
-import * as React from 'react';
-import { Card, Title, Text, Flex } from '@tremor/react';
 import type { StatusState } from '../../types';
 import { StatusBadge } from './StatusBadge';
 import { cn } from '../../lib/utils';
+import { AlertTriangle, Clock, Database } from 'lucide-react';
 
 export interface StatusCardProps {
   projectName: string;
@@ -20,7 +19,7 @@ export interface StatusCardProps {
 /**
  * StatusCard - Project index status overview
  * 
- * Wireframe component - displays:
+ * Displays:
  * - Project name and status badge
  * - Last build timestamp
  * - Chunk count (when indexed)
@@ -35,32 +34,46 @@ export function StatusCard({
   className,
 }: StatusCardProps) {
   return (
-    <Card className={cn('codrag-status-card', className)}>
-      <Flex justifyContent="between" alignItems="start">
+    <div className={cn('rounded-lg border border-border bg-surface p-6 shadow-sm', className)}>
+      <div className="flex justify-between items-start mb-4">
         <div>
-          <Title>{projectName}</Title>
-          {lastBuildAt && (
-            <Text className="mt-1">Last build: {lastBuildAt}</Text>
-          )}
-          {chunkCount !== undefined && status === 'fresh' && (
-            <Text className="mt-1">{chunkCount.toLocaleString()} chunks indexed</Text>
-          )}
+          <h3 className="text-lg font-semibold text-text">{projectName}</h3>
+          
+          <div className="mt-2 space-y-1">
+            {lastBuildAt && (
+              <div className="flex items-center gap-2 text-xs text-text-muted">
+                <Clock className="w-3.5 h-3.5" />
+                <span>Last build: {lastBuildAt}</span>
+              </div>
+            )}
+            {chunkCount !== undefined && status === 'fresh' && (
+              <div className="flex items-center gap-2 text-xs text-text-muted">
+                <Database className="w-3.5 h-3.5" />
+                <span>{chunkCount.toLocaleString()} chunks indexed</span>
+              </div>
+            )}
+          </div>
         </div>
         <StatusBadge status={status} />
-      </Flex>
+      </div>
       
       {error && status === 'error' && (
-        <div className="mt-4 p-3 rounded bg-red-50 dark:bg-red-900/20">
-          <Text className="font-medium text-red-800 dark:text-red-200">
-            {error.code}: {error.message}
-          </Text>
-          {error.hint && (
-            <Text className="mt-1 text-red-700 dark:text-red-300">
-              {error.hint}
-            </Text>
-          )}
+        <div className="mt-4 p-3 rounded-md bg-error-muted/10 border border-error-muted/20">
+          <div className="flex gap-2">
+            <AlertTriangle className="w-4 h-4 text-error shrink-0 mt-0.5" />
+            <div className="text-sm">
+              <p className="font-medium text-error">
+                {error.code}: {error.message}
+              </p>
+              {error.hint && (
+                <p className="mt-1 text-error/80 text-xs">
+                  {error.hint}
+                </p>
+              )}
+            </div>
+          </div>
         </div>
       )}
-    </Card>
+    </div>
   );
 }

@@ -96,11 +96,28 @@ function statusLabel(status: StatusState): string {
 type HeroVariant = 'centered' | 'split' | 'neo' | 'swiss' | 'glass' | 'retro' | 'studio' | 'yale' | 'focus' | 'enterprise';
 type FeatureVariant = 'cards' | 'list' | 'bento';
 
+type HeroLayout = 'default' | 'centered' | 'split';
+
+function getThemeDefaultHeroVariant(theme: ThemeId): HeroVariant {
+  if (theme === 'e') return 'neo';
+  if (theme === 'f') return 'swiss';
+  if (theme === 'g') return 'glass';
+  if (theme === 'h') return 'retro';
+  if (theme === 'i') return 'studio';
+  if (theme === 'j') return 'yale';
+  if (theme === 'k') return 'focus';
+  if (theme === 'l') return 'enterprise';
+  if (theme === 'a' || theme === 'd') return 'centered';
+  if (theme === 'b' || theme === 'c') return 'split';
+  return 'centered';
+}
+
 export default function App() {
   const [theme, setTheme] = useState<ThemeId>('i');
   const [darkMode, setDarkMode] = useState(false);
   const [query, setQuery] = useState('where does auth token get validated');
   const [heroVariant, setHeroVariant] = useState<HeroVariant>('studio');
+  const [heroLayout, setHeroLayout] = useState<HeroLayout>('default');
   const [featureVariant, setFeatureVariant] = useState<FeatureVariant>('cards');
   const [selectedTraceNode, setSelectedTraceNode] = useState<string>('1');
 
@@ -110,17 +127,10 @@ export default function App() {
     root.classList.toggle('dark', darkMode);
 
     // Auto-switch hero variant based on theme for better demo
-    if (theme === 'e') setHeroVariant('neo');
-    else if (theme === 'f') setHeroVariant('swiss');
-    else if (theme === 'g') setHeroVariant('glass');
-    else if (theme === 'h') setHeroVariant('retro');
-    else if (theme === 'i') setHeroVariant('studio');
-    else if (theme === 'j') setHeroVariant('yale');
-    else if (theme === 'k') setHeroVariant('focus');
-    else if (theme === 'l') setHeroVariant('enterprise');
-    else if (theme === 'a' || theme === 'd') setHeroVariant('centered');
-    else if (theme === 'b' || theme === 'c') setHeroVariant('split');
-  }, [theme, darkMode]);
+    if (heroLayout === 'default') {
+      setHeroVariant(getThemeDefaultHeroVariant(theme));
+    }
+  }, [theme, darkMode, heroLayout]);
 
   const themeLabel = useMemo(() => {
     return themeOptions.find((t) => t.id === theme)?.label ?? theme;
@@ -228,17 +238,34 @@ export default function App() {
                   <Flex className="gap-2">
                     <Button
                       size="xs"
-                      variant={heroVariant === 'centered' ? 'primary' : 'secondary'}
-                      onClick={() => setHeroVariant('centered')}
-                      className={heroVariant === 'centered' ? 'bg-primary text-white' : 'border border-border'}
+                      variant={heroLayout === 'default' ? 'primary' : 'secondary'}
+                      onClick={() => {
+                        setHeroLayout('default');
+                        setHeroVariant(getThemeDefaultHeroVariant(theme));
+                      }}
+                      className={heroLayout === 'default' ? 'bg-primary text-white' : 'border border-border'}
                     >
                       Default
                     </Button>
                     <Button
                       size="xs"
-                      variant={heroVariant === 'split' ? 'primary' : 'secondary'}
-                      onClick={() => setHeroVariant('split')}
-                      className={heroVariant === 'split' ? 'bg-primary text-white' : 'border border-border'}
+                      variant={heroLayout === 'centered' ? 'primary' : 'secondary'}
+                      onClick={() => {
+                        setHeroLayout('centered');
+                        setHeroVariant('centered');
+                      }}
+                      className={heroLayout === 'centered' ? 'bg-primary text-white' : 'border border-border'}
+                    >
+                      Center
+                    </Button>
+                    <Button
+                      size="xs"
+                      variant={heroLayout === 'split' ? 'primary' : 'secondary'}
+                      onClick={() => {
+                        setHeroLayout('split');
+                        setHeroVariant('split');
+                      }}
+                      className={heroLayout === 'split' ? 'bg-primary text-white' : 'border border-border'}
                     >
                       Split
                     </Button>

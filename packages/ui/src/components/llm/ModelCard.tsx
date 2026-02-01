@@ -1,11 +1,13 @@
-import { Card, Badge, Button, Select, SelectItem } from '@tremor/react';
+import { Button } from '@tremor/react';
 import { cn } from '../../lib/utils';
 import type { SavedEndpoint, EndpointTestResult, ModelSource } from '../../types';
+import type { ReactNode } from 'react';
+import { CheckCircle, AlertCircle, Download, Cloud, Server, Database } from 'lucide-react';
 
 export interface ModelCardProps {
   title: string;
   description: string;
-  icon?: React.ReactNode;
+  icon?: ReactNode;
   
   // Current config
   enabled?: boolean;
@@ -68,119 +70,119 @@ export function ModelCard({
   const isActive = status === 'connected';
   const isDownloading = status === 'downloading';
   
-  const statusColor = {
-    connected: 'green',
-    disconnected: 'red',
-    'not-configured': 'gray',
-    downloading: 'blue',
-  }[status] as 'green' | 'red' | 'gray' | 'blue';
-  
-  const statusLabel = {
-    connected: 'Connected',
-    disconnected: 'Disconnected',
-    'not-configured': 'Not Configured',
-    downloading: 'Downloading...',
-  }[status];
-
   return (
-    <Card className={cn(
-      'codrag-model-card',
-      isActive && 'ring-1 ring-green-500/50',
+    <div className={cn(
+      'rounded-lg border bg-surface p-6 transition-colors',
+      isActive ? 'border-success/50 shadow-[0_0_15px_rgba(var(--success),0.1)]' : 'border-border',
       className
     )}>
       {/* Header */}
-      <div className="flex items-center justify-between mb-3">
-        <div className="flex items-center gap-2">
-          {icon}
+      <div className="flex items-center justify-between mb-6">
+        <div className="flex items-center gap-3">
+          <div className="p-2 rounded-lg bg-surface-raised text-primary">
+            {icon || <Database className="w-5 h-5" />}
+          </div>
           <div>
-            <h3 className="text-sm font-semibold">{title}</h3>
-            <p className="text-xs text-gray-500">{description}</p>
+            <h3 className="text-lg font-semibold text-text">{title}</h3>
+            <p className="text-sm text-text-muted">{description}</p>
           </div>
         </div>
-        <Badge color={statusColor} size="xs">{statusLabel}</Badge>
+        <span className={cn(
+          "text-xs px-2 py-1 rounded-full font-medium border",
+          status === 'connected' ? "bg-success-muted text-success border-success/20" :
+          status === 'disconnected' ? "bg-error-muted text-error border-error/20" :
+          status === 'downloading' ? "bg-info-muted text-info border-info/20" :
+          "bg-surface-raised text-text-muted border-border"
+        )}>
+          {status === 'connected' ? 'Connected' :
+           status === 'disconnected' ? 'Disconnected' :
+           status === 'downloading' ? 'Downloading...' : 'Not Configured'}
+        </span>
       </div>
       
       {/* Source Toggle (if HF enabled) */}
       {hfEnabled && onSourceChange && (
-        <div className="mb-4 p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
-          <div className="flex gap-2">
-            <button
-              onClick={() => onSourceChange('endpoint')}
-              className={cn(
-                'flex-1 px-3 py-2 text-xs rounded-md transition-colors',
-                source === 'endpoint'
-                  ? 'bg-white dark:bg-gray-700 shadow-sm font-medium'
-                  : 'text-gray-500 hover:text-gray-700'
-              )}
-            >
-              Use Endpoint
-            </button>
-            <button
-              onClick={() => onSourceChange('huggingface')}
-              className={cn(
-                'flex-1 px-3 py-2 text-xs rounded-md transition-colors',
-                source === 'huggingface'
-                  ? 'bg-white dark:bg-gray-700 shadow-sm font-medium'
-                  : 'text-gray-500 hover:text-gray-700'
-              )}
-            >
-              Download from HF
-            </button>
-          </div>
+        <div className="mb-6 p-1 bg-surface-raised rounded-lg flex gap-1 border border-border">
+          <button
+            onClick={() => onSourceChange('endpoint')}
+            className={cn(
+              'flex-1 px-3 py-2 text-xs rounded-md transition-all font-medium flex items-center justify-center gap-2',
+              source === 'endpoint'
+                ? 'bg-surface text-text shadow-sm'
+                : 'text-text-muted hover:text-text hover:bg-surface/50'
+            )}
+          >
+            <Server className="w-3 h-3" />
+            Use Endpoint
+          </button>
+          <button
+            onClick={() => onSourceChange('huggingface')}
+            className={cn(
+              'flex-1 px-3 py-2 text-xs rounded-md transition-all font-medium flex items-center justify-center gap-2',
+              source === 'huggingface'
+                ? 'bg-surface text-text shadow-sm'
+                : 'text-text-muted hover:text-text hover:bg-surface/50'
+            )}
+          >
+            <Cloud className="w-3 h-3" />
+            Download from HF
+          </button>
         </div>
       )}
       
       {/* Endpoint Mode */}
       {source === 'endpoint' && (
-        <div className="space-y-3">
+        <div className="space-y-4">
           {/* Endpoint Selector */}
           <div>
-            <label className="block text-xs font-medium text-gray-500 mb-1">
+            <label className="block text-xs font-medium text-text-muted mb-1.5">
               Endpoint
             </label>
-            <Select
+            <select
               value={endpoint || ''}
-              onValueChange={(val) => onEndpointChange?.(val)}
-              placeholder="Select endpoint..."
+              onChange={(e) => onEndpointChange?.(e.target.value)}
+              className="w-full bg-surface-raised border border-border rounded-md px-3 py-2 text-sm text-text focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-shadow"
             >
+              <option value="" disabled>Select endpoint...</option>
               {endpoints.map((ep) => (
-                <SelectItem key={ep.id} value={ep.id}>
+                <option key={ep.id} value={ep.id}>
                   {ep.name} ({ep.provider})
-                </SelectItem>
+                </option>
               ))}
-            </Select>
+            </select>
           </div>
           
           {/* Model Selector */}
           {endpoint && (
             <div>
-              <label className="block text-xs font-medium text-gray-500 mb-1">
+              <label className="block text-xs font-medium text-text-muted mb-1.5">
                 Model
               </label>
               <div className="flex gap-2">
-                <div className="flex-1">
-                  <Select
+                <div className="flex-1 relative">
+                  <select
                     value={model || ''}
-                    onValueChange={(val) => onModelChange?.(val)}
-                    placeholder="Select model..."
+                    onChange={(e) => onModelChange?.(e.target.value)}
+                    className="w-full bg-surface-raised border border-border rounded-md px-3 py-2 text-sm text-text focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-shadow appearance-none"
                   >
+                    <option value="" disabled>Select model...</option>
                     {availableModels.map((m) => (
-                      <SelectItem key={m} value={m}>{m}</SelectItem>
+                      <option key={m} value={m}>{m}</option>
                     ))}
-                  </Select>
+                  </select>
+                  {/* Custom arrow could go here */}
                 </div>
                 {onRefreshModels && (
-                  <Button
-                    size="xs"
-                    variant="secondary"
+                  <button
                     onClick={onRefreshModels}
-                    loading={loadingModels}
-                    icon={() => (
-                      <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                      </svg>
-                    )}
-                  />
+                    disabled={loadingModels}
+                    className="px-3 py-2 rounded-md bg-surface-raised border border-border text-text-muted hover:text-text hover:bg-border transition-colors disabled:opacity-50"
+                    title="Refresh Models"
+                  >
+                    <svg className={cn("w-4 h-4", loadingModels && "animate-spin")} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                    </svg>
+                  </button>
                 )}
               </div>
             </div>
@@ -190,45 +192,39 @@ export function ModelCard({
       
       {/* HuggingFace Mode */}
       {source === 'huggingface' && hfEnabled && (
-        <div className="space-y-3">
-          <div className="p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-xs font-medium">Model</span>
-              <code className="text-xs text-gray-500">{hfRepoId}</code>
+        <div className="space-y-4">
+          <div className="p-4 bg-surface-raised rounded-lg border border-border">
+            <div className="flex items-center justify-between mb-3">
+              <span className="text-xs font-medium text-text-muted">Model Repository</span>
+              <code className="text-xs text-primary bg-primary-muted/20 px-1.5 py-0.5 rounded">{hfRepoId}</code>
             </div>
             
             {hfDownloaded ? (
-              <div className="flex items-center gap-2 text-xs text-green-600">
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                </svg>
-                Downloaded
+              <div className="flex items-center gap-2 text-sm text-success font-medium bg-success-muted/10 p-3 rounded border border-success-muted/20">
+                <CheckCircle className="w-4 h-4" />
+                Downloaded & Ready
               </div>
             ) : isDownloading ? (
               <div className="space-y-2">
-                <div className="flex items-center justify-between text-xs">
-                  <span>Downloading...</span>
+                <div className="flex items-center justify-between text-xs text-text-muted">
+                  <span>Downloading model files...</span>
                   <span>{hfDownloadProgress ? `${Math.round(hfDownloadProgress * 100)}%` : '...'}</span>
                 </div>
-                <div className="h-1.5 bg-gray-200 rounded-full overflow-hidden">
+                <div className="h-2 bg-border rounded-full overflow-hidden">
                   <div 
-                    className="h-full bg-blue-500 transition-all"
+                    className="h-full bg-info transition-all duration-300"
                     style={{ width: `${(hfDownloadProgress || 0) * 100}%` }}
                   />
                 </div>
               </div>
             ) : (
-              <Button
-                size="xs"
+              <button
                 onClick={onHFDownload}
-                icon={() => (
-                  <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-                  </svg>
-                )}
+                className="w-full py-2 px-4 bg-primary hover:bg-primary-hover text-white rounded-md text-sm font-medium transition-colors flex items-center justify-center gap-2"
               >
-                Download
-              </Button>
+                <Download className="w-4 h-4" />
+                Download Model
+              </button>
             )}
           </div>
         </div>
@@ -236,28 +232,33 @@ export function ModelCard({
       
       {/* Test Connection */}
       {onTest && source === 'endpoint' && endpoint && (
-        <div className="mt-4 pt-4 border-t">
+        <div className="mt-6 pt-4 border-t border-border">
           <Button
             size="xs"
             variant="secondary"
             onClick={onTest}
             loading={testingConnection}
-            className="w-full"
+            className="w-full bg-surface-raised hover:bg-border border-border text-text"
           >
             Test Connection
           </Button>
           {testResult && (
             <div className={cn(
-              'mt-2 p-2 rounded text-xs',
+              'mt-3 p-3 rounded-md text-xs border flex items-start gap-2',
               testResult.success 
-                ? 'bg-green-50 text-green-700 dark:bg-green-900/20 dark:text-green-400'
-                : 'bg-red-50 text-red-700 dark:bg-red-900/20 dark:text-red-400'
+                ? 'bg-success-muted/10 text-success border-success-muted/20' 
+                : 'bg-error-muted/10 text-error border-error-muted/20'
             )}>
+              {testResult.success ? (
+                <CheckCircle className="w-4 h-4 shrink-0 mt-0.5" />
+              ) : (
+                <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
+              )}
               {testResult.message}
             </div>
           )}
         </div>
       )}
-    </Card>
+    </div>
   );
 }

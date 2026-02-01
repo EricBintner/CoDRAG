@@ -16,8 +16,8 @@ export { Sidebar, ProjectList, ProjectTabs, AppShell } from './components/naviga
 export type { SidebarProps, ProjectListProps, ProjectTabsProps, ProjectTab, AppShellProps } from './components/navigation';
 
 // Components - Search
-export { SearchInput, SearchResultRow, ChunkViewer } from './components/search';
-export type { SearchInputProps, SearchResultRowProps, ChunkViewerProps } from './components/search';
+export { SearchInput, SearchResultRow, ChunkViewer, SearchPanel, ContextOptionsPanel, SearchResultsList, ChunkPreview, ContextOutput } from './components/search';
+export type { SearchInputProps, SearchResultRowProps, ChunkViewerProps, SearchPanelProps, ContextOptionsPanelProps, SearchResultsListProps, ChunkPreviewProps, ContextOutputProps, ContextMeta } from './components/search';
 
 // Components - Context
 export { CopyButton, CitationBlock, ContextViewer } from './components/context';
@@ -26,3 +26,13 @@ export type { CopyButtonProps, CitationBlockProps, ContextViewerProps, ContextCh
 // Components - Patterns (shared states)
 export { EmptyState, LoadingState, ErrorState } from './components/patterns';
 export type { EmptyStateProps, LoadingStateProps, ErrorStateProps } from './components/patterns';
+
+// Components - Dashboard
+export { IndexStatusCard, BuildCard } from './components/dashboard';
+export type { IndexStatusCardProps, IndexStats, BuildCardProps } from './components/dashboard';
+
+// Components - LLM
+export { LLMStatusCard, ModelCard, EndpointManager, AIModelsSettings } from './components/llm';
+
+// API (typed client + Storybook mocking helpers)
+export * from './api';

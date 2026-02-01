@@ -1,8 +1,7 @@
-import * as React from 'react';
-import { Card, Title, Text, Flex, Button } from '@tremor/react';
 import type { CodeChunk } from '../../types';
 import { CopyButton } from '../context/CopyButton';
 import { cn } from '../../lib/utils';
+import { X, FileCode } from 'lucide-react';
 
 export interface ChunkViewerProps {
   chunk: CodeChunk;
@@ -13,7 +12,7 @@ export interface ChunkViewerProps {
 /**
  * ChunkViewer - Full chunk detail view (drawer/panel)
  * 
- * Wireframe component - displays:
+ * Displays:
  * - Full chunk text with line numbers
  * - Source path and span info
  * - Copy chunk action
@@ -28,40 +27,50 @@ export function ChunkViewer({
   const startLine = chunk.span?.start_line ?? 1;
 
   return (
-    <Card className={cn('codrag-chunk-viewer', className)}>
-      <Flex justifyContent="between" alignItems="start">
+    <div className={cn(
+      'rounded-lg border border-border bg-surface p-6 shadow-lg',
+      className
+    )}>
+      <div className="flex justify-between items-start mb-4">
         <div>
-          <Title className="font-mono text-sm">{chunk.source_path}</Title>
+          <h3 className="font-mono text-sm font-semibold text-text flex items-center gap-2">
+            <FileCode className="w-4 h-4 text-primary" />
+            {chunk.source_path}
+          </h3>
           {chunk.span && (
-            <Text className="mt-1">
+            <p className="mt-1 text-xs text-text-muted">
               Lines {chunk.span.start_line}–{chunk.span.end_line}
-            </Text>
+            </p>
           )}
         </div>
-        <Flex className="gap-2">
+        <div className="flex gap-2">
           <CopyButton text={chunk.content} />
           {onClose && (
-            <Button variant="secondary" size="xs" onClick={onClose}>
-              Close
-            </Button>
+            <button
+              onClick={onClose}
+              className="p-1.5 rounded-md hover:bg-surface-raised text-text-muted hover:text-text transition-colors"
+              title="Close"
+            >
+              <X className="w-4 h-4" />
+            </button>
           )}
-        </Flex>
-      </Flex>
+        </div>
+      </div>
       
-      <div className="mt-4 bg-gray-50 dark:bg-gray-900 rounded-lg overflow-auto max-h-[60vh]">
-        <pre className="p-4 text-sm font-mono">
+      <div className="bg-surface-raised border border-border rounded-lg overflow-auto max-h-[60vh]">
+        <pre className="p-4 text-sm font-mono text-text">
           <code>
             {lines.map((line, idx) => (
-              <div key={idx} className="flex">
-                <span className="w-12 text-right pr-4 text-gray-400 select-none">
+              <div key={idx} className="flex hover:bg-surface/50 transition-colors">
+                <span className="w-12 text-right pr-4 text-text-subtle select-none border-r border-border mr-4">
                   {startLine + idx}
                 </span>
-                <span className="flex-1">{line || ' '}</span>
+                <span className="flex-1 whitespace-pre-wrap break-all">{line || ' '}</span>
               </div>
             ))}
           </code>
         </pre>
       </div>
-    </Card>
+    </div>
   );
 }

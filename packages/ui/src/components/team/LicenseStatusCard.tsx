@@ -1,6 +1,6 @@
-import { Card, Badge, Button, ProgressBar } from '@tremor/react';
 import { cn } from '../../lib/utils';
 import type { LicenseInfo, LicenseTier } from '../../types';
+import { CreditCard, AlertCircle, Users, Calendar, ArrowUpCircle, Settings } from 'lucide-react';
 
 export interface LicenseStatusCardProps {
   license: LicenseInfo;
@@ -9,11 +9,11 @@ export interface LicenseStatusCardProps {
   className?: string;
 }
 
-const tierConfig: Record<LicenseTier, { label: string; color: 'gray' | 'blue' | 'green' | 'purple' }> = {
-  free: { label: 'Free', color: 'gray' },
-  pro: { label: 'Pro', color: 'blue' },
-  team: { label: 'Team', color: 'green' },
-  enterprise: { label: 'Enterprise', color: 'purple' },
+const tierConfig: Record<LicenseTier, { label: string; color: string }> = {
+  free: { label: 'Free', color: 'bg-surface-raised text-text-muted border-border' },
+  pro: { label: 'Pro', color: 'bg-primary-muted/10 text-primary border-primary-muted/20' },
+  team: { label: 'Team', color: 'bg-success-muted/10 text-success border-success-muted/20' },
+  enterprise: { label: 'Enterprise', color: 'bg-purple-500/10 text-purple-600 border-purple-500/20 dark:text-purple-400' },
 };
 
 export function LicenseStatusCard({
@@ -27,27 +27,39 @@ export function LicenseStatusCard({
   const seatPercent = showSeats ? (license.seats_used! / license.seats_total!) * 100 : 0;
   
   return (
-    <Card className={cn('codrag-license-status-card', className)}>
-      <div className="flex items-start justify-between mb-4">
+    <div className={cn('rounded-lg border border-border bg-surface p-6 shadow-sm', className)}>
+      <div className="flex items-start justify-between mb-6">
         <div>
-          <h3 className="text-sm font-semibold">License</h3>
-          <p className="text-xs text-gray-500 mt-1">
+          <h3 className="text-lg font-semibold text-text flex items-center gap-2">
+            <CreditCard className="w-5 h-5 text-primary" />
+            License
+          </h3>
+          <p className="text-sm text-text-muted mt-1">
             CoDRAG {label} License
           </p>
         </div>
         <div className="flex items-center gap-2">
-          <Badge color={color}>{label}</Badge>
-          {!license.valid && <Badge color="red">Invalid</Badge>}
+          <span className={cn("px-2.5 py-0.5 rounded-full text-xs font-medium border", color)}>
+            {label}
+          </span>
+          {!license.valid && (
+            <span className="flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-error-muted/10 text-error border border-error-muted/20">
+              <AlertCircle className="w-3.5 h-3.5" />
+              Invalid
+            </span>
+          )}
         </div>
       </div>
       
       {/* Features */}
       {license.features.length > 0 && (
-        <div className="mb-4">
-          <p className="text-xs font-medium text-gray-500 uppercase mb-2">Features</p>
-          <div className="flex flex-wrap gap-1">
+        <div className="mb-6">
+          <p className="text-xs font-medium text-text-muted uppercase tracking-wider mb-2">Features</p>
+          <div className="flex flex-wrap gap-2">
             {license.features.map((feature) => (
-              <Badge key={feature} size="xs" color="gray">{feature}</Badge>
+              <span key={feature} className="inline-flex items-center px-2 py-1 rounded text-xs bg-surface-raised border border-border text-text-muted">
+                {feature}
+              </span>
             ))}
           </div>
         </div>
@@ -55,35 +67,57 @@ export function LicenseStatusCard({
       
       {/* Seats (Team/Enterprise) */}
       {showSeats && (
-        <div className="mb-4">
-          <div className="flex justify-between text-xs mb-1">
-            <span>Seats Used</span>
-            <span>{license.seats_used} / {license.seats_total}</span>
+        <div className="mb-6">
+          <div className="flex justify-between text-xs mb-1.5">
+            <span className="flex items-center gap-1.5 text-text-muted">
+              <Users className="w-3.5 h-3.5" />
+              Seats Used
+            </span>
+            <span className="font-medium text-text">{license.seats_used} / {license.seats_total}</span>
           </div>
-          <ProgressBar value={seatPercent} color={seatPercent > 90 ? 'red' : 'blue'} />
+          <div className="w-full bg-surface-raised rounded-full h-2 overflow-hidden border border-border-subtle">
+            <div 
+              className={cn(
+                "h-full rounded-full transition-all", 
+                seatPercent > 90 ? "bg-error" : "bg-primary"
+              )}
+              style={{ width: `${seatPercent}%` }}
+            />
+          </div>
         </div>
       )}
       
       {/* Expiration */}
       {license.expires_at && (
-        <p className="text-xs text-gray-500 mb-4">
-          {license.valid ? 'Expires' : 'Expired'}: {license.expires_at}
-        </p>
+        <div className="flex items-center gap-2 text-xs text-text-muted mb-6 bg-surface-raised/50 p-2 rounded border border-border/50">
+          <Calendar className="w-3.5 h-3.5 text-text-subtle" />
+          <span className={license.valid ? "text-text-muted" : "text-error"}>
+            {license.valid ? 'Expires' : 'Expired'}: {license.expires_at}
+          </span>
+        </div>
       )}
       
       {/* Actions */}
       <div className="flex gap-2">
         {license.tier === 'free' && onUpgrade && (
-          <Button size="xs" onClick={onUpgrade}>
+          <button 
+            onClick={onUpgrade}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-primary hover:bg-primary-hover text-white text-sm font-medium transition-colors shadow-sm"
+          >
+            <ArrowUpCircle className="w-4 h-4" />
             Upgrade to Pro
-          </Button>
+          </button>
         )}
         {onManageLicense && (
-          <Button size="xs" variant="secondary" onClick={onManageLicense}>
+          <button 
+            onClick={onManageLicense}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-surface hover:bg-surface-raised border border-border text-text text-sm font-medium transition-colors"
+          >
+            <Settings className="w-4 h-4" />
             Manage License
-          </Button>
+          </button>
         )}
       </div>
-    </Card>
+    </div>
   );
 }

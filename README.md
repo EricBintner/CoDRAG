@@ -6,6 +6,44 @@
 
 ---
 
+## CLI + MCP Quickstart
+
+CoDRAG is primarily used in two ways:
+
+- **CLI**: manage projects, build indexes, search, and assemble context.
+- **MCP tool/server**: expose CoDRAG capabilities to IDEs (Windsurf, Cursor, Claude Desktop) via the Model Context Protocol.
+
+### CLI (daemon mode)
+
+```bash
+# 1) Start the daemon
+codrag serve
+
+# 2) Register a repo
+codrag add /path/to/your/repo
+
+# 3) Build the index (async)
+codrag build
+
+# 4) Semantic search
+codrag search "authentication middleware"
+
+# 5) Assemble LLM-ready context
+codrag context "explain the login flow" --raw
+```
+
+### MCP (IDE integration)
+
+```bash
+# Start MCP in server mode (connects to the running daemon)
+codrag mcp --auto
+
+# Generate IDE config (prints JSON)
+codrag mcp-config --ide cursor
+```
+
+For the full CLI reference, see `docs/CLI.md`.
+
 ## Vision
 
 CoDRAG is a **local-first, team-ready** application that provides:
@@ -145,43 +183,71 @@ ollama pull nomic-embed-text
 
 ## CLI Reference
 
+The CLI is implemented with Typer; run `codrag --help` or `codrag <command> --help` for detailed help.
+
+Full reference: `docs/CLI.md`.
+
+### Common examples
+
 ```bash
+# Start the daemon
+codrag serve
+
+# Add a repo
+codrag add /path/to/your/repo
+
+# Build the index (async)
+codrag build
+
+# Search your codebase
+codrag search "authentication middleware"
+
+# Assemble context for an LLM
+codrag context "explain the login flow" --raw
+
+# IDE integration (MCP)
+codrag mcp --auto
+```
+
+### Full options (reference)
+
+```bash
+# Tip: most daemon-backed commands accept --host/--port (default: 127.0.0.1:8400)
+
 # Daemon
-codrag serve                      # Start daemon (background)
-codrag serve --foreground         # Start in foreground
-codrag stop                       # Stop daemon
+codrag serve [--host 127.0.0.1] [--port 8400] [--reload]              # Start the daemon
 
 # Projects
-codrag add <path>                 # Add project (auto-detect name)
-codrag add <path> --name "Name"   # Add with custom name
-codrag add <path> --embedded      # Store index in project dir
-codrag list                       # List all projects
-codrag remove <project-id>        # Remove project
-codrag remove <id> --purge        # Remove + delete index
+codrag add <path> [--name "Name"] [--mode standalone|embedded] \
+  [--host 127.0.0.1] [--port 8400]                                     # Register project
+codrag list [--host 127.0.0.1] [--port 8400]                            # List projects
+codrag remove <project-id> [--purge] [--host 127.0.0.1] [--port 8400]   # Unregister project
 
-# Building
-codrag build <project-id>         # Full rebuild
-codrag build --all                # Rebuild all projects
-codrag status                     # Show all project status
-codrag status <project-id>        # Show specific project
+# Index lifecycle
+codrag status [project-id] [--host 127.0.0.1] [--port 8400]             # Index status
+codrag build [project-id] [--full] [--host 127.0.0.1] [--port 8400]     # Trigger build (async)
 
-# Querying
-codrag search <project-id> "query"
-codrag context <project-id> "query" --max-chars 8000
-codrag trace <project-id> "symbol_name"
+# Retrieval
+codrag search "query" [--project <project-id>] [--limit 10] [--min-score 0.15] \
+  [--host 127.0.0.1] [--port 8400]                                      # Semantic search
+codrag context "query" [--project <project-id>] [--limit 5] [--max-chars 8000] [--raw] \
+  [--host 127.0.0.1] [--port 8400]                                      # Assemble context
 
-# Dashboard
-codrag ui                         # Open dashboard in browser
-codrag ui --port 8401             # Custom port
+# UI
+codrag ui [--port 8400]                                                 # Open dashboard
 
-# MCP (for IDE integration)
-codrag mcp --mode direct          # Direct mode (no daemon required)
-codrag mcp --mode server --auto   # Server mode (connects to daemon)
-codrag mcp-config --mode direct   # Generate IDE config for direct mode
+# MCP (IDE integration)
+codrag mcp [--mode server|direct] [--daemon http://127.0.0.1:8400] \
+  [--auto] [--project <project-id>] [--repo-root <path>]                # Run MCP server (stdio)
+codrag mcp-config [--ide claude|cursor|windsurf|vscode|jetbrains|all] \
+  [--mode auto|project|direct] [--daemon http://127.0.0.1:8400] [--project <project-id>]  # Print IDE config JSON
 
-# Utilities
-codrag export-agents <project-id> # Generate AGENTS.md
-codrag config                     # Show/edit global config
+# Extras
+codrag activity [--weeks 12] [--no-legend] [--no-labels] [--json] \
+  [--host 127.0.0.1] [--port 8400]                                      # Activity heatmap
+codrag coverage [--host 127.0.0.1] [--port 8400]                        # Coverage visualization
+codrag overview [--weeks 12] [--host 127.0.0.1] [--port 8400]            # Terminal overview dashboard
+codrag version                                                          # Version
 ```
 
 ---

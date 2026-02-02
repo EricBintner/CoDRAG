@@ -501,7 +501,13 @@ def mcp(
 
 @app.command("mcp-config")
 def mcp_config(
-    ide: str = typer.Option("all", "--ide", "-i", help="Target IDE: claude, cursor, windsurf, all"),
+    ide: str = typer.Option(
+        "all",
+        "--ide",
+        "-i",
+        help="Target IDE: claude, cursor, windsurf, vscode, jetbrains, all",
+    ),
+    mode: str = typer.Option("auto", "--mode", "-m", help="Mode: auto | project | direct"),
     daemon_url: str = typer.Option("http://127.0.0.1:8400", "--daemon", "-d", help="CoDRAG daemon URL"),
     project_id: str = typer.Option(None, "--project", "-p", help="Optional pinned Project ID"),
 ) -> None:
@@ -513,11 +519,14 @@ def mcp_config(
     from codrag.mcp_config import generate_mcp_configs
     
     # We simplify this command to assume "server" mode for most users
+    resolved_mode = mode
+    if resolved_mode == "auto" and project_id:
+        resolved_mode = "project"
     try:
         configs = generate_mcp_configs(
             ide=ide,
             daemon_url=daemon_url,
-            mode="auto" if not project_id else "project",
+            mode=resolved_mode,
             project_id=project_id
         )
     except Exception as e:
@@ -535,11 +544,6 @@ def mcp_config(
         # Single IDE
         cfg = next(iter(configs.values()))
         print(json.dumps(cfg["config"], indent=2))
-
-
-if __name__ == "__main__":
-    app()
-
 
 
 @app.command()
@@ -563,7 +567,7 @@ def activity(
         ActivityDay,
     )
     
-    base = _api_base(host, port)
+    base = _base_url(host, port)
     
     try:
         # Try to fetch real data from server
@@ -642,7 +646,7 @@ def coverage(
     # e.g. _get_json(f"{base}/files/tree")
     # For now, we will show the demo data structure
     
-    base = _api_base(host, port)
+    base = _base_url(host, port)
     try:
         data = _get_json(f"{base}/coverage")
         tree_data = data.get("tree") if isinstance(data, dict) else None
@@ -713,7 +717,7 @@ def overview(
     from codrag.viz.overview import render_dashboard
     from codrag.viz.activity_heatmap import generate_sample_data, ActivityDay, ActivityHeatmapData
     
-    base = _api_base(host, port)
+    base = _base_url(host, port)
     
     # Initialize with empty/default data
     health_stats = {}
@@ -792,4 +796,4 @@ def main() -> None:
 
 
 if __name__ == "__main__":
-    main()
+    app()

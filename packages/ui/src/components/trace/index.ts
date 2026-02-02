@@ -9,3 +9,6 @@ export type { SymbolResultRowProps } from './SymbolResultRow';
 
 export { NodeDetailPanel } from './NodeDetailPanel';
 export type { NodeDetailPanelProps } from './NodeDetailPanel';
+
+export { TraceGraph, TraceGraphMini } from './TraceGraph';
+export type { TraceGraphProps, TraceNode, TraceEdge } from './TraceGraph';

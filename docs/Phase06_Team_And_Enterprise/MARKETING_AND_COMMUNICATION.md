@@ -32,7 +32,7 @@ This is a Phase 06-specific pack; it feeds the Phase 12 website copy.
   - a requirement to upload code to a vendor cloud
 
 ### Pricing line
-- **Team:** $12/seat/month (billed annually).
+- **Team:** $15/seat/month (billed annually).
 
 ## Messaging: Enterprise Tier (“Local-first, deploy-anywhere”)
 

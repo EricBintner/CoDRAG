@@ -16,6 +16,7 @@ from codrag.mcp_server import (
     TOOLS,
     MCP_PROTOCOL_VERSION,
     JSONRPC_VERSION,
+    BuildInProgressError,
     DaemonUnavailableError,
     InvalidParamsError,
     MethodNotFoundError,
@@ -29,18 +30,18 @@ from codrag.mcp_server import (
 @pytest.fixture
 def server():
     """Create an MCP server instance."""
-    return MCPServer(daemon_url="http://127.0.0.1:8400")
+    return MCPServer(daemon_url="http://127.0.0.1:8400", project_id="proj_test")
 
 
 @pytest.fixture
 def mock_status_response():
-    """Mock response from /api/code-index/status."""
+    """Mock response from /projects/{project_id}/status."""
     return {
         "index": {
-            "loaded": True,
-            "total_documents": 150,
-            "model": "nomic-embed-text",
-            "built_at": "2026-02-01T08:00:00Z",
+            "exists": True,
+            "total_chunks": 150,
+            "embedding_model": "nomic-embed-text",
+            "last_build_at": "2026-02-01T08:00:00Z",
         },
         "building": False,
         "watch": {"enabled": True},
@@ -49,36 +50,33 @@ def mock_status_response():
 
 @pytest.fixture
 def mock_search_response():
-    """Mock response from /api/code-index/search."""
+    """Mock response from /projects/{project_id}/search."""
     return {
         "results": [
             {
-                "doc": {
-                    "source_path": "src/main.py",
-                    "section": "def main",
-                    "content": "def main():\n    print('hello')",
-                },
+                "chunk_id": "chunk_1",
+                "source_path": "src/main.py",
+                "span": {"start_line": 1, "end_line": 2},
+                "preview": "def main():\n    print('hello')",
                 "score": 0.85,
             },
             {
-                "doc": {
-                    "source_path": "README.md",
-                    "section": "Installation",
-                    "content": "# Installation\n\npip install codrag",
-                },
+                "chunk_id": "chunk_2",
+                "source_path": "README.md",
+                "span": {"start_line": 1, "end_line": 3},
+                "preview": "# Installation\n\npip install codrag",
                 "score": 0.72,
             },
         ],
-        "meta": {"query": "test query"},
     }
 
 
 @pytest.fixture
 def mock_context_response():
-    """Mock response from /api/code-index/context."""
+    """Mock response from /projects/{project_id}/context."""
     return {
         "context": "[src/main.py | def main]\ndef main():\n    print('hello')",
-        "chunks": [{"source_path": "src/main.py", "score": 0.85}],
+        "chunks": [{"chunk_id": "chunk_1", "source_path": "src/main.py", "score": 0.85}],
         "total_chars": 50,
         "estimated_tokens": 12,
     }
@@ -197,7 +195,7 @@ class TestToolStatus:
             assert result["index_loaded"] is True
             assert result["total_documents"] == 150
             assert result["building"] is False
-            mock_get.assert_called_once_with("/status")
+            mock_get.assert_called_once_with(f"/projects/{server.project_id}/status")
 
     @pytest.mark.asyncio
     async def test_status_daemon_unavailable(self, server):
@@ -221,13 +219,13 @@ class TestToolBuild:
             result = await server.tool_build()
             
             assert result["status"] == "started"
-            mock_post.assert_called_once_with("/build", {})
+            mock_post.assert_called_once_with(f"/projects/{server.project_id}/build", {})
 
     @pytest.mark.asyncio
     async def test_build_already_in_progress(self, server):
         """Test build when already building."""
         with patch.object(server, "_api_post", new_callable=AsyncMock) as mock_post:
-            mock_post.return_value = {"started": False, "building": True}
+            mock_post.side_effect = BuildInProgressError("BUILD_ALREADY_RUNNING: Build already running")
             
             result = await server.tool_build()
             
@@ -250,6 +248,10 @@ class TestToolSearch:
             assert len(result["results"]) == 2
             assert result["results"][0]["path"] == "src/main.py"
             assert result["results"][0]["score"] == 0.85
+            mock_post.assert_called_once_with(
+                f"/projects/{server.project_id}/search",
+                {"query": "test query", "k": 5, "min_score": 0.15},
+            )
 
     @pytest.mark.asyncio
     async def test_search_empty_query(self, server):
@@ -278,6 +280,17 @@ class TestToolContext:
             assert "context" in result
             assert result["chunks_used"] == 1
             assert result["total_chars"] == 50
+            mock_post.assert_called_once_with(
+                f"/projects/{server.project_id}/context",
+                {
+                    "query": "test query",
+                    "k": 5,
+                    "max_chars": 6000,
+                    "include_sources": True,
+                    "include_scores": False,
+                    "structured": True,
+                },
+            )
 
     @pytest.mark.asyncio
     async def test_context_empty_query(self, server):
@@ -320,6 +333,7 @@ class TestToolsCall:
             # Parse the JSON text content
             data = json.loads(result["content"][0]["text"])
             assert data["daemon"] == "running"
+            mock_get.assert_called_once_with(f"/projects/{server.project_id}/status")
 
     @pytest.mark.asyncio
     async def test_call_search(self, server, mock_search_response):
@@ -342,6 +356,10 @@ class TestToolsCall:
             assert response["result"]["isError"] is False
             data = json.loads(response["result"]["content"][0]["text"])
             assert data["count"] == 2
+            mock_post.assert_called_once_with(
+                f"/projects/{server.project_id}/search",
+                {"query": "find main function", "k": 5, "min_score": 0.15},
+            )
 
     @pytest.mark.asyncio
     async def test_call_unknown_tool(self, server):

@@ -21,7 +21,7 @@ This document outlines the operational financial structure for **Magnetic Anomal
 ## 3. Revenue Channels & Implementation
 
 ### Channel A: Direct Sales (Web Licensing)
-*Primary channel for CoDRAG Personal/Pro Licenses.*
+*Primary channel for CoDRAG Starter Passes and Pro Licenses.*
 
 - **Platform:** **Stripe** (Direct Integration).
 - **Setup:**
@@ -29,10 +29,10 @@ This document outlines the operational financial structure for **Magnetic Anomal
   - **Descriptors:** Use dynamic statement descriptors if possible (e.g., `MAGANOM* CODRAG`) or generic `MAGNETIC ANOMALY`.
   - **Domain:** `payments.codrag.io` (or similar subdomain).
 - **Checkout Flow:**
-  1. User clicks "Buy License" on landing page.
+  1. User clicks "Buy Starter Pass" or "Buy Pro License" on landing page.
   2. Redirects to Stripe Checkout (hosted session).
   3. **Webhook:** Stripe sends `checkout.session.completed` to CoDRAG License Server.
-  4. **Fulfillment:** License Server generates `Ed25519` key and emails it to user.
+  4. **Fulfillment:** License Server generates `Ed25519` key (with expiration for Starter, perpetual for Pro) and emails it to user.
 - **Tax Compliance:** 
   - *Note:* Using Stripe directly requires configuring **Stripe Tax** to handle VAT/Sales Tax collection and remittance automatically.
 

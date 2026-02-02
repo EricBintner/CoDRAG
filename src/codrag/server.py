@@ -19,7 +19,7 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional
 
 import requests
-from fastapi import FastAPI, HTTPException, Request
+from fastapi import FastAPI, HTTPException, Query, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
@@ -27,6 +27,13 @@ from pydantic import BaseModel
 from codrag import __version__
 from codrag.api.envelope import ApiException, install_api_exception_handlers, ok
 from codrag.core import CodeIndex, OllamaEmbedder
+from codrag.core.project_registry import (
+    Project,
+    ProjectAlreadyExists,
+    ProjectNotFound,
+    ProjectRegistry,
+    project_index_dir,
+)
 from codrag.core.repo_policy import ensure_repo_policy
 from codrag.core.repo_profile import profile_repo
 from codrag.core.trace import TraceBuilder, TraceIndex
@@ -64,6 +71,16 @@ _last_build_error: Optional[str] = None
 _watcher: Optional[AutoRebuildWatcher] = None
 _SERVER_STARTED_AT = datetime.now(timezone.utc).isoformat()
 
+_registry: Optional[ProjectRegistry] = None
+_project_indexes: Dict[str, CodeIndex] = {}
+_project_trace_indexes: Dict[str, TraceIndex] = {}
+_project_build_lock = threading.Lock()
+_project_build_threads: Dict[str, threading.Thread] = {}
+_project_last_build_result: Dict[str, Dict[str, Any]] = {}
+_project_last_build_error: Dict[str, str] = {}
+_project_trace_build_lock = threading.Lock()
+_project_trace_build_threads: Dict[str, threading.Thread] = {}
+
 
 _DEFAULT_UI_CONFIG: Dict[str, Any] = {
     "repo_root": "",
@@ -82,6 +99,9 @@ _DEFAULT_UI_CONFIG: Dict[str, Any] = {
         "**/*.lock",
     ],
     "max_file_bytes": 400_000,
+    "trace": {"enabled": False},
+    "auto_rebuild": {"enabled": False, "debounce_ms": 5000},
+    "llm_config": None,  # Will be populated with defaults if missing
 }
 
 
@@ -103,7 +123,42 @@ def _default_ui_config() -> Dict[str, Any]:
             if (rr / cand).exists():
                 core.append(cand)
         cfg["core_roots"] = core
+# Default LLM Config
+    ollama_url = str(_config.get("ollama_url") or "http://localhost:11434")
+    model = str(_config.get("model") or "nomic-embed-text")
+    
+    cfg["llm_config"] = {
+        "saved_endpoints": [
+            {
+                "id": "default_ollama",
+                "name": "Default Ollama",
+                "provider": "ollama",
+                "url": ollama_url,
+            }
+        ],
+        "embedding": {
+            "source": "endpoint",
+            "endpoint_id": "default_ollama",
+            "model": model,
+        },
+        "small_model": {
+            "enabled": False,
+            "endpoint_id": "default_ollama",
+            "model": "qwen2.5:3b",
+        },
+        "large_model": {
+            "enabled": False,
+            "endpoint_id": "default_ollama",
+            "model": "mistral-nemo",
+        },
+        "clara": {
+            "enabled": False,
+            "source": "huggingface",
+            "hf_repo_id": "apple/CLaRa-7B-Instruct",
+        }
+    }
 
+    
     return cfg
 
 
@@ -126,7 +181,10 @@ def _load_ui_config() -> Dict[str, Any]:
             "working_roots",
             "include_globs",
             "exclude_globs",
+            "llm_config",
             "max_file_bytes",
+            "trace",
+            "auto_rebuild",
         ]:
             if key in data:
                 cfg[key] = data[key]
@@ -137,6 +195,25 @@ def _save_ui_config(cfg: Dict[str, Any]) -> None:
     path = _ui_config_path()
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(json.dumps(cfg, indent=2))
+
+
+def _get_registry() -> ProjectRegistry:
+    global _registry
+    if _registry is None:
+        _registry = ProjectRegistry()
+    return _registry
+
+
+def _project_to_dict(proj: Project) -> Dict[str, Any]:
+    return {
+        "id": proj.id,
+        "name": proj.name,
+        "path": proj.path,
+        "mode": proj.mode,
+        "config": proj.config,
+        "created_at": proj.created_at,
+        "updated_at": proj.updated_at,
+    }
 
 
 def _project_id_for_root(root: str) -> str:
@@ -176,9 +253,10 @@ def _current_project() -> Dict[str, Any] | None:
     }
 
 
-def _require_project(project_id: str) -> Dict[str, Any]:
-    proj = _current_project()
-    if proj is None or str(proj.get("id")) != project_id:
+def _require_project(project_id: str) -> Project:
+    reg = _get_registry()
+    proj = reg.get_project(project_id)
+    if proj is None:
         raise ApiException(
             status_code=404,
             code="PROJECT_NOT_FOUND",
@@ -188,11 +266,11 @@ def _require_project(project_id: str) -> Dict[str, Any]:
     return proj
 
 
-def _project_index_status(idx: CodeIndex) -> Dict[str, Any]:
+def _project_index_status(idx: CodeIndex, last_build_error: Optional[str] = None) -> Dict[str, Any]:
     st = idx.stats()
     last_error = None
-    if _last_build_error:
-        last_error = {"code": "BUILD_FAILED", "message": str(_last_build_error)}
+    if last_build_error:
+        last_error = {"code": "BUILD_FAILED", "message": str(last_build_error)}
 
     return {
         "exists": bool(st.get("loaded", False)),
@@ -204,17 +282,25 @@ def _project_index_status(idx: CodeIndex) -> Dict[str, Any]:
     }
 
 
-def _project_trace_status() -> Dict[str, Any]:
-    global _trace_index, _trace_build_thread
-    
-    building = _trace_build_thread is not None and _trace_build_thread.is_alive()
-    
-    if _trace_index is None:
-        index_dir = Path(_config.get("index_dir") or "./codrag_data")
-        _trace_index = TraceIndex(index_dir)
-    
-    status = _trace_index.status()
-    status["building"] = building
+def _project_trace_status(project: Project) -> Dict[str, Any]:
+    cfg = project.config or {}
+    trace_cfg = cfg.get("trace") if isinstance(cfg, dict) else None
+    enabled = bool((trace_cfg or {}).get("enabled", False))
+
+    if not enabled:
+        return {
+            "enabled": False,
+            "exists": False,
+            "building": False,
+            "counts": {"nodes": 0, "edges": 0},
+            "last_build_at": None,
+            "last_error": None,
+        }
+
+    trace_idx = _get_project_trace_index(project)
+    status = trace_idx.status()
+    status["enabled"] = True
+    status["building"] = _is_project_trace_building(project.id)
     return status
 
 
@@ -305,6 +391,12 @@ class ContextRequest(BaseModel):
     structured: bool = False
 
 
+class TraceSearchRequest(BaseModel):
+    query: str
+    kinds: Optional[List[str]] = None
+    limit: int = 20
+
+
 class ChunkRequest(BaseModel):
     chunk_id: str
 
@@ -313,6 +405,26 @@ class AddProjectRequest(BaseModel):
     path: str
     name: Optional[str] = None
     mode: str = "standalone"
+
+
+class UpdateProjectRequest(BaseModel):
+    name: Optional[str] = None
+    config: Optional[Dict[str, Any]] = None
+
+
+class LLMProxyRequest(BaseModel):
+    provider: str = "ollama"
+    url: str
+    api_key: Optional[str] = None
+
+
+class LLMModelTestRequest(BaseModel):
+    provider: str = "ollama"
+    url: str
+    model: str
+    api_key: Optional[str] = None
+    kind: str = "completion"
+
 
 
 # =============================================================================
@@ -384,6 +496,135 @@ def _build_worker(
         _build_thread = None
 
 
+def _get_project_index(project: Project) -> CodeIndex:
+    idx = _project_indexes.get(project.id)
+    idx_dir = project_index_dir(project)
+    if idx is None or Path(idx.index_dir).resolve() != Path(idx_dir).resolve():
+        ollama_url = _config.get("ollama_url", "http://localhost:11434")
+        model = _config.get("model", "nomic-embed-text")
+        embedder = OllamaEmbedder(model=model, base_url=ollama_url)
+        idx = CodeIndex(index_dir=idx_dir, embedder=embedder)
+        _project_indexes[project.id] = idx
+    return idx
+
+
+def _is_project_building(project_id: str) -> bool:
+    t = _project_build_threads.get(project_id)
+    return t is not None and t.is_alive()
+
+
+def _start_project_build(
+    project: Project,
+    roots: Optional[List[str]],
+    include_globs: Optional[List[str]],
+    exclude_globs: Optional[List[str]],
+    max_file_bytes: int,
+) -> bool:
+    with _project_build_lock:
+        if _is_project_building(project.id):
+            return False
+
+        t = threading.Thread(
+            target=_project_build_worker,
+            args=(project, roots, include_globs, exclude_globs, max_file_bytes),
+            daemon=True,
+        )
+        _project_build_threads[project.id] = t
+        t.start()
+        return True
+
+
+def _project_build_worker(
+    project: Project,
+    roots: Optional[List[str]],
+    include_globs: Optional[List[str]],
+    exclude_globs: Optional[List[str]],
+    max_file_bytes: int,
+):
+    try:
+        idx = _get_project_index(project)
+        meta = idx.build(
+            repo_root=Path(project.path),
+            roots=roots,
+            include_globs=include_globs,
+            exclude_globs=exclude_globs,
+            max_file_bytes=max_file_bytes,
+        )
+        _project_last_build_result[project.id] = meta
+        _project_last_build_error.pop(project.id, None)
+    except Exception as e:
+        logger.exception("Build failed")
+        _project_last_build_error[project.id] = str(e)
+    finally:
+        with _project_build_lock:
+            cur = threading.current_thread()
+            if _project_build_threads.get(project.id) is cur:
+                _project_build_threads.pop(project.id, None)
+
+
+def _get_project_trace_index(project: Project) -> TraceIndex:
+    idx = _project_trace_indexes.get(project.id)
+    idx_dir = project_index_dir(project)
+    if idx is None or Path(idx.index_dir).resolve() != Path(idx_dir).resolve():
+        idx = TraceIndex(idx_dir)
+        _project_trace_indexes[project.id] = idx
+    return idx
+
+
+def _is_project_trace_building(project_id: str) -> bool:
+    t = _project_trace_build_threads.get(project_id)
+    return t is not None and t.is_alive()
+
+
+def _start_project_trace_build(
+    project: Project,
+    include_globs: Optional[List[str]] = None,
+    exclude_globs: Optional[List[str]] = None,
+    max_file_bytes: int = 500_000,
+) -> bool:
+    with _project_trace_build_lock:
+        if _is_project_trace_building(project.id):
+            return False
+
+        t = threading.Thread(
+            target=_project_trace_build_worker,
+            args=(project, include_globs, exclude_globs, max_file_bytes),
+            daemon=True,
+        )
+        _project_trace_build_threads[project.id] = t
+        t.start()
+        return True
+
+
+def _project_trace_build_worker(
+    project: Project,
+    include_globs: Optional[List[str]],
+    exclude_globs: Optional[List[str]],
+    max_file_bytes: int,
+):
+    try:
+        idx_dir = project_index_dir(project)
+        builder = TraceBuilder(
+            repo_root=Path(project.path),
+            index_dir=idx_dir,
+            include_globs=include_globs,
+            exclude_globs=exclude_globs,
+            max_file_bytes=max_file_bytes,
+        )
+        builder.build()
+
+        trace_idx = TraceIndex(idx_dir)
+        trace_idx.load()
+        _project_trace_indexes[project.id] = trace_idx
+    except Exception as e:
+        logger.error(f"Trace build failed: {e}")
+    finally:
+        with _project_trace_build_lock:
+            cur = threading.current_thread()
+            if _project_trace_build_threads.get(project.id) is cur:
+                _project_trace_build_threads.pop(project.id, None)
+
+
 # =============================================================================
 # Health & Info Endpoints
 # =============================================================================
@@ -409,18 +650,18 @@ def root() -> dict:
 
 @app.get("/projects")
 def list_projects() -> Dict[str, Any]:
-    proj = _current_project()
+    reg = _get_registry()
     projects: List[Dict[str, Any]] = []
-    if proj is not None:
+    for p in reg.list_projects():
         projects.append(
             {
-                "id": proj.get("id"),
-                "name": proj.get("name"),
-                "path": proj.get("path"),
-                "mode": proj.get("mode"),
-                "created_at": proj.get("created_at"),
-                "updated_at": proj.get("updated_at"),
-                "config": proj.get("config"),
+                "id": p.id,
+                "name": p.name,
+                "path": p.path,
+                "mode": p.mode,
+                "created_at": p.created_at,
+                "updated_at": p.updated_at,
+                "config": p.config,
             }
         )
     return ok({"projects": projects, "total": len(projects)})
@@ -431,9 +672,6 @@ def add_project(req: AddProjectRequest) -> Dict[str, Any]:
     if req.mode not in ("standalone", "embedded"):
         raise ApiException(status_code=400, code="VALIDATION_ERROR", message="Invalid mode")
 
-    if _is_building():
-        raise ApiException(status_code=409, code="BUILD_ALREADY_RUNNING", message="Build already running")
-
     p = Path(str(req.path)).expanduser().resolve()
     if not p.exists() or not p.is_dir():
         raise ApiException(
@@ -442,34 +680,95 @@ def add_project(req: AddProjectRequest) -> Dict[str, Any]:
             message=f"Path does not exist: {p}",
         )
 
-    cfg = _load_ui_config()
-    cfg["repo_root"] = str(p)
-    _save_ui_config(cfg)
+    reg = _get_registry()
+    default_cfg: Dict[str, Any] = {
+        "include_globs": list(_DEFAULT_UI_CONFIG.get("include_globs") or []),
+        "exclude_globs": list(_DEFAULT_UI_CONFIG.get("exclude_globs") or []),
+        "max_file_bytes": int(_DEFAULT_UI_CONFIG.get("max_file_bytes") or 500_000),
+        "trace": {"enabled": bool((_DEFAULT_UI_CONFIG.get("trace") or {}).get("enabled", False))},
+        "auto_rebuild": {
+            "enabled": bool((_DEFAULT_UI_CONFIG.get("auto_rebuild") or {}).get("enabled", False)),
+        },
+    }
+    if req.mode == "embedded":
+        if "**/.codrag/**" not in default_cfg["exclude_globs"]:
+            default_cfg["exclude_globs"].append("**/.codrag/**")
+    if (_DEFAULT_UI_CONFIG.get("auto_rebuild") or {}).get("debounce_ms") is not None:
+        default_cfg["auto_rebuild"]["debounce_ms"] = int(
+            (_DEFAULT_UI_CONFIG.get("auto_rebuild") or {}).get("debounce_ms")
+        )
 
-    configure(
-        repo_root=str(p),
-        index_dir=str(_config.get("index_dir") or "./codrag_data"),
-        ollama_url=str(_config.get("ollama_url") or "http://localhost:11434"),
-        model=str(_config.get("model") or "nomic-embed-text"),
-    )
+    try:
+        proj = reg.add_project(path=str(p), name=req.name, mode=req.mode, config=default_cfg)
+    except ProjectAlreadyExists:
+        raise ApiException(
+            status_code=409,
+            code="PROJECT_ALREADY_EXISTS",
+            message=f"A project already exists at '{p}'",
+            hint="Use a different path or remove the existing project first.",
+        )
 
-    proj = _current_project()
-    if proj is None:
-        raise ApiException(status_code=500, code="INTERNAL_ERROR", message="Failed to create project")
-    return ok({"project": proj})
+    return ok({"project": _project_to_dict(proj)})
+
+
+@app.get("/projects/{project_id}")
+def get_project(project_id: str) -> Dict[str, Any]:
+    proj = _require_project(project_id)
+    return ok({"project": _project_to_dict(proj)})
+
+
+@app.put("/projects/{project_id}")
+def update_project(project_id: str, req: UpdateProjectRequest) -> Dict[str, Any]:
+    reg = _get_registry()
+    try:
+        updated = reg.update_project(project_id, name=req.name, config=req.config)
+    except ProjectNotFound:
+        raise ApiException(
+            status_code=404,
+            code="PROJECT_NOT_FOUND",
+            message=f"Project with ID '{project_id}' not found",
+            hint="Add the project first or select an existing project.",
+        )
+
+    return ok({"project": _project_to_dict(updated)})
+
+
+@app.delete("/projects/{project_id}")
+def delete_project(project_id: str, purge: bool = False) -> Dict[str, Any]:
+    reg = _get_registry()
+    try:
+        reg.remove_project(project_id, purge=bool(purge))
+    except ProjectNotFound:
+        raise ApiException(
+            status_code=404,
+            code="PROJECT_NOT_FOUND",
+            message=f"Project with ID '{project_id}' not found",
+            hint="Add the project first or select an existing project.",
+        )
+
+    _project_indexes.pop(project_id, None)
+    _project_trace_indexes.pop(project_id, None)
+    with _project_build_lock:
+        _project_build_threads.pop(project_id, None)
+        _project_last_build_result.pop(project_id, None)
+        _project_last_build_error.pop(project_id, None)
+    with _project_trace_build_lock:
+        _project_trace_build_threads.pop(project_id, None)
+
+    return ok({"removed": True, "purged": bool(purge)})
 
 
 @app.get("/projects/{project_id}/status")
 def get_project_status(project_id: str) -> Dict[str, Any]:
-    _require_project(project_id)
-    idx = _get_index()
+    proj = _require_project(project_id)
+    idx = _get_project_index(proj)
 
-    watch = _watcher.status() if _watcher is not None else {"enabled": False, "state": "disabled"}
+    watch = {"enabled": False, "state": "disabled"}
     data = {
-        "building": _is_building(),
+        "building": _is_project_building(proj.id),
         "stale": bool(watch.get("stale", False)),
-        "index": _project_index_status(idx),
-        "trace": _project_trace_status(),
+        "index": _project_index_status(idx, _project_last_build_error.get(proj.id)),
+        "trace": _project_trace_status(proj),
         "watch": watch,
     }
     return ok(data)
@@ -477,32 +776,38 @@ def get_project_status(project_id: str) -> Dict[str, Any]:
 
 @app.post("/projects/{project_id}/build")
 def build_project(project_id: str, full: bool = False) -> Dict[str, Any]:
-    _require_project(project_id)
+    proj = _require_project(project_id)
 
-    ui_cfg = _load_ui_config()
-    repo_root = str(ui_cfg.get("repo_root") or "") or _config.get("repo_root")
-    if not repo_root:
-        raise ApiException(status_code=400, code="VALIDATION_ERROR", message="repo_root is required")
+    cfg = proj.config or {}
+    include_raw = cfg.get("include_globs") if isinstance(cfg, dict) else None
+    exclude_raw = cfg.get("exclude_globs") if isinstance(cfg, dict) else None
+    include_globs = list(include_raw) if isinstance(include_raw, list) else None
+    exclude_globs = list(exclude_raw) if isinstance(exclude_raw, list) else None
+    max_file_bytes = int((cfg.get("max_file_bytes") or 500_000) if isinstance(cfg, dict) else 500_000)
 
-    roots = list(ui_cfg.get("core_roots") or []) + list(ui_cfg.get("working_roots") or [])
-    roots = roots or None
-    include_globs = ui_cfg.get("include_globs") or None
-    exclude_globs = ui_cfg.get("exclude_globs") or None
-    max_file_bytes = int(ui_cfg.get("max_file_bytes") or 500_000)
+    if proj.mode == "embedded":
+        if exclude_globs is None:
+            exclude_globs = []
+        if "**/.codrag/**" not in exclude_globs:
+            exclude_globs.append("**/.codrag/**")
 
-    started = _start_build(str(repo_root), roots, include_globs, exclude_globs, max_file_bytes)
+    started = _start_project_build(proj, None, include_globs, exclude_globs, max_file_bytes)
     if not started:
         raise ApiException(status_code=409, code="BUILD_ALREADY_RUNNING", message="Build already running")
+
+    trace_cfg = cfg.get("trace") if isinstance(cfg, dict) else None
+    if bool((trace_cfg or {}).get("enabled", False)):
+        _start_project_trace_build(proj, include_globs, exclude_globs, max_file_bytes=max_file_bytes)
     return ok({"started": True, "building": True, "build_id": None})
 
 
 @app.post("/projects/{project_id}/search")
 def search_project(project_id: str, req: SearchRequest) -> Dict[str, Any]:
-    _require_project(project_id)
+    proj = _require_project(project_id)
     if not req.query.strip():
         raise ApiException(status_code=400, code="VALIDATION_ERROR", message="query is required")
 
-    idx = _get_index()
+    idx = _get_project_index(proj)
     if not idx.is_loaded():
         raise ApiException(
             status_code=409,
@@ -516,11 +821,14 @@ def search_project(project_id: str, req: SearchRequest) -> Dict[str, Any]:
     for r in results:
         d = r.doc
         content = str(d.get("content") or "")
+        span = d.get("span")
+        if not isinstance(span, dict) or "start_line" not in span or "end_line" not in span:
+            span = {"start_line": 1, "end_line": 1}
         out.append(
             {
                 "chunk_id": str(d.get("id") or ""),
                 "source_path": str(d.get("source_path") or ""),
-                "span": {"start_line": 1, "end_line": 1},
+                "span": span,
                 "preview": content[:200],
                 "score": float(r.score),
             }
@@ -530,11 +838,11 @@ def search_project(project_id: str, req: SearchRequest) -> Dict[str, Any]:
 
 @app.post("/projects/{project_id}/context")
 def context_project(project_id: str, req: ContextRequest) -> Dict[str, Any]:
-    _require_project(project_id)
+    proj = _require_project(project_id)
     if not req.query.strip():
         raise ApiException(status_code=400, code="VALIDATION_ERROR", message="query is required")
 
-    idx = _get_index()
+    idx = _get_project_index(proj)
     if not idx.is_loaded():
         raise ApiException(
             status_code=409,
@@ -564,6 +872,9 @@ def context_project(project_id: str, req: ContextRequest) -> Dict[str, Any]:
         chunk_id = str(d.get("id") or "")
         source_path = str(d.get("source_path") or "")
         section = str(d.get("section") or "")
+        span = d.get("span")
+        if not isinstance(span, dict) or "start_line" not in span or "end_line" not in span:
+            span = {"start_line": 1, "end_line": 1}
 
         header_bits: List[str] = []
         if section:
@@ -597,7 +908,7 @@ def context_project(project_id: str, req: ContextRequest) -> Dict[str, Any]:
             {
                 "chunk_id": chunk_id,
                 "source_path": source_path,
-                "span": {"start_line": 1, "end_line": 1},
+                "span": span,
                 "score": float(r.score),
                 "text": text,
             }
@@ -618,26 +929,40 @@ def context_project(project_id: str, req: ContextRequest) -> Dict[str, Any]:
 
 @app.get("/projects/{project_id}/trace/status")
 def trace_status_project(project_id: str) -> Dict[str, Any]:
-    _require_project(project_id)
-    return ok(_project_trace_status())
+    proj = _require_project(project_id)
+    return ok(_project_trace_status(proj))
 
 
 @app.post("/projects/{project_id}/trace/build")
 def build_trace_project(project_id: str) -> Dict[str, Any]:
-    _require_project(project_id)
-    
-    if _is_trace_building():
+    proj = _require_project(project_id)
+
+    cfg = proj.config or {}
+    trace_cfg = cfg.get("trace") if isinstance(cfg, dict) else None
+    if not bool((trace_cfg or {}).get("enabled", False)):
+        raise ApiException(
+            status_code=409,
+            code="TRACE_DISABLED",
+            message="Trace is disabled for this project",
+            hint="Enable trace in project settings and try again.",
+        )
+
+    if _is_project_trace_building(proj.id):
         raise ApiException(status_code=409, code="TRACE_BUILD_ALREADY_RUNNING", message="Trace build already running")
-    
-    ui_cfg = _load_ui_config()
-    repo_root = str(ui_cfg.get("repo_root") or "") or _config.get("repo_root")
-    if not repo_root:
-        raise ApiException(status_code=400, code="VALIDATION_ERROR", message="repo_root is required")
-    
-    include_globs = ui_cfg.get("include_globs") or None
-    exclude_globs = ui_cfg.get("exclude_globs") or None
-    
-    started = _start_trace_build(repo_root, include_globs, exclude_globs)
+
+    include_raw = cfg.get("include_globs") if isinstance(cfg, dict) else None
+    exclude_raw = cfg.get("exclude_globs") if isinstance(cfg, dict) else None
+    include_globs = list(include_raw) if isinstance(include_raw, list) else None
+    exclude_globs = list(exclude_raw) if isinstance(exclude_raw, list) else None
+    max_file_bytes = int((cfg.get("max_file_bytes") or 500_000) if isinstance(cfg, dict) else 500_000)
+
+    if proj.mode == "embedded":
+        if exclude_globs is None:
+            exclude_globs = []
+        if "**/.codrag/**" not in exclude_globs:
+            exclude_globs.append("**/.codrag/**")
+
+    started = _start_project_trace_build(proj, include_globs, exclude_globs, max_file_bytes=max_file_bytes)
     if not started:
         raise ApiException(status_code=409, code="TRACE_BUILD_ALREADY_RUNNING", message="Trace build already running")
     
@@ -646,12 +971,22 @@ def build_trace_project(project_id: str) -> Dict[str, Any]:
 
 @app.get("/projects/{project_id}/trace/search")
 def search_trace_project(project_id: str, query: str, kind: Optional[str] = None, limit: int = 50) -> Dict[str, Any]:
-    _require_project(project_id)
+    proj = _require_project(project_id)
     
     if not query.strip():
         raise ApiException(status_code=400, code="VALIDATION_ERROR", message="query is required")
+
+    cfg = proj.config or {}
+    trace_cfg = cfg.get("trace") if isinstance(cfg, dict) else None
+    if not bool((trace_cfg or {}).get("enabled", False)):
+        raise ApiException(
+            status_code=409,
+            code="TRACE_DISABLED",
+            message="Trace is disabled for this project",
+            hint="Enable trace in project settings and build the trace index.",
+        )
     
-    trace_idx = _get_trace_index()
+    trace_idx = _get_project_trace_index(proj)
     if not trace_idx.exists():
         raise ApiException(
             status_code=409,
@@ -664,14 +999,69 @@ def search_trace_project(project_id: str, query: str, kind: Optional[str] = None
         trace_idx.load()
     
     results = trace_idx.search_nodes(query, kind=kind, limit=min(limit, 100))
-    return ok({"results": results, "total": len(results)})
+    return ok({"nodes": results})
 
 
+@app.post("/projects/{project_id}/trace/search")
+def trace_search_project(project_id: str, req: TraceSearchRequest) -> Dict[str, Any]:
+    proj = _require_project(project_id)
+
+    if not str(req.query or "").strip():
+        raise ApiException(status_code=400, code="VALIDATION_ERROR", message="query is required")
+
+    cfg = proj.config or {}
+    trace_cfg = cfg.get("trace") if isinstance(cfg, dict) else None
+    if not bool((trace_cfg or {}).get("enabled", False)):
+        raise ApiException(
+            status_code=409,
+            code="TRACE_DISABLED",
+            message="Trace is disabled for this project",
+            hint="Enable trace in project settings and build the trace index.",
+        )
+
+    trace_idx = _get_project_trace_index(proj)
+    if not trace_idx.exists():
+        raise ApiException(
+            status_code=409,
+            code="TRACE_NOT_BUILT",
+            message="Trace index has not been built yet",
+            hint="Run a trace build first.",
+        )
+
+    if not trace_idx.is_loaded():
+        trace_idx.load()
+
+    hard_cap = 100
+    limit = min(int(req.limit or 0) if req.limit is not None else 20, hard_cap)
+    if limit <= 0:
+        limit = 20
+
+    nodes = trace_idx.search_nodes(req.query, kind=None, limit=hard_cap)
+    if isinstance(req.kinds, list) and req.kinds:
+        kinds = {str(k).strip() for k in req.kinds if isinstance(k, str) and k.strip()}
+        if kinds:
+            nodes = [n for n in nodes if str(n.get("kind") or "") in kinds]
+    nodes = nodes[:limit]
+
+    return ok({"nodes": nodes})
+
+
+@app.get("/projects/{project_id}/trace/node/{node_id}")
 @app.get("/projects/{project_id}/trace/nodes/{node_id}")
 def get_trace_node(project_id: str, node_id: str) -> Dict[str, Any]:
-    _require_project(project_id)
+    proj = _require_project(project_id)
+
+    cfg = proj.config or {}
+    trace_cfg = cfg.get("trace") if isinstance(cfg, dict) else None
+    if not bool((trace_cfg or {}).get("enabled", False)):
+        raise ApiException(
+            status_code=409,
+            code="TRACE_DISABLED",
+            message="Trace is disabled for this project",
+            hint="Enable trace in project settings and build the trace index.",
+        )
     
-    trace_idx = _get_trace_index()
+    trace_idx = _get_project_trace_index(proj)
     if not trace_idx.exists():
         raise ApiException(status_code=409, code="TRACE_NOT_BUILT", message="Trace index has not been built yet")
     
@@ -682,20 +1072,35 @@ def get_trace_node(project_id: str, node_id: str) -> Dict[str, Any]:
     if node is None:
         raise ApiException(status_code=404, code="NODE_NOT_FOUND", message=f"Node not found: {node_id}")
     
-    return ok({"node": node})
+    in_degree = len(getattr(trace_idx, "_edges_by_target", {}).get(node_id, []) or [])
+    out_degree = len(getattr(trace_idx, "_edges_by_source", {}).get(node_id, []) or [])
+    return ok({"node": node, "in_degree": in_degree, "out_degree": out_degree})
 
 
+@app.get("/projects/{project_id}/trace/neighbors/{node_id}")
 @app.get("/projects/{project_id}/trace/nodes/{node_id}/neighbors")
 def get_trace_node_neighbors(
     project_id: str,
     node_id: str,
     direction: str = "both",
-    edge_kinds: Optional[str] = None,
-    max_nodes: int = 50,
+    edge_kinds: Optional[List[str]] = Query(None),
+    hops: int = 1,
+    max_nodes: int = 25,
+    max_edges: int = 50,
 ) -> Dict[str, Any]:
-    _require_project(project_id)
+    proj = _require_project(project_id)
+
+    cfg = proj.config or {}
+    trace_cfg = cfg.get("trace") if isinstance(cfg, dict) else None
+    if not bool((trace_cfg or {}).get("enabled", False)):
+        raise ApiException(
+            status_code=409,
+            code="TRACE_DISABLED",
+            message="Trace is disabled for this project",
+            hint="Enable trace in project settings and build the trace index.",
+        )
     
-    trace_idx = _get_trace_index()
+    trace_idx = _get_project_trace_index(proj)
     if not trace_idx.exists():
         raise ApiException(status_code=409, code="TRACE_NOT_BUILT", message="Trace index has not been built yet")
     
@@ -706,13 +1111,53 @@ def get_trace_node_neighbors(
     if node is None:
         raise ApiException(status_code=404, code="NODE_NOT_FOUND", message=f"Node not found: {node_id}")
     
-    edge_kinds_list = edge_kinds.split(",") if edge_kinds else None
-    neighbors = trace_idx.get_neighbors(node_id, direction=direction, edge_kinds=edge_kinds_list, max_nodes=min(max_nodes, 100))
-    
-    return ok(neighbors)
+    edge_kinds_list: Optional[List[str]] = None
+    if edge_kinds:
+        cleaned: List[str] = []
+        for v in edge_kinds:
+            for part in str(v).split(","):
+                p = part.strip()
+                if p:
+                    cleaned.append(p)
+        edge_kinds_list = cleaned or None
+
+    if edge_kinds_list is None:
+        edge_kinds_list = ["imports"]
+
+    neighbors = trace_idx.get_neighbors(
+        node_id,
+        direction=direction,
+        edge_kinds=edge_kinds_list,
+        max_nodes=min(max_nodes, 100),
+    )
+
+    edges: List[Dict[str, Any]] = []
+    seen_edges: set[str] = set()
+    for e in list(neighbors.get("in_edges") or []) + list(neighbors.get("out_edges") or []):
+        eid = str(e.get("id") or "")
+        if eid and eid in seen_edges:
+            continue
+        if eid:
+            seen_edges.add(eid)
+        edges.append(e)
+
+    max_edges_cap = 200
+    edges = edges[: min(int(max_edges), max_edges_cap)] if int(max_edges) > 0 else edges[:50]
+
+    nodes_out: List[Dict[str, Any]] = []
+    seen_nodes: set[str] = set()
+    for n in [node] + list(neighbors.get("in_nodes") or []) + list(neighbors.get("out_nodes") or []):
+        nid = str((n or {}).get("id") or "")
+        if not nid or nid in seen_nodes:
+            continue
+        seen_nodes.add(nid)
+        nodes_out.append(n)
+
+    return ok({"nodes": nodes_out, "edges": edges})
 
 
 @app.get("/llm/status")
+@app.get("/api/llm/status")
 def get_llm_status() -> Dict[str, Any]:
     ollama_url = str(_config.get("ollama_url") or "http://localhost:11434").rstrip("/")
     connected = False
@@ -740,6 +1185,7 @@ def get_llm_status() -> Dict[str, Any]:
 
 
 @app.post("/llm/test")
+@app.post("/api/llm/test")
 def test_llm() -> Dict[str, Any]:
     ollama_url = str(_config.get("ollama_url") or "http://localhost:11434").rstrip("/")
     ollama_connected = False
@@ -758,6 +1204,150 @@ def test_llm() -> Dict[str, Any]:
     )
 
 
+@app.post("/api/llm/proxy/models")
+def proxy_models(req: LLMProxyRequest) -> Dict[str, Any]:
+    url = req.url.rstrip("/")
+    models: List[str] = []
+    
+    try:
+        if req.provider == "ollama":
+            r = requests.get(f"{url}/api/tags", timeout=5)
+            if r.status_code == 200:
+                data = r.json()
+                for m in data.get("models", []):
+                    if isinstance(m, dict) and "name" in m:
+                        models.append(m["name"])
+        
+        elif req.provider in ("openai", "openai-compatible", "anthropic"):
+            headers = {}
+            if req.api_key:
+                headers["Authorization"] = f"Bearer {req.api_key}"
+            
+            # OpenAI/compatible usually uses /v1/models
+            target = f"{url}/models"
+            if "v1" not in url and req.provider != "anthropic":
+                 target = f"{url}/v1/models"
+            
+            r = requests.get(target, headers=headers, timeout=5)
+            if r.status_code == 200:
+                data = r.json()
+                for m in data.get("data", []):
+                    if isinstance(m, dict) and "id" in m:
+                        models.append(m["id"])
+                        
+    except Exception as e:
+        raise ApiException(status_code=500, code="CONNECTION_FAILED", message=str(e))
+
+    return ok({"models": models})
+
+
+@app.post("/api/llm/proxy/test")
+def proxy_test(req: LLMProxyRequest) -> Dict[str, Any]:
+    url = req.url.rstrip("/")
+    success = False
+    message = ""
+    models: List[str] = []
+
+    try:
+        if req.provider == "ollama":
+            r = requests.get(f"{url}/api/tags", timeout=5)
+            if r.status_code == 200:
+                success = True
+                data = r.json()
+                models = [m["name"] for m in data.get("models", []) if "name" in m]
+                message = f"Connected to Ollama v{r.headers.get('version', 'unknown')}"
+            else:
+                message = f"HTTP {r.status_code}: {r.text[:100]}"
+        
+        else:
+            headers = {}
+            if req.api_key:
+                headers["Authorization"] = f"Bearer {req.api_key}"
+            
+            target = f"{url}/models"
+            if "v1" not in url and req.provider != "anthropic":
+                 target = f"{url}/v1/models"
+
+            r = requests.get(target, headers=headers, timeout=5)
+            if r.status_code == 200:
+                success = True
+                data = r.json()
+                models = [m.get("id") for m in data.get("data", []) if "id" in m]
+                message = "Connected successfully"
+            else:
+                message = f"HTTP {r.status_code}: {r.text[:100]}"
+
+    except Exception as e:
+        message = str(e)
+
+    return ok({"success": success, "message": message, "models": models})
+
+
+@app.post("/api/llm/proxy/test-model")
+def proxy_test_model(req: LLMModelTestRequest) -> Dict[str, Any]:
+    url = req.url.rstrip("/")
+    success = False
+    message = ""
+    
+    try:
+        if req.provider == "ollama":
+            if req.kind == "embedding":
+                r = requests.post(
+                    f"{url}/api/embeddings",
+                    json={"model": req.model, "prompt": "Test embedding"},
+                    timeout=10
+                )
+            else:
+                r = requests.post(
+                    f"{url}/api/generate",
+                    json={"model": req.model, "prompt": "Hi", "stream": False},
+                    timeout=10
+                )
+            
+            if r.status_code == 200:
+                success = True
+                message = "Model responded successfully"
+            else:
+                message = f"HTTP {r.status_code}: {r.text[:100]}"
+                
+        elif req.provider in ("openai", "openai-compatible"):
+            headers = {}
+            if req.api_key:
+                headers["Authorization"] = f"Bearer {req.api_key}"
+            
+            base = url if "v1" in url else f"{url}/v1"
+            
+            if req.kind == "embedding":
+                r = requests.post(
+                    f"{base}/embeddings",
+                    headers=headers,
+                    json={"model": req.model, "input": "Test"},
+                    timeout=10
+                )
+            else:
+                r = requests.post(
+                    f"{base}/chat/completions",
+                    headers=headers,
+                    json={
+                        "model": req.model, 
+                        "messages": [{"role": "user", "content": "Hi"}],
+                        "max_tokens": 5
+                    },
+                    timeout=10
+                )
+                
+            if r.status_code == 200:
+                success = True
+                message = "Model responded successfully"
+            else:
+                message = f"HTTP {r.status_code}: {r.text[:100]}"
+
+    except Exception as e:
+        message = str(e)
+
+    return ok({"success": success, "message": message})
+
+
 @app.get("/api/code-index/config")
 def get_ui_config():
     return _load_ui_config()
@@ -771,8 +1361,11 @@ def put_ui_config(data: Dict[str, Any]):
         "core_roots",
         "working_roots",
         "include_globs",
+        "llm_config",
         "exclude_globs",
         "max_file_bytes",
+        "trace",
+        "auto_rebuild",
     ]:
         if key in data:
             cfg[key] = data[key]

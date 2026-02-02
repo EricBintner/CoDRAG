@@ -1,4 +1,5 @@
 import { Copy, Settings2 } from 'lucide-react';
+import { Card, Flex, Title, NumberInput, Switch, Button, Text } from '@tremor/react';
 import { cn } from '../../lib/utils';
 
 export interface ContextOptionsPanelProps {
@@ -48,99 +49,103 @@ export function ContextOptionsPanel({
   className,
 }: ContextOptionsPanelProps) {
   return (
-    <div className={cn(
-      'bg-surface border border-border rounded-lg p-4 shadow-sm',
-      className
-    )}>
-      <div className="flex items-center justify-between mb-4">
-        <h3 className="text-sm font-semibold text-text flex items-center gap-2">
-          <Settings2 className="w-4 h-4 text-primary" />
-          Context Options
-        </h3>
-        <div className="flex items-center gap-2">
-          <button
+    <Card className={cn('border border-border bg-surface shadow-sm', className)}>
+      <Flex justifyContent="between" alignItems="center" className="mb-4">
+        <Flex className="gap-2" justifyContent="start">
+          <Settings2 className="w-5 h-5 text-primary" />
+          <Title className="text-text">Context Options</Title>
+        </Flex>
+        <Flex className="gap-2" justifyContent="end">
+          <Button
+            size="xs"
             onClick={onGetContext}
             disabled={disabled}
-            className="bg-primary hover:bg-primary-hover disabled:opacity-50 disabled:cursor-not-allowed rounded-md px-3 py-1.5 text-xs font-medium text-white transition-colors shadow-sm"
+            className="bg-primary hover:bg-primary-hover text-white border-none"
           >
             Get Context
-          </button>
+          </Button>
           {onCopyContext && (
-            <button
+            <Button
+              size="xs"
+              variant="secondary"
               onClick={onCopyContext}
               disabled={!hasContext}
-              className="bg-surface hover:bg-surface-raised border border-border disabled:opacity-50 disabled:cursor-not-allowed rounded-md px-3 py-1.5 text-xs font-medium text-text transition-colors flex items-center gap-1.5"
-              title="Copy context"
+              className="border border-border"
+              icon={Copy}
             >
-              <Copy className="w-3.5 h-3.5" />
               Copy
-            </button>
+            </Button>
           )}
+        </Flex>
+      </Flex>
+
+      <div className="space-y-6">
+        <Flex className="gap-4 flex-wrap" justifyContent="start" alignItems="start">
+          <div className="w-32">
+            <label className="block text-sm font-medium text-text-muted mb-2">
+              Chunks (k)
+            </label>
+            <NumberInput
+              value={k}
+              onValueChange={onKChange}
+              min={1}
+              max={50}
+              disabled={disabled}
+              className="w-full"
+            />
+          </div>
+
+          <div className="w-32">
+            <label className="block text-sm font-medium text-text-muted mb-2">
+              Max Chars
+            </label>
+            <NumberInput
+              value={maxChars}
+              onValueChange={onMaxCharsChange}
+              min={200}
+              max={200000}
+              disabled={disabled}
+              className="w-full"
+            />
+          </div>
+        </Flex>
+
+        <div className="border-t border-border" />
+
+        <div className="space-y-3">
+          <label className="block text-sm font-medium text-text-muted">
+            Inclusions
+          </label>
+          <Flex className="gap-6 w-auto" justifyContent="start">
+            <label className="flex items-center gap-2 cursor-pointer hover:opacity-80 transition-opacity">
+              <Switch
+                checked={includeSources}
+                onChange={onIncludeSourcesChange}
+                disabled={disabled}
+              />
+              <Text className="text-sm text-text">Sources</Text>
+            </label>
+
+            <label className="flex items-center gap-2 cursor-pointer hover:opacity-80 transition-opacity">
+              <Switch
+                checked={includeScores}
+                onChange={onIncludeScoresChange}
+                disabled={disabled}
+              />
+              <Text className="text-sm text-text">Scores</Text>
+            </label>
+
+            <label className="flex items-center gap-2 cursor-pointer hover:opacity-80 transition-opacity">
+              <Switch
+                checked={structured}
+                onChange={onStructuredChange}
+                disabled={disabled}
+              />
+              <Text className="text-sm text-text">Structured</Text>
+            </label>
+          </Flex>
         </div>
       </div>
-
-      <div className="flex gap-4 flex-wrap items-center text-sm">
-        <div className="flex items-center gap-2">
-          <span className="text-text-muted font-medium text-xs">k</span>
-          <input
-            type="number"
-            value={k}
-            onChange={(e) => onKChange(parseInt(e.target.value) || 5)}
-            min={1}
-            max={50}
-            disabled={disabled}
-            className="w-16 bg-surface-raised border border-border rounded-md px-2 py-1 text-xs text-text focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent disabled:opacity-50 transition-all"
-          />
-        </div>
-
-        <div className="flex items-center gap-2">
-          <span className="text-text-muted font-medium text-xs">max_chars</span>
-          <input
-            type="number"
-            value={maxChars}
-            onChange={(e) => onMaxCharsChange(parseInt(e.target.value) || 6000)}
-            min={200}
-            max={200000}
-            disabled={disabled}
-            className="w-24 bg-surface-raised border border-border rounded-md px-2 py-1 text-xs text-text focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent disabled:opacity-50 transition-all"
-          />
-        </div>
-
-        <div className="h-4 w-px bg-border mx-2" />
-
-        <label className="flex items-center gap-2 text-text cursor-pointer select-none group">
-          <input
-            type="checkbox"
-            checked={includeSources}
-            onChange={(e) => onIncludeSourcesChange(e.target.checked)}
-            disabled={disabled}
-            className="rounded border-border text-primary focus:ring-primary bg-surface-raised"
-          />
-          <span className="text-xs group-hover:text-primary transition-colors">include_sources</span>
-        </label>
-
-        <label className="flex items-center gap-2 text-text cursor-pointer select-none group">
-          <input
-            type="checkbox"
-            checked={includeScores}
-            onChange={(e) => onIncludeScoresChange(e.target.checked)}
-            disabled={disabled}
-            className="rounded border-border text-primary focus:ring-primary bg-surface-raised"
-          />
-          <span className="text-xs group-hover:text-primary transition-colors">include_scores</span>
-        </label>
-
-        <label className="flex items-center gap-2 text-text cursor-pointer select-none group">
-          <input
-            type="checkbox"
-            checked={structured}
-            onChange={(e) => onStructuredChange(e.target.checked)}
-            disabled={disabled}
-            className="rounded border-border text-primary focus:ring-primary bg-surface-raised"
-          />
-          <span className="text-xs group-hover:text-primary transition-colors">structured</span>
-        </label>
-      </div>
-    </div>
+    </Card>
   );
 }

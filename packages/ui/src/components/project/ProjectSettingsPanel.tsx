@@ -77,7 +77,7 @@ export function ProjectSettingsPanel({
   );
 
   return (
-    <div className={cn('space-y-8 bg-surface p-6 rounded-lg border border-border', className)}>
+    <div className={cn('codrag-card space-y-8 bg-surface p-6 rounded-lg border border-border', className)}>
       {/* Include Globs */}
       <section>
         <h3 className="text-sm font-semibold text-text mb-1">Include Patterns</h3>

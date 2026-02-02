@@ -19,9 +19,10 @@ We will use a **Signed JSON Payload** encoded in Base64 (similar to JWT but simp
   "id": "uuid-v4",
   "issued_to": "email@example.com",
   "issued_at": 1735689600,  // Unix timestamp
-  "updates_until": 1767225600, // Unix timestamp (1 year later)
-  "tier": "pro", // "pro", "team", "enterprise"
-  "seats": 1, // 1 for pro, N for team
+  "updates_until": 1767225600, // Unix timestamp (1 year later for Pro)
+  "expires_at": null, // Unix timestamp (OPTIONAL: Hard expiration for Starter passes)
+  "tier": "pro", // "starter", "pro", "team", "enterprise"
+  "seats": 1, // 1 for pro/starter, N for team
   "features": [
     "trace_index",
     "mcp_advanced"
@@ -46,17 +47,23 @@ The CoDRAG desktop app (Tauri/Rust) and daemon (Python) will both contain the **
 -   Verify signature against payload using the embedded **Ed25519 Public Key**.
 -   **Failure:** `INVALID_LICENSE` (The key is fake or modified).
 
-### 2. Entitlement Check
+### 2. Expiration Check (Starter Tier / Term License)
+-   **expires_at** (if present):
+    -   If `current_date > expires_at`:
+        -   **Result:** `LICENSE_EXPIRED`.
+        -   **Action:** Revert to Free Tier limits. Show "Pass Expired" banner.
+
+### 3. Entitlement Check (Updates)
 -   **updates_until**:
     -   Compare with current date.
-    -   If `current_date > updates_until`:
-        -   **App:** ALLOW launch (Perpetual fallback).
+    -   If `current_date > updates_until` AND license is NOT expired:
+        -   **App:** ALLOW launch (Perpetual fallback for Pro).
         -   **Updates:** DENY download of new versions released *after* this date.
         -   **UI:** Show "Updates Expired - Renew to get vNext".
 -   **tier/features**:
     -   Enable gated modules (TraceManager, Advanced MCP).
 
-### 3. Seat/Machine Check (Team/Enterprise only)
+### 4. Seat/Machine Check (Team/Enterprise only)
 -   *Strict enforcement usually requires a license server.*
 -   **Local-First Approach:**
     -   We trust the user for offline scenarios.
@@ -66,9 +73,27 @@ The CoDRAG desktop app (Tauri/Rust) and daemon (Python) will both contain the **
 ## Feature Gating Implementation
 
 ### Free Tier (Default state)
--   `ProjectRegistry`: Enforce `project_count <= 2`.
+-   `ProjectRegistry`: Enforce `project_count <= 1`.
 -   `TraceManager`: Disabled. Returns "Upgrade to Pro" error on `trace_build`.
 -   `Dashboard`: Show "Pro" badges on locked features.
+
+### Starter Tier (Term Pass)
+-   `ProjectRegistry`: Enforce `project_count <= 3`.
+-   `TraceManager`: Enabled (Standard).
+-   `ContextFreshness`: Real-time watchers enabled.
+-   **Expiration:** Reverts to Free Tier behavior when `expires_at` is reached.
+
+### Enforcement points (by runtime mode)
+
+- **Daemon / server mode (multi-project)**:
+  - Project count limits are enforced by the daemon (authoritative) via `ProjectRegistry`.
+  - HTTP API and MCP server-mode tooling MUST return consistent license error envelopes when limits are exceeded.
+- **Direct MCP mode (single repo, no daemon)**:
+  - Repo-count gating is not meaningful (Direct mode is scoped to the current working directory).
+  - License enforcement in Direct mode is optional; recommended gating is feature-based (e.g., trace) rather than “repo count”.
+- **Network / team server deployments (Phase 06)**:
+  - Remote access and multi-client usage will require explicit authentication.
+  - Seat enforcement is not strictly enforceable without an online license server; Enterprise posture relies on signed offline keys + legal enforcement.
 
 ### Pro Tier
 -   `ProjectRegistry`: Unlimited.

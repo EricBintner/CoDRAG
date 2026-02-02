@@ -15,14 +15,24 @@ Precedents: TablePlus, Sublime Text, JetBrains.
 ### Free Tier (The Hook)
 - **Price:** $0
 - **Limits:** 
-  - **2 active projects** (indexed repos).
+  - **1 active project** (indexed repo).
   - Standard keyword/embedding search only.
 - **Constraints:** 
   - **No Trace Index** (structural signals/call graphs).
   - Standard MCP tools only.
-- **Purpose:** Evaluation, students, hobbyists.
+  - Manual re-indexing (no real-time watcher).
+- **Purpose:** Evaluation, students, "Hello World".
 
-### Pro License (Personal/Professional Use)
+### Starter Tier (The Bridge)
+- **Price:** **$29** / 4-months (Pass).
+- **Limits:**
+  - **3 active projects**.
+- **Features:**
+  - Standard Trace Index.
+  - Context Freshness (Real-time watcher).
+- **Purpose:** Freelancers, single-project devs, "getting addicted".
+
+### Pro License (Perpetual Ownership)
 - **Price:** **$79** (One-time payment).
 - **Model:** Perpetual fallback. Includes 1 year of updates.
   - After 1 year: Keep the last version forever, or renew for **~$30/year** for updates.
@@ -30,6 +40,7 @@ Precedents: TablePlus, Sublime Text, JetBrains.
   - **Unlimited projects**.
   - **Trace Index** (Structural Intelligence / Call Graphs).
   - **Full MCP Suite** (including advanced context assembly).
+  - **Multi-Repo Agent** capabilities.
   - Priority local indexing.
 - **Launch Strategy:** **"Founder’s Edition"** license at **$49** for the first 500 users.
 
@@ -57,13 +68,13 @@ Target: Regulated industries (Banking, Defense) requiring air-gapped/governed us
 
 ## Value Metrics (Feature Gating)
 
-| Feature | Free | Pro | Team | Enterprise |
-| :--- | :--- | :--- | :--- | :--- |
-| **Project Limit** | 2 Repos | Unlimited | Unlimited | Unlimited |
-| **Indexing** | Basic (Embeddings) | **Trace Index** (Structural) | Shared Configs | Governed Policy |
-| **MCP Tools** | Standard | Full Suite | Full Suite | Full Suite |
-| **Deployment** | Local | Local | Local + Config Sync | Air-gapped / Managed |
-| **Support** | Community | Email | Priority | SLA |
+| Feature | Free | Starter | Pro | Team | Enterprise |
+| :--- | :--- | :--- | :--- | :--- | :--- |
+| **Project Limit** | 1 Repo | 3 Repos | Unlimited | Unlimited | Unlimited |
+| **Indexing** | Basic (Manual) | Real-time | **Trace Index** | Shared Configs | Governed Policy |
+| **MCP Tools** | Standard | Standard | Full Suite | Full Suite | Full Suite |
+| **Deployment** | Local | Local | Local | Local + Config Sync | Air-gapped / Managed |
+| **Support** | Community | Community | Email | Priority | SLA |
 
 ## Marketing Positioning
 - **"No Token Markup":** Explicitly market against cloud AI tools that mark up inference costs. CoDRAG is a "BYOK engine" that runs at cost.

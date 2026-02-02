@@ -26,6 +26,9 @@ export interface SearchResult {
   };
   preview: string;
   score: number;
+  // Optional extras for different contexts
+  section?: string;
+  content?: string;
 }
 
 /**

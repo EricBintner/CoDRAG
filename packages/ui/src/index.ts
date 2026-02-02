@@ -5,7 +5,18 @@
 export { cn } from './lib/utils';
 
 // Types
-export type { StatusState, SearchResult, CodeChunk, ProjectSummary } from './types';
+export type { 
+  StatusState, 
+  SearchResult, 
+  CodeChunk, 
+  ProjectSummary, 
+  ProjectConfig, 
+  LLMConfig, 
+  SavedEndpoint, 
+  EndpointTestResult,
+  ProjectStatus,
+  ApiError
+} from './types';
 
 // Components - Status
 export { StatusBadge, StatusCard, BuildProgress } from './components/status';
@@ -28,15 +39,43 @@ export { EmptyState, LoadingState, ErrorState } from './components/patterns';
 export type { EmptyStateProps, LoadingStateProps, ErrorStateProps } from './components/patterns';
 
 // Components - Dashboard
-export { IndexStatusCard, BuildCard } from './components/dashboard';
-export type { IndexStatusCardProps, IndexStats, BuildCardProps } from './components/dashboard';
+export { IndexStatusCard, BuildCard, IndexStatsDisplay } from './components/dashboard';
+export type { IndexStatusCardProps, IndexStats, BuildCardProps, IndexStatsProps, StatItem } from './components/dashboard';
 
 // Components - LLM
 export { LLMStatusCard, ModelCard, EndpointManager, AIModelsSettings } from './components/llm';
 
 // Components - Project
-export { FolderTree, sampleFileTree } from './components/project';
-export type { FolderTreeProps, TreeNode, FileStatus } from './components/project';
+export { FolderTree, sampleFileTree, ProjectSettingsPanel } from './components/project';
+export type { FolderTreeProps, TreeNode, FileStatus, ProjectSettingsPanelProps } from './components/project';
+
+// Components - Layout (Modular Dashboard - Phase 15)
+export { PanelChrome, DashboardGrid, PanelPicker, ModularDashboard, useLayoutPersistence } from './components/layout';
+export type { PanelChromeProps, DashboardGridProps, PanelPickerProps, ModularDashboardProps, PanelContentMap } from './components/layout';
+
+// Components - Marketing & Site (Phase 12)
+export { MarketingHero, FeatureBlocks } from './components/marketing';
+export type { MarketingHeroProps, FeatureBlocksProps, Feature } from './components/marketing';
+export { SiteHeader, SiteFooter } from './components/site';
+export type { SiteHeaderProps, SiteFooterProps, NavLink, FooterSection, FooterLink } from './components/site';
+
+// Components - Docs (Phase 12)
+export { DocsLayout, DocsSidebarNav, TableOfContents } from './components/docs';
+export type { DocsLayoutProps, DocsSidebarNavProps, DocNode, TableOfContentsProps, TocItem } from './components/docs';
+
+// Layout Types (Phase 15)
+export type { 
+  PanelConfig, 
+  DashboardLayout, 
+  PanelCategory, 
+  PanelDefinition, 
+  PanelProps, 
+  GridLayoutItem 
+} from './types/layout';
+export { DEFAULT_LAYOUT, LAYOUT_STORAGE_KEY, toGridLayout, fromGridLayout } from './types/layout';
+
+// Panel Registry (Phase 15)
+export { PANEL_REGISTRY, getPanelDefinition, getPanelsByCategory } from './config/panelRegistry';
 
 // API (typed client + Storybook mocking helpers)
 export * from './api';

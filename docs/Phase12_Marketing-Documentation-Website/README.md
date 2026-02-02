@@ -39,6 +39,7 @@ Launch a placeholder public website and a user-facing documentation site that:
 - Website sitemap (v0 placeholder + v1 expanded)
 - Documentation sitemap (v0 scaffold + v1 expanded)
 - A publishable placeholder launch checklist
+- **Deployment & DNS Strategy**: See [DEPLOYMENT.md](./DEPLOYMENT.md) for detailed Vercel/Netlify + Cloudflare setup instructions.
 
 ## Functional specification
 
@@ -169,6 +170,41 @@ Candidate approaches:
 
 Default recommendation:
 - Start with **Next.js** for marketing + docs content (MDX), and plan to share a UI package with the dashboard (Phase 13).
+
+### Current repo implementation status (scaffold)
+
+The repo currently contains an initial website monorepo scaffold to support `codrag.io` and future subdomains.
+
+Implemented:
+- Root npm workspaces + Turborepo
+  - Root `package.json` defines workspaces:
+    - `packages/*`
+    - `websites/apps/*`
+  - Root `turbo.json` defines `dev`, `build`, `lint`, `typecheck` tasks.
+- Shared Tailwind preset
+  - `websites/tailwind.preset.cjs` is the shared Tailwind config used by website apps.
+- Website apps (Next.js App Router)
+  - `websites/apps/marketing`
+    - `codrag.io`
+  - `websites/apps/docs`
+    - `docs.codrag.io`
+  - `websites/apps/support`
+    - `support.codrag.io`
+  - `websites/apps/payments`
+    - `payments.codrag.io`
+  - All apps:
+    - import shared styles from `@codrag/ui/styles`
+    - use shared Tailwind preset via `websites/tailwind.preset.cjs`
+    - transpile `@codrag/ui` via `transpilePackages`
+
+Local dev (from repo root):
+- `npm install`
+- Run all workspaces: `npm run dev`
+- Or run individually:
+  - marketing: `npm run dev -w @codrag/marketing` (port 3000)
+  - docs: `npm run dev -w @codrag/docs` (port 3001)
+  - support: `npm run dev -w @codrag/support` (port 3002)
+  - payments: `npm run dev -w @codrag/payments` (port 3003)
 
 ### Placeholder launch checklist
 

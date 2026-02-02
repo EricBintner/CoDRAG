@@ -3,7 +3,7 @@
 ## Problem statement
 CoDRAG becomes dramatically more valuable when it supports team workflows: shared onboarding, repeatable indexing, and (optionally) a central server. Without a team story, adoption stalls at “personal tool” and breaks in real org environments.
 
-From a business perspective, the **Team Tier ($12/seat/mo)** monetizes "Indexed Harmony"—ensuring every developer on the team has the exact same context configuration.
+From a business perspective, the **Team Tier ($15/seat/mo)** monetizes "Indexed Harmony"—ensuring every developer on the team has the exact same context configuration.
 
 ## Goal
 Support team workflows as first-class: shared configurations, embedded indexes, network mode, and auth.
@@ -157,6 +157,17 @@ In network mode, clients typically:
 Constraints:
 - The server must never expose arbitrary filesystem browsing.
 - Project paths are server-private; clients see only project IDs, names, and status.
+
+### Analytics / telemetry posture (Team/Enterprise)
+
+- **No mandatory telemetry**: Enterprise deployments may be air-gapped; analytics must be optional.
+- **Customer-hosted server reality**: when customers self-host a team server, CoDRAG should assume limited visibility into usage.
+- **Audit vs analytics**:
+  - Analytics should be aggregated counters (build outcomes, error codes) and must not include code or raw queries by default.
+  - Audit logging (roadmap) is a separate feature and must be explicit about what is recorded.
+- **Seat enforcement**:
+  - Strict online seat counting requires a license server and is out of scope for MVP.
+  - Team/Enterprise posture relies on signed offline license keys and legal enforcement for seat counts.
 
 ### Team onboarding flows
 

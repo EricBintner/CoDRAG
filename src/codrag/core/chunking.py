@@ -21,7 +21,7 @@ class Chunk:
     metadata: Dict[str, Any] = field(default_factory=dict)
 
 
-def _iter_markdown_sections(text: str) -> Generator[Tuple[List[str], str], None, None]:
+def _iter_markdown_sections(text: str) -> Generator[Tuple[List[str], str, int, int], None, None]:
     """
     Iterate over markdown sections, yielding (headings_stack, section_text).
     
@@ -30,15 +30,24 @@ def _iter_markdown_sections(text: str) -> Generator[Tuple[List[str], str], None,
     lines = text.split("\n")
     headings: List[str] = []
     current_lines: List[str] = []
+    current_start_line: Optional[int] = None
+    current_end_line: Optional[int] = None
 
     heading_re = re.compile(r"^(#{1,6})\s+(.*)$")
 
-    for line in lines:
+    for line_no, line in enumerate(lines, start=1):
         m = heading_re.match(line)
         if m:
             if current_lines:
-                yield list(headings), "\n".join(current_lines).strip()
+                yield (
+                    list(headings),
+                    "\n".join(current_lines).strip(),
+                    int(current_start_line or 1),
+                    int(current_end_line or (line_no - 1) or 1),
+                )
                 current_lines = []
+                current_start_line = None
+                current_end_line = None
 
             level = len(m.group(1))
             title = m.group(2).strip()
@@ -47,10 +56,18 @@ def _iter_markdown_sections(text: str) -> Generator[Tuple[List[str], str], None,
                 headings.pop()
             headings.append(title)
         else:
+            if current_start_line is None:
+                current_start_line = line_no
+            current_end_line = line_no
             current_lines.append(line)
 
     if current_lines:
-        yield list(headings), "\n".join(current_lines).strip()
+        yield (
+            list(headings),
+            "\n".join(current_lines).strip(),
+            int(current_start_line or 1),
+            int(current_end_line or (len(lines) or 1)),
+        )
 
 
 def _split_long_text(text: str, max_chars: int) -> List[str]:
@@ -111,12 +128,13 @@ def chunk_markdown(
     """
     parts: List[Chunk] = []
 
-    def make_meta(headings: List[str]) -> Dict[str, Any]:
+    def make_meta(headings: List[str], start_line: int, end_line: int) -> Dict[str, Any]:
         return {
             "source_path": source_path,
             "xref_id": xref_id or "",
             "name": name or "",
             "section": " > ".join(headings) if headings else "",
+            "span": {"start_line": int(start_line), "end_line": int(end_line)},
         }
 
     def emit(content: str, meta: Dict[str, Any], idx: int) -> None:
@@ -130,31 +148,41 @@ def chunk_markdown(
 
     pending: List[str] = []
     pending_meta: Dict[str, Any] = {}
+    pending_start_line: Optional[int] = None
+    pending_end_line: Optional[int] = None
     idx = 0
 
-    for headings, section_text in _iter_markdown_sections(text):
+    for headings, section_text, start_line, end_line in _iter_markdown_sections(text):
         if not section_text:
             continue
 
-        section_meta = make_meta(headings)
+        section_meta = make_meta(headings, start_line, end_line)
 
         if pending:
             candidate = "\n\n".join(pending + [section_text])
             if len(candidate) <= max_chars:
                 pending.append(section_text)
                 pending_meta = section_meta
+                pending_end_line = int(end_line)
                 continue
 
             combined = "\n\n".join(pending).strip()
             if combined:
-                emit(combined, pending_meta or section_meta, idx)
+                meta = dict(pending_meta or section_meta)
+                if pending_start_line is not None and pending_end_line is not None:
+                    meta["span"] = {"start_line": int(pending_start_line), "end_line": int(pending_end_line)}
+                emit(combined, meta, idx)
                 idx += 1
             pending = []
             pending_meta = {}
+            pending_start_line = None
+            pending_end_line = None
 
         if len(section_text) < min_chars:
             pending = [section_text]
             pending_meta = section_meta
+            pending_start_line = int(start_line)
+            pending_end_line = int(end_line)
             continue
 
         if len(section_text) <= max_chars:
@@ -169,7 +197,10 @@ def chunk_markdown(
     if pending:
         combined = "\n\n".join(pending).strip()
         if combined:
-            emit(combined, pending_meta, idx)
+            meta = dict(pending_meta)
+            if pending_start_line is not None and pending_end_line is not None:
+                meta["span"] = {"start_line": int(pending_start_line), "end_line": int(pending_end_line)}
+            emit(combined, meta, idx)
 
     return parts
 
@@ -193,12 +224,17 @@ def chunk_code(
         List of Chunk objects
     """
     if len(text) <= max_chars:
+        end_line = len(text.splitlines()) or 1
         chunk_id = stable_code_chunk_id(source_path, 0)
         return [
             Chunk(
                 chunk_id=chunk_id,
                 content=text,
-                metadata={"source_path": source_path, "chunk_index": 0},
+                metadata={
+                    "source_path": source_path,
+                    "chunk_index": 0,
+                    "span": {"start_line": 1, "end_line": int(end_line)},
+                },
             )
         ]
 
@@ -211,12 +247,23 @@ def chunk_code(
         end = min(start + max_chars, len(text))
         chunk_text = text[start:end]
 
+        start_line = text.count("\n", 0, start) + 1
+        end_line = text.count("\n", 0, end) + 1
+        if end > 0 and text[end - 1] == "\n":
+            end_line -= 1
+        if end_line < 1:
+            end_line = 1
+
         chunk_id = stable_code_chunk_id(source_path, idx)
         chunks.append(
             Chunk(
                 chunk_id=chunk_id,
                 content=chunk_text,
-                metadata={"source_path": source_path, "chunk_index": idx},
+                metadata={
+                    "source_path": source_path,
+                    "chunk_index": idx,
+                    "span": {"start_line": int(start_line), "end_line": int(end_line)},
+                },
             )
         )
 

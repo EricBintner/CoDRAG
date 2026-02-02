@@ -276,6 +276,7 @@ class CodeIndex:
                     "file_hash": file_hash,
                     "role": role,
                     "section": ch.metadata.get("section", ""),
+                    "span": ch.metadata.get("span"),
                     "content": ch.content,
                 }
                 docs.append(doc)

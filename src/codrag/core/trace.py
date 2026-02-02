@@ -111,19 +111,30 @@ def _to_posix(path: str) -> str:
 
 
 def _is_relevant(rel_posix: str, include_globs: List[str], exclude_globs: List[str]) -> bool:
+    base = os.path.basename(rel_posix)
+
+    def _matches(pattern: str) -> bool:
+        patterns = [pattern]
+        if pattern.startswith("**/"):
+            patterns.append(pattern[3:])
+        for p in patterns:
+            if fnmatch(rel_posix, p) or fnmatch(base, p):
+                return True
+        return False
+
     included = False
     if not include_globs:
         included = True
     else:
         for g in include_globs:
-            if fnmatch(rel_posix, g) or fnmatch(os.path.basename(rel_posix), g):
+            if _matches(g):
                 included = True
                 break
     if not included:
         return False
 
     for g in exclude_globs:
-        if fnmatch(rel_posix, g) or fnmatch(os.path.basename(rel_posix), g):
+        if _matches(g):
             return False
     return True
 

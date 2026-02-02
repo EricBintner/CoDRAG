@@ -56,3 +56,20 @@ export { ServerModeIndicator } from './team/ServerModeIndicator';
 export { TeamConfigStatus } from './team/TeamConfigStatus';
 export { EmbeddedModeIndicator } from './team/EmbeddedModeIndicator';
 export { LicenseStatusCard } from './team/LicenseStatusCard';
+
+// Marketing Components (Phase 12)
+export { MarketingHero, type MarketingHeroProps } from './marketing/MarketingHero';
+export { FeatureBlocks, type FeatureBlocksProps, type Feature } from './marketing/FeatureBlocks';
+
+// Site Layout Components (Phase 12)
+export { SiteHeader, type SiteHeaderProps, type NavLink } from './site/SiteHeader';
+export { SiteFooter, type SiteFooterProps, type FooterSection, type FooterLink } from './site/SiteFooter';
+
+// Docs Layout Components (Phase 12)
+export { DocsLayout, type DocsLayoutProps } from './docs/DocsLayout';
+export { DocsSidebarNav, type DocsSidebarNavProps, type DocNode } from './docs/DocsSidebarNav';
+export { TableOfContents, type TableOfContentsProps, type TocItem } from './docs/TableOfContents';
+
+// Data Visualization Components (Phase 16)
+export { ActivityHeatmap, generateSampleActivityData } from './viz/ActivityHeatmap';
+export type { ActivityHeatmapProps, ActivityHeatmapData, ActivityDay } from './viz/ActivityHeatmap';

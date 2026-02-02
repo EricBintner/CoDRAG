@@ -30,7 +30,7 @@
     "pip": {
       "package": "codrag",
       "command": "codrag",
-      "args": ["mcp", "--auto"]
+      "args": ["mcp", "--mode", "direct"]
     }
   },
   "tools": [
@@ -60,7 +60,7 @@
   },
   "requirements": {
     "daemon": {
-      "description": "CoDRAG daemon must be running (codrag serve)",
+      "description": "Optional. Required only for server mode (codrag mcp --mode server)",
       "default_url": "http://127.0.0.1:8400"
     },
     "ollama": {

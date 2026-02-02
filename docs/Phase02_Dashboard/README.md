@@ -420,6 +420,15 @@ Progress granularity (recommended for UI):
 - E2E smoke test: add project → build → search → view chunk → context
 - Error-state test: Ollama down, bad path, build failure
 
+## Current implementation status
+- `src/codrag/dashboard/src/App.tsx` is currently the primary repair target due to missing/truncated state + handlers (notably for `AIModelsSettings`).
+- Backend endpoints required for the legacy single-project settings round-trip have been confirmed:
+  - `GET/PUT /api/code-index/config`
+  - `GET /api/llm/proxy/models`
+  - `POST /api/llm/proxy/test-model`
+  - `GET /llm/status`
+- Immediate next step is to restore LLM config state + handler wiring in `App.tsx` so the dashboard compiles and settings persist.
+
 ## Research completion criteria
 - Phase README satisfies `../PHASE_RESEARCH_GATES.md` (global checklist + Phase 02 gates)
 

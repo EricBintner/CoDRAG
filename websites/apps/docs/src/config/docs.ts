@@ -1,0 +1,58 @@
+import type { DocNode } from '@codrag/ui';
+
+export const docsSidebar: DocNode[] = [
+  {
+    title: 'Getting Started',
+    href: '/getting-started',
+    children: [
+      { title: 'Introduction', href: '/getting-started' },
+      { title: 'Installation', href: '/getting-started/installation' },
+      { title: 'Quick Start', href: '/getting-started/quick-start' },
+    ],
+  },
+  {
+    title: 'Core Concepts',
+    href: '/concepts',
+    children: [
+      { title: 'Local Indexing', href: '/concepts/indexing' },
+      { title: 'Trace Index', href: '/concepts/trace-index' },
+      { title: 'Context Assembly', href: '/concepts/context' },
+    ],
+  },
+  {
+    title: 'Dashboard',
+    href: '/dashboard',
+    children: [
+      { title: 'Overview', href: '/dashboard' },
+      { title: 'Projects', href: '/dashboard/projects' },
+      { title: 'Settings', href: '/dashboard/settings' },
+    ],
+  },
+  {
+    title: 'CLI Reference',
+    href: '/cli',
+    children: [
+      { title: 'Overview', href: '/cli' },
+      { title: 'Commands', href: '/cli/commands' },
+      { title: 'Configuration', href: '/cli/config' },
+    ],
+  },
+  {
+    title: 'Integrations',
+    href: '/mcp',
+    children: [
+      { title: 'MCP Server', href: '/mcp' },
+      { title: 'Cursor', href: '/mcp/cursor' },
+      { title: 'Windsurf', href: '/mcp/windsurf' },
+    ],
+  },
+  {
+    title: 'Help',
+    href: '/troubleshooting',
+    children: [
+      { title: 'Troubleshooting', href: '/troubleshooting' },
+      { title: 'FAQ', href: '/faq' },
+      { title: 'Support', href: 'https://support.codrag.io' },
+    ],
+  },
+];

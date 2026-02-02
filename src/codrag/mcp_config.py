@@ -19,8 +19,8 @@ def generate_mcp_configs(
     norm_mode = str(mode).strip().lower()
     if norm_mode in ("pinned", "project"):
         norm_mode = "project"
-    if norm_mode not in ("auto", "project"):
-        raise ValueError("mode must be 'auto' or 'project'")
+    if norm_mode not in ("auto", "project", "direct"):
+        raise ValueError("mode must be 'auto', 'project', or 'direct'")
     if norm_mode == "project":
         if project_id is None or not str(project_id).strip():
             raise ValueError("project_id is required when mode='project'")
@@ -28,11 +28,13 @@ def generate_mcp_configs(
     codrag_path = codrag_command or detect_codrag_command()
 
     args = ["mcp"]
-    if norm_mode == "project":
-        args.extend(["--project", str(project_id).strip()])
+    if norm_mode == "direct":
+        args.extend(["--mode", "direct"])
+    elif norm_mode == "project":
+        args.extend(["--project", str(project_id).strip(), "--daemon", daemon_url])
     else:
-        args.append("--auto")
-    args.extend(["--daemon", daemon_url])
+        # Auto/Server mode
+        args.extend(["--auto", "--daemon", daemon_url])
 
     base_config: Dict[str, Any] = {
         "command": codrag_path,

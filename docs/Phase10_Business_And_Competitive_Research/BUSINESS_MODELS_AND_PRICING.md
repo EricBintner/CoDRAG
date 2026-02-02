@@ -101,17 +101,20 @@ We have selected a **Perpetual License** model for individuals and a **Seat-Base
 - Low COGS (BYOK) allows avoiding the "AI Subscription" trap.
 - Creates trust with privacy-conscious developers.
 
-**The Strategy:**
-- **Indie/Pro:** One-time purchase ($79) with 1 year of updates.
-- **Team:** Annual seat-based subscription ($12/mo/seat) for shared config and governance.
+**The Strategy (The "Context Drug" Ladder):**
+- **Free:** 1 repo, manual refresh (The Hook).
+- **Starter:** $29/4-mo pass, 3 repos, real-time watcher (The Bridge).
+- **Pro:** $79 One-time, Unlimited repos, Trace Index (Ownership).
+- **Team:** $15/mo/seat, Shared config/index (Standardization).
 - **Enterprise:** Custom pricing for air-gapped/compliance needs.
 
 See the detailed strategy in: [Pricing/PRICING_STRATEGY.md](Pricing/PRICING_STRATEGY.md)
 
 ## Decision outputs
-- **Adoption funnel:** Individual-led (Free -> Pro License).
+- **Adoption funnel:** Free (1 repo) -> Starter ($29/4mo) -> Pro License ($79).
 - **Packaging:**
-    - **Free:** 2 repos, basic search.
+    - **Free:** 1 active repo, manual indexing.
+    - **Starter:** 3 active repos, real-time indexing.
     - **Pro:** Unlimited repos, Trace Index (structural), Full MCP.
     - **Team:** Shared configs, License management.
 - **Cloud requirement:** None for Pro. Optional "Team Server" for shared configs/indexes in Phase 6.

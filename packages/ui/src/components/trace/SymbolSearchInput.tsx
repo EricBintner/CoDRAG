@@ -1,4 +1,5 @@
 import { TextInput, Select, SelectItem } from '@tremor/react';
+import { Loader2 } from 'lucide-react';
 import { cn } from '../../lib/utils';
 import type { NodeKind } from '../../types';
 
@@ -24,7 +25,7 @@ export function SymbolSearchInput({
   className,
 }: SymbolSearchInputProps) {
   return (
-    <div className={cn('codrag-symbol-search flex gap-2', className)}>
+    <div className={cn('codrag-symbol-search flex gap-3', className)}>
       <div className="flex-1">
         <TextInput
           placeholder={placeholder}
@@ -39,7 +40,7 @@ export function SymbolSearchInput({
         <Select
           value={kindFilter}
           onValueChange={(val) => onKindFilterChange(val as NodeKind | 'all')}
-          className="w-32"
+          className="w-36"
         >
           <SelectItem value="all">All</SelectItem>
           <SelectItem value="symbol">Symbols</SelectItem>
@@ -48,8 +49,8 @@ export function SymbolSearchInput({
       )}
       
       {loading && (
-        <div className="flex items-center px-2">
-          <div className="h-4 w-4 animate-spin rounded-full border-2 border-gray-300 border-t-blue-600" />
+        <div className="flex items-center px-1">
+          <Loader2 className="h-5 w-5 animate-spin text-primary" />
         </div>
       )}
     </div>

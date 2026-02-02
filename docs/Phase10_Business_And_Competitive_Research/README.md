@@ -86,9 +86,11 @@
  ### 2) Packaging tiers
 
 Define packaging tiers as a mapping to feature surfaces:
-- Local-only tier (single machine)
-- Team tier (embedded mode + LAN server)
-- Enterprise tier (hardening: auth, audit baseline, deployment guidance)
+- **Free (The Hook):** 1 active repo, manual indexing.
+- **Starter (The Bridge):** 3 active repos, real-time indexing ($29/4mo).
+- **Pro (Ownership):** Unlimited repos, Trace Index, Full MCP ($79/life).
+- **Team (Standardization):** Shared configs, License management ($15/mo/seat).
+- **Enterprise:** Hardening, auth, audit baseline, deployment guidance.
 
 Each tier should specify:
 - included features
@@ -96,12 +98,13 @@ Each tier should specify:
 - operational assumptions
 - support expectations
 
- ### 3) Pricing model
+### 3) Pricing model
 
 Define:
-- pricing unit (per seat, per team, per machine)
-- license model (subscription vs perpetual + upgrades)
-- how pricing maps to tiers
+- **Indie:** Perpetual license (Free -> Starter -> Pro).
+- **Team:** Seat-based subscription.
+- **Enterprise:** Custom/Seat-based.
+- **Philosophy:** Gated by Structural Intelligence (Trace) and Scale (Repos), not Tokens.
 
  ### 4) Go-to-market plan
 
@@ -146,18 +149,19 @@ Rules:
  ## Dependencies
  - MVP feature set is defined enough to price/package (Phases 01–08)
 
- ## Open questions
- - Target ICP and deployment model (local-only vs managed team server)
- - Pricing model and packaging tiers
- - App store vs direct distribution trade-offs for MVP
- - Enterprise licensing model (offline, license server)
+## Decided Items (formerly Open Questions)
+- **Target ICP:** Solo developers (freelance/staff) using Cursor/Windsurf.
+- **Deployment Model:** Local-only (MVP) → Embedded/Team (Phase 06).
+- **Pricing Model:** "Context Drug" Ladder (Free 1-repo → Starter 4mo-pass → Pro Perpetual).
+- **Distribution:** Direct download (primary) for max margin; App Store (secondary) for discovery.
+- **Enterprise Licensing:** Offline-first Ed25519 keys (no mandatory license server).
 
- ## Risks
- - Shipping features that don’t map to a viable distribution or pricing strategy
- - Being surprised by competitor capabilities that should influence technical bets
- - Choosing a distribution channel that conflicts with local-first + sidecar constraints
+## Risks
+- **Feature Creep by IDEs:** If Cursor ships a perfect local indexer, our "Solo Pro" conversion drops. Mitigation: Win on "Multi-repo" and "Structural Trace".
+- **Viral Support Load:** A viral spike (Month 5 scenario) could drown a solo dev in support. Mitigation: Community-first support (Discord).
+- **Shipping features that don’t map to a viable distribution or pricing strategy** (Mitigated by Triple Tier plan).
 
- ## Testing / evaluation plan
+## Testing / evaluation plan
  - Validate plan against early users (qualitative) and operational constraints (quantitative)
  - Verify that enterprise assumptions match real IT constraints (procurement, security, deployment)
 

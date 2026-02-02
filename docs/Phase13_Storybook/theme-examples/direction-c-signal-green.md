@@ -226,7 +226,7 @@ Note: Tighter radii for a more "technical/precise" aesthetic.
 ┌─────────────────────────────────────────────────────────────────┐
 │                                                                 │
 │  ●  LinuxBrain                                                  │
-│     /Volumes/4TB-BAD/HumanAI/LinuxBrain                        │
+│     LinuxBrain                                                   │
 │                                                                 │
 │  ┌─────────────────────────────────────────────────────────┐   │
 │  │  Index        ●  Fresh     Last build: 2 min ago        │   │

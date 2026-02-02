@@ -1,6 +1,8 @@
 import type { Preview } from '@storybook/react';
 import React from 'react';
 import '../src/styles/index.css';
+import 'react-grid-layout/css/styles.css';
+import 'react-resizable/css/styles.css';
 
 const preview: Preview = {
   parameters: {

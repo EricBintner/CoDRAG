@@ -106,7 +106,8 @@ Copy:
 - If an index becomes incompatible after an upgrade, CoDRAG will prompt you to rebuild.
 
 ## Pricing page copy (placeholder)
-- **Free Tier:** 2 repos. Essential search. $0 forever.
+- **Free Tier:** 1 active repo. Essential search. $0 forever.
+- **Starter Pass:** 3 active repos. Real-time watchers. $29 / 4-months.
 - **Pro License:** Unlimited repos. Trace Index. Full MCP.
   - **Founder's Edition:** $49 (Limited time). Yours forever.
   - **Standard:** $79.

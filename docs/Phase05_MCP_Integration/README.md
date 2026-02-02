@@ -32,6 +32,8 @@ Make CoDRAG callable as an IDE tool (Windsurf, Cursor, etc.) via MCP.
 - **Local-first by default**: MCP should assume a local daemon on `127.0.0.1:8400`.
 - **Stable schemas**: MCP tool outputs must not drift from the HTTP API contract the dashboard uses.
 - **Bounded outputs**: defaults must be conservative (context size, k, graph neighbors).
+- **Licensing consistency**: MCP errors must be stable and actionable when features are gated or usage limits are exceeded.
+- **No mandatory telemetry**: MCP operation must not require analytics; any telemetry must be opt-in and must not leak repo content.
 
 ### Architecture
 
@@ -46,6 +48,11 @@ Transport:
 - MCP server process communicates with the daemon via HTTP.
 - Default base URL: `http://127.0.0.1:8400`.
 - Optional override via env var: `CODRAG_API_BASE`.
+
+Additional architecture (Phase 14): **Direct MCP mode**
+- Single-repo, zero-daemon mode: `codrag mcp --mode direct`
+- The MCP server imports `codrag.core` and runs indexing/search in-process.
+- This is the preferred path for the lowest-friction IDE onboarding.
 
 Daemon availability behavior:
 - On startup, MCP server should perform a health check (`GET /health`).
@@ -218,6 +225,25 @@ Minimum additional MCP-specific codes:
 - `DAEMON_UNAVAILABLE`
 - `PROJECT_SELECTION_AMBIGUOUS`
 
+Recommended license/entitlement codes (mirrors daemon envelope):
+- `LICENSE_REQUIRED`
+- `LICENSE_INVALID`
+- `LICENSE_TIER_INSUFFICIENT`
+- `LICENSE_LIMIT_REACHED`
+
+License error UX requirements:
+- Errors MUST include an actionable hint (where to enter a license, or which command to run).
+- In future network mode, errors MUST avoid leaking server filesystem paths.
+
+### Analytics / measurement posture (cross-distribution)
+
+CoDRAG is local-first and MUST NOT require telemetry.
+
+If analytics are enabled (opt-in), MCP-related measurement should be:
+- aggregated counters (e.g., tool call counts, build success/failure counts, error code counts)
+- no code, file contents, or raw query strings
+- no absolute filesystem paths
+
 ### Config generation
 
 CLI:
@@ -244,6 +270,7 @@ Config characteristics:
 
 ## Open questions
 - Should MCP talk to the daemon over HTTP or call engine directly in-process
+  - Answer: both are supported. HTTP proxy mode remains the default for the multi-project daemon; Phase 14 added direct mode for single-repo workflows.
 - How to handle multi-project selection when cwd matches multiple projects
 - How to handle auth tokens for network mode (future)
 

@@ -11,6 +11,9 @@
  - Minimal trace storage per project (`trace_nodes.jsonl`, `trace_edges.jsonl`, `trace_manifest.json`)
  - Python symbol extraction MVP (functions/classes + import edges)
  - Query-time trace expansion option for `/context` assembly (bounded traversal)
+ - **Feature Gating:**
+   - **Free Tier:** Trace build and expansion are **disabled** (Standard RAG only).
+   - **Starter/Pro/Team:** Trace features are **enabled**.
 
  ### Out of scope
  - Full cross-language call graph correctness

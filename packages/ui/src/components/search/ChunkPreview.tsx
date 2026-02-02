@@ -1,4 +1,5 @@
 import { FileText } from 'lucide-react';
+import { Card, Title, Flex } from '@tremor/react';
 import { cn } from '../../lib/utils';
 
 export interface ChunkPreviewProps {
@@ -25,29 +26,30 @@ export function ChunkPreview({
   className,
 }: ChunkPreviewProps) {
   return (
-    <div className={cn(
-      'bg-surface-raised border border-border rounded-lg p-4 max-h-96 overflow-y-auto shadow-sm',
-      className
-    )}>
-      <h3 className="text-sm font-semibold text-text-muted mb-3 flex items-center gap-2 sticky top-0 bg-surface-raised pb-2 border-b border-border/50">
-        <FileText className="w-4 h-4 text-primary" />
-        {content ? 'Chunk Content' : 'Preview'}
-      </h3>
+    <Card className={cn('border border-border bg-surface shadow-sm flex flex-col', className)}>
+      <Flex justifyContent="start" alignItems="center" className="mb-4 gap-2">
+        <FileText className="w-5 h-5 text-primary" />
+        <Title className="text-text">{content ? 'Chunk Content' : 'Preview'}</Title>
+      </Flex>
+      
       {sourcePath && (
-        <div className="text-xs text-text mb-3 truncate font-mono bg-surface px-2 py-1.5 rounded border border-border">
+        <div className="mb-4 text-xs text-text truncate font-mono bg-surface-raised px-3 py-2 rounded border border-border">
           {sourcePath}
           {section && <span className="text-text-muted"> · {section}</span>}
         </div>
       )}
+      
       {content ? (
-        <pre className="text-xs whitespace-pre-wrap font-mono text-text p-2">
-          {content}
-        </pre>
+        <div className="flex-1 min-h-0 bg-surface-raised border border-border rounded-lg overflow-hidden">
+          <pre className="text-xs whitespace-pre-wrap font-mono text-text p-4 h-full overflow-y-auto custom-scrollbar">
+            {content}
+          </pre>
+        </div>
       ) : (
-        <div className="h-32 flex items-center justify-center text-text-subtle text-sm italic border-2 border-dashed border-border-subtle rounded-md bg-surface/50">
+        <div className="h-64 flex items-center justify-center text-text-subtle text-sm italic border-2 border-dashed border-border-subtle rounded-md bg-surface/50">
           {placeholder}
         </div>
       )}
-    </div>
+    </Card>
   );
 }

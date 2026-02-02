@@ -44,6 +44,9 @@ Non-goals:
 
 ### Watcher architecture
 
+- **Feature Gating (Monetization):**
+  - **Free Tier:** Watchers are **disabled**. Users must trigger rebuilds manually (UI button or CLI).
+  - **Starter/Pro/Team:** Watchers are **enabled** (subject to `auto_rebuild.enabled` config).
 - Watchers are **per-project**.
 - Watchers are controlled by a per-project setting `auto_rebuild.enabled`.
 - Watchers must respect:

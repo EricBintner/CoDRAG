@@ -1,13 +1,15 @@
 {
   "name": "codrag",
   "private": true,
+  "packageManager": "npm@10.9.3",
   "workspaces": [
     "packages/*",
-    "websites/apps/*"
+    "websites/apps/*",
+    "src/codrag/dashboard"
   ],
   "scripts": {
     "dev": "turbo run dev --parallel",
-    "build": "turbo run build",
+    "build": "NODE_ENV=production turbo run build",
     "lint": "turbo run lint",
     "typecheck": "turbo run typecheck"
   },

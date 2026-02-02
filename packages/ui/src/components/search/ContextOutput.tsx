@@ -1,5 +1,6 @@
 import { cn } from '../../lib/utils';
 import { FileText } from 'lucide-react';
+import { Card, Title, Flex, Badge } from '@tremor/react';
 
 export interface ContextMeta {
   chunks?: { source_path: string; section: string; score: number; truncated: boolean }[];
@@ -31,23 +32,26 @@ export function ContextOutput({
   }
 
   return (
-    <div className={cn('mt-4 space-y-2', className)}>
-      <div className="flex items-center justify-between">
-        <h3 className="text-sm font-semibold text-text flex items-center gap-2">
-          <FileText className="w-4 h-4 text-primary" />
-          Assembled Context
-        </h3>
+    <Card className={cn('border border-border bg-surface shadow-sm', className)}>
+      <Flex justifyContent="between" alignItems="center" className="mb-4">
+        <Flex justifyContent="start" alignItems="center" className="gap-2">
+          <FileText className="w-5 h-5 text-primary" />
+          <Title className="text-text">Assembled Context</Title>
+        </Flex>
         {meta && (
-          <div className="text-xs text-text-muted bg-surface-raised px-2 py-0.5 rounded border border-border">
-            chunks={meta.chunks?.length ?? 0} · chars={meta.total_chars?.toLocaleString()} · est_tokens={meta.estimated_tokens?.toLocaleString()}
-          </div>
+          <Flex justifyContent="end" className="gap-2">
+             <Badge color="gray" size="xs">{meta.chunks?.length ?? 0} chunks</Badge>
+             <Badge color="gray" size="xs">{meta.total_chars?.toLocaleString()} chars</Badge>
+             <Badge color="blue" size="xs">~{meta.estimated_tokens?.toLocaleString()} tokens</Badge>
+          </Flex>
         )}
-      </div>
+      </Flex>
+      
       <div className="bg-surface-raised border border-border rounded-lg overflow-hidden">
-        <pre className="p-4 text-xs whitespace-pre-wrap font-mono text-text max-h-96 overflow-y-auto">
+        <pre className="p-4 text-xs whitespace-pre-wrap font-mono text-text max-h-96 overflow-y-auto custom-scrollbar">
           {context}
         </pre>
       </div>
-    </div>
+    </Card>
   );
 }

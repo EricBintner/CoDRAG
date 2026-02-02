@@ -54,84 +54,13 @@ BUILD_IN_PROGRESS = -32002
 PROJECT_NOT_FOUND = -32003
 
 
+from codrag.mcp_tools import TOOLS
+
 # =============================================================================
 # Tool Definitions
 # =============================================================================
 
-TOOLS = [
-    {
-        "name": "codrag_status",
-        "description": "Get CoDRAG index status and daemon health. Returns index stats, build state, and configuration.",
-        "inputSchema": {
-            "type": "object",
-            "properties": {},
-            "required": [],
-        },
-    },
-    {
-        "name": "codrag_build",
-        "description": "Trigger an index build. Returns immediately; build runs async in background. Use codrag_status to check progress.",
-        "inputSchema": {
-            "type": "object",
-            "properties": {
-                "full": {
-                    "type": "boolean",
-                    "description": "Force full rebuild (ignore cache). Default: false (incremental).",
-                    "default": False,
-                },
-            },
-            "required": [],
-        },
-    },
-    {
-        "name": "codrag_search",
-        "description": "Search the CoDRAG index with a semantic query. Returns ranked code/doc chunks.",
-        "inputSchema": {
-            "type": "object",
-            "properties": {
-                "query": {
-                    "type": "string",
-                    "description": "Natural language search query.",
-                },
-                "k": {
-                    "type": "integer",
-                    "description": "Number of results to return. Default: 8.",
-                    "default": 8,
-                },
-                "min_score": {
-                    "type": "number",
-                    "description": "Minimum similarity score (0-1). Default: 0.15.",
-                    "default": 0.15,
-                },
-            },
-            "required": ["query"],
-        },
-    },
-    {
-        "name": "codrag_context",
-        "description": "Get assembled context for LLM prompt injection. Returns formatted chunks optimized for token efficiency.",
-        "inputSchema": {
-            "type": "object",
-            "properties": {
-                "query": {
-                    "type": "string",
-                    "description": "Natural language query describing what context you need.",
-                },
-                "k": {
-                    "type": "integer",
-                    "description": "Number of chunks to include. Default: 5.",
-                    "default": 5,
-                },
-                "max_chars": {
-                    "type": "integer",
-                    "description": "Maximum characters in assembled context. Default: 6000.",
-                    "default": 6000,
-                },
-            },
-            "required": ["query"],
-        },
-    },
-]
+# Imported from mcp_tools.py
 
 
 # =============================================================================
@@ -155,6 +84,8 @@ class MCPServer:
         self.project_id = project_id
         self.auto_detect = auto_detect
         self._client: Optional[httpx.AsyncClient] = None
+        self._resolved_project_id: Optional[str] = None
+        self._resolved_project_cwd: Optional[str] = None
 
     async def _get_client(self) -> httpx.AsyncClient:
         if self._client is None:
@@ -166,31 +97,126 @@ class MCPServer:
             await self._client.aclose()
             self._client = None
 
-    async def _api_get(self, path: str) -> Dict[str, Any]:
+    def _unwrap_envelope(self, payload: Any) -> Any:
+        if not isinstance(payload, dict):
+            return payload
+        if "success" not in payload or "data" not in payload:
+            return payload
+        if payload.get("success") is True:
+            return payload.get("data")
+        err = payload.get("error")
+        if isinstance(err, dict):
+            code = str(err.get("code") or "ERROR")
+            message = str(err.get("message") or "Request failed")
+            hint = err.get("hint")
+            text = f"{code}: {message}"
+            if hint:
+                text = f"{text} (hint: {hint})"
+            if code == "PROJECT_NOT_FOUND":
+                raise ProjectNotFoundError(text)
+            if code in ("INDEX_NOT_BUILT", "INDEX_NOT_READY"):
+                raise IndexNotReadyError(text)
+            if code in ("BUILD_ALREADY_RUNNING", "TRACE_BUILD_ALREADY_RUNNING"):
+                raise BuildInProgressError(text)
+            raise DaemonError(text)
+        raise DaemonError("Request failed")
+
+    async def _api_get(self, path: str) -> Any:
         """GET request to daemon API."""
         client = await self._get_client()
-        url = f"{self.daemon_url}/api/code-index{path}"
+        if not path.startswith("/"):
+            path = "/" + path
+        url = f"{self.daemon_url}{path}"
         try:
             resp = await client.get(url)
             resp.raise_for_status()
-            return resp.json()
         except httpx.ConnectError:
             raise DaemonUnavailableError(f"Cannot connect to CoDRAG daemon at {self.daemon_url}")
         except httpx.HTTPStatusError as e:
+            try:
+                self._unwrap_envelope(e.response.json())
+            except DaemonError as de:
+                raise de
+            except Exception:
+                pass
             raise DaemonError(f"Daemon returned {e.response.status_code}: {e.response.text}")
 
-    async def _api_post(self, path: str, payload: Dict[str, Any]) -> Dict[str, Any]:
+        try:
+            payload = resp.json()
+        except Exception:
+            raise DaemonError(f"Daemon returned invalid JSON: {resp.text}")
+        return self._unwrap_envelope(payload)
+
+    async def _api_post(self, path: str, payload: Dict[str, Any]) -> Any:
         """POST request to daemon API."""
         client = await self._get_client()
-        url = f"{self.daemon_url}/api/code-index{path}"
+        if not path.startswith("/"):
+            path = "/" + path
+        url = f"{self.daemon_url}{path}"
         try:
             resp = await client.post(url, json=payload)
             resp.raise_for_status()
-            return resp.json()
         except httpx.ConnectError:
             raise DaemonUnavailableError(f"Cannot connect to CoDRAG daemon at {self.daemon_url}")
         except httpx.HTTPStatusError as e:
+            try:
+                self._unwrap_envelope(e.response.json())
+            except DaemonError as de:
+                raise de
+            except Exception:
+                pass
             raise DaemonError(f"Daemon returned {e.response.status_code}: {e.response.text}")
+
+        try:
+            payload_out = resp.json()
+        except Exception:
+            raise DaemonError(f"Daemon returned invalid JSON: {resp.text}")
+        return self._unwrap_envelope(payload_out)
+
+    async def _resolve_project_id(self) -> str:
+        if self.project_id:
+            return self.project_id
+
+        cwd = str(Path.cwd().resolve())
+        if self.auto_detect and self._resolved_project_id and self._resolved_project_cwd == cwd:
+            return self._resolved_project_id
+
+        data = await self._api_get("/projects")
+        projects: List[Dict[str, Any]] = []
+        if isinstance(data, dict):
+            raw = data.get("projects")
+            if isinstance(raw, list):
+                projects = [p for p in raw if isinstance(p, dict)]
+
+        if not projects:
+            raise ProjectNotFoundError("No projects configured in daemon")
+
+        if self.auto_detect:
+            best_id: Optional[str] = None
+            best_len = -1
+            for p in projects:
+                pid = p.get("id")
+                p_path = str(p.get("path") or "").rstrip("/")
+                if not pid or not p_path:
+                    continue
+                if cwd == p_path or cwd.startswith(p_path + "/"):
+                    if len(p_path) > best_len:
+                        best_id = str(pid)
+                        best_len = len(p_path)
+
+            if best_id:
+                self._resolved_project_id = best_id
+                self._resolved_project_cwd = cwd
+                return best_id
+
+        if len(projects) == 1 and projects[0].get("id"):
+            pid = str(projects[0].get("id"))
+            if self.auto_detect:
+                self._resolved_project_id = pid
+                self._resolved_project_cwd = cwd
+            return pid
+
+        raise ProjectNotFoundError("Multiple projects available; pin a project_id or enable auto_detect")
 
     # -------------------------------------------------------------------------
     # Tool Implementations
@@ -198,31 +224,38 @@ class MCPServer:
 
     async def tool_status(self) -> Dict[str, Any]:
         """Get index status."""
-        data = await self._api_get("/status")
-        
+        project_id = await self._resolve_project_id()
+        data = await self._api_get(f"/projects/{project_id}/status")
+
         # Lean output for token efficiency
-        index = data.get("index", {})
+        index = (data or {}).get("index", {}) if isinstance(data, dict) else {}
         return {
             "daemon": "running",
-            "index_loaded": index.get("loaded", False),
-            "total_documents": index.get("total_documents", 0),
-            "model": index.get("model", "unknown"),
-            "built_at": index.get("built_at"),
-            "building": data.get("building", False),
-            "watch_enabled": (data.get("watch") or {}).get("enabled", False),
+            "index_loaded": bool(index.get("exists", False)),
+            "total_documents": int(index.get("total_chunks") or 0),
+            "model": index.get("embedding_model", "unknown"),
+            "built_at": index.get("last_build_at"),
+            "building": bool((data or {}).get("building", False) if isinstance(data, dict) else False),
+            "watch_enabled": bool(
+                (((data or {}).get("watch") or {}).get("enabled", False) if isinstance(data, dict) else False)
+            ),
         }
 
     async def tool_build(self, full: bool = False) -> Dict[str, Any]:
         """Trigger index build."""
-        # Note: full rebuild would clear cache - not yet implemented in daemon
-        data = await self._api_post("/build", {})
-        
-        if data.get("started"):
-            return {"status": "started", "message": "Index build started. Use codrag_status to check progress."}
-        elif data.get("building"):
+        project_id = await self._resolve_project_id()
+        path = f"/projects/{project_id}/build"
+        if full:
+            path = f"{path}?full=true"
+
+        try:
+            data = await self._api_post(path, {})
+        except BuildInProgressError:
             return {"status": "already_building", "message": "A build is already in progress."}
-        else:
-            return {"status": "unknown", "data": data}
+
+        if isinstance(data, dict) and data.get("started"):
+            return {"status": "started", "message": "Index build started. Use codrag_status to check progress."}
+        return {"status": "unknown", "data": data}
 
     async def tool_search(
         self,
@@ -234,22 +267,22 @@ class MCPServer:
         if not query.strip():
             raise InvalidParamsError("query is required")
 
-        data = await self._api_post("/search", {
+        project_id = await self._resolve_project_id()
+        data = await self._api_post(f"/projects/{project_id}/search", {
             "query": query,
             "k": k,
             "min_score": min_score,
         })
 
         # Format results for token efficiency
-        results = data.get("results", [])
+        results = (data or {}).get("results", []) if isinstance(data, dict) else []
         formatted = []
         for r in results:
-            doc = r.get("doc", {})
             formatted.append({
-                "path": doc.get("source_path", ""),
-                "section": doc.get("section", ""),
+                "path": r.get("source_path", ""),
+                "section": "",
                 "score": round(r.get("score", 0), 3),
-                "content": doc.get("content", "")[:500],  # Truncate for listing
+                "content": str(r.get("preview", ""))[:500],  # Truncate for listing
             })
 
         return {
@@ -268,7 +301,8 @@ class MCPServer:
         if not query.strip():
             raise InvalidParamsError("query is required")
 
-        data = await self._api_post("/context", {
+        project_id = await self._resolve_project_id()
+        data = await self._api_post(f"/projects/{project_id}/context", {
             "query": query,
             "k": k,
             "max_chars": max_chars,
@@ -277,11 +311,13 @@ class MCPServer:
             "structured": True,
         })
 
+        chunks = data.get("chunks") if isinstance(data, dict) else None
+        chunks_used = len(chunks) if isinstance(chunks, list) else 0
         return {
-            "context": data.get("context", ""),
-            "chunks_used": len(data.get("chunks", [])),
-            "total_chars": data.get("total_chars", 0),
-            "estimated_tokens": data.get("estimated_tokens", 0),
+            "context": (data or {}).get("context", "") if isinstance(data, dict) else "",
+            "chunks_used": chunks_used,
+            "total_chars": (data or {}).get("total_chars", 0) if isinstance(data, dict) else 0,
+            "estimated_tokens": (data or {}).get("estimated_tokens", 0) if isinstance(data, dict) else 0,
         }
 
     # -------------------------------------------------------------------------
@@ -413,6 +449,18 @@ class DaemonUnavailableError(MCPError):
 
 class DaemonError(MCPError):
     code = INTERNAL_ERROR
+
+
+class IndexNotReadyError(DaemonError):
+    code = INDEX_NOT_READY
+
+
+class BuildInProgressError(DaemonError):
+    code = BUILD_IN_PROGRESS
+
+
+class ProjectNotFoundError(DaemonError):
+    code = PROJECT_NOT_FOUND
 
 
 # =============================================================================

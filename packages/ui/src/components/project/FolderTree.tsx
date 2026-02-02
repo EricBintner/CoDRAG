@@ -14,10 +14,10 @@ export interface TreeNode {
 }
 
 const statusColors: Record<FileStatus, string> = {
-  indexed: 'bg-green-500',
-  pending: 'bg-yellow-500',
-  ignored: 'bg-gray-400',
-  error: 'bg-red-500',
+  indexed: 'bg-success',
+  pending: 'bg-warning',
+  ignored: 'bg-text-subtle/30',
+  error: 'bg-error',
 };
 
 const statusLabels: Record<FileStatus, string> = {
@@ -65,65 +65,62 @@ function TreeItem({ node, depth = 0, path = '', selectable, onSelect, selectedPa
     <div>
       <div
         className={cn(
-          'group flex items-center gap-2 rounded-md px-2 py-1.5 transition-colors cursor-pointer',
-          'hover:bg-gray-700/50',
-          isSelected && 'bg-blue-900/30 border-l-2 border-blue-500',
+          'group flex items-center gap-2 rounded-md px-2 py-1.5 hover:bg-surface-raised transition-colors cursor-pointer',
+          isSelected && 'bg-primary-muted/10 border-l-2 border-l-primary border-y-transparent border-r-transparent',
           depth > 0 && 'ml-4'
         )}
         onClick={handleClick}
       >
         {isFolder ? (
-          <span className="text-gray-400 flex-shrink-0">
+          <span className="text-text-subtle">
             {expanded ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
           </span>
         ) : (
-          <span className="w-4 flex-shrink-0" />
+          <span className="w-4" />
         )}
-
+        
         {selectable && (
           <input
             type="checkbox"
             checked={isSelected}
             onChange={() => onSelect?.(node, currentPath)}
             onClick={(e) => e.stopPropagation()}
-            className="accent-blue-500 flex-shrink-0"
+            className="accent-primary flex-shrink-0"
           />
         )}
 
-        <span
-          className={cn(
-            'text-sm flex items-center gap-2 truncate',
-            isFolder ? 'text-gray-100 font-medium' : 'text-gray-400 font-mono'
-          )}
-        >
-          {isFolder ? (
-            <Folder className="w-4 h-4 text-blue-400 flex-shrink-0" />
-          ) : (
-            <File className="w-4 h-4 flex-shrink-0" />
-          )}
-          <span className="truncate">{node.name}</span>
+        <span className={cn(
+          "text-sm flex items-center gap-2",
+          isFolder ? "text-text font-medium" : "text-text-muted font-mono"
+        )}>
+          {isFolder ? <Folder className="w-4 h-4 text-primary" /> : <File className="w-4 h-4" />} {node.name}
         </span>
 
         {node.status && (
-          <span className="ml-auto flex items-center gap-1.5 text-xs px-2 py-0.5 rounded-full bg-gray-700/50 flex-shrink-0">
-            <span className={cn('w-1.5 h-1.5 rounded-full', statusColors[node.status])} />
-            <span className="text-gray-400">{statusLabels[node.status]}</span>
+          <span
+            className={cn(
+              "ml-auto flex items-center gap-1.5 text-xs px-2 py-0.5 rounded-full",
+              `${statusColors[node.status]}/20`
+            )}
+          >
+            <span className={cn("w-1.5 h-1.5 rounded-full", statusColors[node.status])} />
+            <span className="text-text-subtle">{statusLabels[node.status]}</span>
           </span>
         )}
 
         {node.chunks !== undefined && (
-          <span className="text-xs text-gray-500 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0">
+          <span className="text-xs text-text-subtle opacity-0 group-hover:opacity-100 transition-opacity">
             {node.chunks} chunks
           </span>
         )}
       </div>
 
       {hasChildren && expanded && (
-        <div className="border-l border-gray-700 ml-4">
+        <div className="border-l border-border-subtle ml-4">
           {node.children!.map((child, i) => (
-            <TreeItem
-              key={`${child.name}-${i}`}
-              node={child}
+            <TreeItem 
+              key={`${child.name}-${i}`} 
+              node={child} 
               depth={depth + 1}
               path={currentPath}
               selectable={selectable}
@@ -146,7 +143,7 @@ export function FolderTree({
   className,
 }: FolderTreeProps) {
   return (
-    <div className={cn(compact && 'text-sm', className)}>
+    <div className={cn(compact ? 'text-sm' : '', className)}>
       {data.map((node, i) => (
         <TreeItem
           key={`${node.name}-${i}`}

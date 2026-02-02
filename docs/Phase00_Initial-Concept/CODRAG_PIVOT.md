@@ -19,7 +19,7 @@ The Phase 69 research has evolved from a project-embedded `code_index` approach 
 | **Architecture** | Standalone daemon | Resource efficiency, multi-project management |
 | **Team Focus** | Enterprise MVP | Build for teams from day one, not afterthought |
 | **UI Strategy** | Web UI → Tauri | Fast dev iteration, native MVP launch |
-| **Location** | `/Volumes/4TB-BAD/HumanAI/CoDRAG/` | Sibling to CLaRa, LinuxBrain for testing |
+| **Location** | `CoDRAG/` | Sibling to CLaRa, LinuxBrain for testing |
 
 ---
 
@@ -35,12 +35,12 @@ The following research documents remain relevant and inform CoDRAG design:
 
 ### Implementation Target
 - **Old plan:** Build `code_index/` as git submodule
-- **New plan:** Build CoDRAG as standalone app at `/Volumes/4TB-BAD/HumanAI/CoDRAG/`
+- **New plan:** Build CoDRAG as standalone app at `CoDRAG/`
 
 ### LinuxBrain as Test Project
 LinuxBrain becomes the primary test project for CoDRAG:
 ```bash
-codrag add /Volumes/4TB-BAD/HumanAI/LinuxBrain --name "LinuxBrain"
+codrag add LinuxBrain --name "LinuxBrain"
 codrag build linuxbrain
 codrag search linuxbrain "how does image generation work?"
 ```
@@ -50,7 +50,7 @@ codrag search linuxbrain "how does image generation work?"
 ## CoDRAG Repository Structure
 
 ```
-/Volumes/4TB-BAD/HumanAI/CoDRAG/
+CoDRAG/
 ├── README.md                 # Project overview, quick start
 ├── CONTRIBUTING.md           # Contribution guidelines
 ├── LICENSE                   # MIT license
@@ -117,10 +117,10 @@ The existing `LinuxBrain/code_index/` research code can be migrated to CoDRAG:
 
 ## Related Documents
 
-- [CoDRAG README](../../../CoDRAG/README.md)
-- [CoDRAG Architecture](../../../CoDRAG/docs/ARCHITECTURE.md)
-- [CoDRAG Roadmap](../../../CoDRAG/docs/ROADMAP.md)
-- [CoDRAG Decisions](../../../CoDRAG/docs/DECISIONS.md)
+- [CoDRAG README](../../../README.md)
+- [CoDRAG Architecture](../../../docs/ARCHITECTURE.md)
+- [CoDRAG Roadmap](../../../docs/ROADMAP.md)
+- [CoDRAG Decisions](../../../docs/DECISIONS.md)
 
 ---
 

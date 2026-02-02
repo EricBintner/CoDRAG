@@ -81,6 +81,27 @@ Relevant entries in `../MASTER_TODO.md`:
 - [ ] STR-05 Budgets: UI defaults must match daemon/MCP conservative defaults
 - [ ] STR-04 Atomic build: UI must communicate “last known-good snapshot” behavior
 
+## Current progress (dashboard wiring)
+- [x] Identified the immediate regression: `src/codrag/dashboard/src/App.tsx` was truncated and references missing state/handlers, especially around `AIModelsSettings`.
+- [x] Verified the relevant backend surfaces exist:
+  - legacy UI config: `GET/PUT /api/code-index/config`
+  - LLM proxy: `GET /api/llm/proxy/models`, `POST /api/llm/proxy/test-model`
+  - provider status: `GET /llm/status`
+- [x] Verified `@codrag/ui` has the required settings UI components and stories (reference implementations):
+  - `AIModelsSettings`, `EndpointManager`
+  - `ProjectSettingsPanel`
+
+## Next steps (to restore compile + functionality)
+- [ ] Repair `App.tsx` to compile:
+  - restore missing `useState` state for LLM config (endpoints + model slots)
+  - restore missing handlers and API wiring for model fetch + test
+  - ensure settings round-trip persistence via `/api/code-index/config`
+- [ ] Smoke test flows:
+  - load config on mount
+  - update endpoint/model slot → save config
+  - fetch models for an endpoint
+  - run “test model” and surface results
+
 ## Notes / blockers
 - [ ] Decide where “project path” is shown vs hidden (future remote mode redaction requirements)
 - [ ] Decide whether the dashboard needs a “diagnostics” panel in MVP (Phase07 suggests it)

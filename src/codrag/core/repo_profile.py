@@ -7,6 +7,7 @@ from typing import Any, Dict, Iterator, List, Sequence, Set, Tuple
 
 DEFAULT_EXCLUDE_DIR_NAMES: Set[str] = {
     ".git",
+    ".codrag",
     "node_modules",
     "__pycache__",
     ".venv",
@@ -226,6 +227,7 @@ def profile_repo(repo_root: Path, max_depth: int = 4, max_files: int = 5000) -> 
 
     exclude_globs: List[str] = [
         "**/.git/**",
+        "**/.codrag/**",
         "**/node_modules/**",
         "**/__pycache__/**",
         "**/.venv/**",

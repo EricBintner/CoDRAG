@@ -49,10 +49,11 @@
    - [x] foundations (color/type/spacing)
    - [x] components
    - [x] patterns (trust console states)
-- [ ] P13-I7 Accessibility expectations:
-  - contrast checks
-  - focus states
-  - keyboard behaviors
+   - [x] visual directions (theme showcase)
+- [x] P13-I7 Accessibility expectations:
+  - [x] contrast checks
+  - [x] focus states
+  - [x] keyboard behaviors
 
 ## Cross-phase strategy alignment
 Relevant entries in `../MASTER_TODO.md`:
@@ -60,4 +61,4 @@ Relevant entries in `../MASTER_TODO.md`:
 - [ ] STR-05 Budgets UI (teach bounded outputs)
 
 ## Notes / blockers
-- [ ] Decide default theme (light vs dark) and whether a density toggle exists
+- [x] Decide default theme (light vs dark) and whether a density toggle exists (See DECISIONS.md)

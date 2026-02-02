@@ -1,4 +1,5 @@
-import { Loader2, FolderOpen, Play } from 'lucide-react';
+import { FolderOpen, Play, Loader2 } from 'lucide-react';
+import { Card, Title, TextInput, Button } from '@tremor/react';
 import { cn } from '../../lib/utils';
 
 export interface BuildCardProps {
@@ -26,45 +27,35 @@ export function BuildCard({
   className,
 }: BuildCardProps) {
   return (
-    <div className={cn(
-      'rounded-lg border border-border bg-surface p-6 space-y-4 shadow-sm',
-      className
-    )}>
-      <h2 className="text-lg font-semibold text-text flex items-center gap-2">
+    <Card className={cn('border border-border bg-surface shadow-sm', className)}>
+      <Title className="text-text mb-4 flex items-center gap-2">
         <FolderOpen className="w-5 h-5 text-primary" />
         Build Index
-      </h2>
+      </Title>
 
-      <div className="space-y-4">
+      <div className="space-y-6">
         <div>
-          <label className="block text-sm font-medium text-text-muted mb-1.5">
+          <label className="block text-sm font-medium text-text-muted mb-2">
             Repository Root
           </label>
-          <div className="relative">
-            <input
-              type="text"
-              value={repoRoot}
-              onChange={(e) => onRepoRootChange(e.target.value)}
-              placeholder="/path/to/repo"
-              disabled={disabled || building}
-              className="w-full bg-surface-raised border border-border rounded-md px-3 py-2 text-sm text-text placeholder:text-text-subtle focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent disabled:opacity-50 transition-all"
-            />
-          </div>
+          <TextInput
+            value={repoRoot}
+            onValueChange={onRepoRootChange}
+            placeholder="/path/to/repo"
+            disabled={disabled || building}
+            className="w-full"
+          />
         </div>
 
-        <button
+        <Button
           onClick={onBuild}
           disabled={building || disabled || !repoRoot.trim()}
-          className="w-full bg-primary hover:bg-primary-hover disabled:opacity-50 disabled:cursor-not-allowed rounded-md px-4 py-2 font-medium text-white transition-colors flex items-center justify-center gap-2 shadow-sm"
+          className="w-full bg-primary hover:bg-primary-hover text-white border-none"
+          icon={building ? Loader2 : Play}
         >
-          {building ? (
-            <Loader2 className="w-4 h-4 animate-spin" />
-          ) : (
-            <Play className="w-4 h-4" />
-          )}
           {building ? 'Building...' : 'Start Build'}
-        </button>
+        </Button>
       </div>
-    </div>
+    </Card>
   );
 }

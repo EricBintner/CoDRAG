@@ -26,6 +26,10 @@ This folder is the **authoritative** planning and execution roadmap for CoDRAG.
 - `Phase11_Deployment/`
 - `Phase12_Marketing-Documentation-Website/`
 - `Phase13_Storybook/`
+- `Phase14_UI_UX_Improvements/`
+- `Phase14_MCP-CLI/`
+- `Phase15_modular-design/`
+- `Phase16_DataVisualization/`
 
 ## Key transition document
 - `TRANSITION_FROM_LINUXBRAIN.md`

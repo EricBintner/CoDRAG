@@ -72,7 +72,7 @@ export function ModelCard({
   
   return (
     <div className={cn(
-      'rounded-lg border bg-surface p-6 transition-colors',
+      'codrag-card rounded-lg border bg-surface p-6 transition-colors',
       isActive ? 'border-success/50 shadow-[0_0_15px_rgba(var(--success),0.1)]' : 'border-border',
       className
     )}>

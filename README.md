@@ -175,8 +175,9 @@ codrag ui                         # Open dashboard in browser
 codrag ui --port 8401             # Custom port
 
 # MCP (for IDE integration)
-codrag mcp --project <project-id> # MCP server for specific project
-codrag mcp --auto                 # Auto-detect project from cwd
+codrag mcp --mode direct          # Direct mode (no daemon required)
+codrag mcp --mode server --auto   # Server mode (connects to daemon)
+codrag mcp-config --mode direct   # Generate IDE config for direct mode
 
 # Utilities
 codrag export-agents <project-id> # Generate AGENTS.md
@@ -224,7 +225,7 @@ server:
 # Set via CLI or dashboard
 project:
   name: "LinuxBrain"
-  path: /Volumes/4TB-BAD/HumanAI/LinuxBrain
+  path: LinuxBrain
   mode: standalone  # or "embedded"
   
   include:

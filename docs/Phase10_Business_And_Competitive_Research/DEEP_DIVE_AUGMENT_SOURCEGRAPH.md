@@ -15,7 +15,7 @@ This document provides a detailed technical and strategic comparison of CoDRAG a
 | **Vector DB** | Local (on-device) | Cloud (Google Cloud) | Removed in favor of BM25 search |
 | **Latency** | Sub-10ms local queries | Network-bound (50-200ms+) | Network-bound |
 | **Privacy** | Complete (no upload) | Code uploaded, "proof of possession" | Code indexed remotely |
-| **Pricing** | **Perpetual License (Indie) + Seat Subscription (Team)** | $20-$200/mo + Enterprise | $49/user/mo Enterprise only (Free/Pro discontinued) |
+| **Pricing** | **Free (1-repo) / Starter ($29/4mo) / Pro ($79 life)** | $20-$200/mo + Enterprise | $49/user/mo Enterprise only (Free/Pro discontinued) |
 
 **Key insight**: Both Augment and Sourcegraph are cloud-first by design. CoDRAG's local-first architecture is a genuine moat, not just a positioning choice.
 

@@ -97,7 +97,7 @@ export function EndpointManager({
     provider === 'openai' || provider === 'anthropic' || provider === 'openai-compatible';
 
   return (
-    <div className={cn('rounded-lg border border-border bg-surface p-6', className)}>
+    <div className={cn('codrag-card rounded-lg border border-border bg-surface p-6', className)}>
       <div className="flex items-center justify-between mb-6">
         <div>
           <h3 className="text-lg font-semibold text-text flex items-center gap-2">

@@ -391,9 +391,11 @@ CoDRAG's acquisition attractiveness would come from:
 ### Positioning
 - CoDRAG should avoid competing head-on as "another IDE"; instead position as:
   - a local-first context engine that works with existing IDE assistants via MCP.
-- **Pricing Strategy:** Disrupt the subscription-heavy market with a **Perpetual License** model ("Pay once, own forever") for individuals.
-  - This contrasts sharply with the $20/mo rental model of competitors.
-- "Enterprise" in this market usually implies identity + policy + audit even if the core app is local.
+- **Pricing Strategy: The "Context Drug" Ladder**:
+  - **Free (The Hook):** 1-repo limit creates natural friction to upgrade once usage habits form.
+  - **Starter (The Bridge):** $29/4-mo pass for freelancers/students who need >1 repo but aren't ready for $79.
+  - **Pro (The Owner):** Perpetual License ("Pay once, own forever") disrupts the $20/mo subscription fatigue.
+- "Enterprise" in this market implies identity + policy + audit even if the core app is local.
 
 ### Differentiation summary
 | Dimension | CoDRAG | OSS pip-install tools | Pieces | Greptile/Augment/Sourcegraph |
@@ -404,10 +406,10 @@ CoDRAG's acquisition attractiveness would come from:
 | MCP integration | Yes | No | No | No |
 | Desktop app | Yes (Tauri) | No | Yes | No |
 | Enterprise tier | Roadmap | No | No | Yes |
-| Trace/graph | Roadmap | No | No | Yes (Greptile) |
+| Trace/graph | **Pro Feature** | No | No | Yes (Greptile) |
 
 ### Strategic implications
 - **No direct competitor** is doing local-first + multi-codebase + MCP + desktop app.
 - **Pieces** is the closest in spirit but different in focus (memory vs codebase context).
 - **Cloud services** (Greptile, Augment, Sourcegraph) are potential competitive threats if they add local modes, but their DNA is cloud-first.
-- **Acquisition path**: CoDRAG's best angle is as a **local-first context engine** that complements Cursor/Windsurf without requiring them to build local infrastructure.
+- **Acquisition path**: CoDRAG's best angle is as a **local-first context engine** that complements Cursor/Windsurf (filling the "local graph" gap) without requiring them to build local infrastructure.

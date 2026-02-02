@@ -130,7 +130,7 @@ rebuild_delay_ms: 5000               # debounce
 projects:
   - id: "proj-abc123"
     name: "LinuxBrain"
-    path: "/Volumes/4TB-BAD/HumanAI/LinuxBrain"
+    path: "LinuxBrain"
     index_dir: "~/.local/share/codebase-rag/projects/proj-abc123"
     include_globs: ["**/*.py", "**/*.md", "**/*.ts", "**/*.tsx"]
     exclude_globs: ["**/node_modules/**", "**/.venv/**", "**/dist/**"]
@@ -220,7 +220,7 @@ The `--auto` flag looks up the current working directory in the project registry
 ├─────────────────────────────────────────────────────────────────────────────┤
 │                                                                             │
 │  Project: LinuxBrain                                                        │
-│  Path: /Volumes/4TB-BAD/HumanAI/LinuxBrain                                  │
+│  Path: LinuxBrain                                                            │
 │                                                                             │
 │  ┌─────────────────────────────────────────────────────────────────────────┐│
 │  │ Index Status                                                            ││

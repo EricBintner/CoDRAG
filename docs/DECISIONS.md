@@ -145,7 +145,7 @@ Design for **team/enterprise use cases** in MVP:
 Where should the CoDRAG source code live?
 
 ### Decision
-Create new repo at `/Volumes/4TB-BAD/HumanAI/CoDRAG/`, sibling to:
+Create new repo at `CoDRAG/`, sibling to:
 - `CLaRa-Remembers-It-All/`
 - `LinuxBrain/`
 - `Halley.Chat/`

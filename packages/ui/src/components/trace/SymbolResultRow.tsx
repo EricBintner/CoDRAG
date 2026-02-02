@@ -36,8 +36,8 @@ export function SymbolResultRow({
       className={cn(
         'codrag-symbol-result-row cursor-pointer rounded border p-3 transition-colors',
         selected
-          ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20'
-          : 'border-transparent hover:bg-gray-50 dark:hover:bg-gray-800',
+          ? 'border-primary bg-primary/5 shadow-md'
+          : 'border-border-subtle bg-surface-raised hover:border-border hover:shadow-sm',
         className
       )}
     >

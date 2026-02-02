@@ -389,7 +389,7 @@ export default function App() {
                               <Folder className="w-8 h-8 text-primary" />
                               <div>
                                 <Title className="text-text">LinuxBrain</Title>
-                                <Text className="font-mono text-sm text-text-subtle">/Volumes/4TB-BAD/HumanAI/LinuxBrain</Text>
+                                <Text className="font-mono text-sm text-text-subtle">LinuxBrain</Text>
                               </div>
                             </Flex>
                           </div>

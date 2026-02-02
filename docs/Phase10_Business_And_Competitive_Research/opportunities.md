@@ -21,6 +21,17 @@ Track competitive opportunities that should influence roadmap bets.
 - **Pricing-tier UX hooks**: make “why upgrade?” visible as product affordances:
   - trace-enabled workflows gated behind Pro
   - team policy + config provenance gated behind Team
+  - "1-repo limit" friction in Free tier driving the "Starter" upgrade
+- **Viral Growth Mechanics**:
+  - **"Team Discovery"**: In-app prompt "Is your whole team using CoDRAG?" to drive multi-seat adoption.
+  - **"Limited Time" Discount**: Capability to trigger 48h "Founder's Edition" offers during viral spikes.
+  - **MCP-first onboarding**: Ensure "1-click connect" for Cursor/Windsurf users to capture viral traffic.
+
+## Opportunities (Emerging Tech Moats)
+- **Small Language Models (SLMs)**: Local re-ranking using ~2B param models (Phi-4, Llama 3) to beat cloud RAG quality at zero marginal cost.
+- **GraphRAG / Structural Trace**: Move beyond chunk-based retrieval to "relationship-based" answers (Cross-repo imports, function calls).
+- **Context Compression**: (LLMLingua) Prune context to save user tokens and improve agent focus.
+- **LSP Integration**: Real-time semantic freshness (rename variable = instant index update).
 
 ## Opportunities (meaningful visualization)
 - **Differentiation demo dashboards**: simple, inspectable “before/after” visuals for:

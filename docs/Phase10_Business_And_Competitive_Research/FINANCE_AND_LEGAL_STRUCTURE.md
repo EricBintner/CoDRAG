@@ -23,18 +23,16 @@ This document outlines the operational financial structure for **Magnetic Anomal
 ### Channel A: Direct Sales (Web Licensing)
 *Primary channel for CoDRAG Starter Passes and Pro Licenses.*
 
-- **Platform:** **Stripe** (Direct Integration).
+- **Platform:** **Lemon Squeezy** (Merchant of Record).
 - **Setup:**
-  - **Account:** One Stripe account for "Magnetic Anomaly LLC".
-  - **Descriptors:** Use dynamic statement descriptors if possible (e.g., `MAGANOM* CODRAG`) or generic `MAGNETIC ANOMALY`.
+  - **Account:** One Lemon Squeezy store for "Magnetic Anomaly LLC".
+  - **Tax:** Lemon Squeezy handles global VAT/Sales Tax collection and remittance automatically (Merchant of Record).
   - **Domain:** `payments.codrag.io` (or similar subdomain).
 - **Checkout Flow:**
   1. User clicks "Buy Starter Pass" or "Buy Pro License" on landing page.
-  2. Redirects to Stripe Checkout (hosted session).
-  3. **Webhook:** Stripe sends `checkout.session.completed` to CoDRAG License Server.
-  4. **Fulfillment:** License Server generates `Ed25519` key (with expiration for Starter, perpetual for Pro) and emails it to user.
-- **Tax Compliance:** 
-  - *Note:* Using Stripe directly requires configuring **Stripe Tax** to handle VAT/Sales Tax collection and remittance automatically.
+  2. Redirects to Lemon Squeezy Checkout (hosted).
+  3. **Fulfillment:** Lemon Squeezy emails a License Key to the user.
+  4. **Activation:** User enters key in CoDRAG App -> App calls `api.codrag.io` to exchange for signed offline license.
 
 ### Channel B: App Stores (Distribution)
 *Secondary channel for discovery or specific platform compliance.*
@@ -52,7 +50,7 @@ This document outlines the operational financial structure for **Magnetic Anomal
 | Function | Tool Recommendation | Notes |
 | :--- | :--- | :--- |
 | **Banking** | Mercury / Chase / SVB | Needs good API access for accounting. |
-| **Payments** | Stripe | Enable "Stripe Tax" immediately to avoid liability. |
+| **Payments** | Lemon Squeezy | Merchant of Record handles global tax liability. |
 | **Accounting** | Xero / QuickBooks Online | Syncs with Stripe & Bank. |
 | **Registered Agent** | [Provider Name] | Required for LLC compliance. |
 
@@ -60,5 +58,5 @@ This document outlines the operational financial structure for **Magnetic Anomal
 1.  **Form LLC:** File Articles of Organization.
 2.  **EIN:** Obtain from IRS.
 3.  **Bank Account:** Open using EIN + Articles.
-4.  **Stripe Account:** Activate using Bank Account + EIN.
+4.  **Lemon Squeezy Account:** Activate using Bank Account + EIN.
 5.  **Apple Developer:** Enroll as Organization (requires DUNS number).

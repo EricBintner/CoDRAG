@@ -97,5 +97,6 @@ if [[ $DO_BUILD -eq 1 ]]; then
 fi
 
 if [[ $DO_DEV -eq 1 ]]; then
-  npm run dev
+  npm run -w @codrag/ui build
+  npx turbo run dev --filter='./websites/apps/*'
 fi

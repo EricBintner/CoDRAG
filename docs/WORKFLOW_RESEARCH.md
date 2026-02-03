@@ -62,7 +62,7 @@ It is intended to keep Phase01–Phase13 planning aligned around real user workf
   - context assembly respects `max_chars`
   - trace expansion has strict node/edge caps
 - **Feature Gates are Enforced:**
-  - Free tier users cannot add >2 projects.
+  - Free tier users cannot add >1 project.
   - Free tier users cannot enable Trace Index.
 - Failure modes are actionable:
   - stable `error.code`
@@ -246,7 +246,7 @@ Acceptance criteria:
 
 ### A1 Journey 5 — Structural question with trace-assisted context (Phase04)
 
-*Note: This journey requires a **Pro License**.*
+*Note: This journey requires a **paid tier** (Starter Pass or Pro License).*
 
 Steps:
 

@@ -34,6 +34,7 @@ const samplePanelDefinitions: PanelDefinition[] = [
 const mockPanelContent = {
   status: (
     <IndexStatusCard
+      className="h-full"
       stats={{
         loaded: true,
         total_documents: 1234,
@@ -45,6 +46,7 @@ const mockPanelContent = {
   ),
   build: (
     <BuildCard
+      className="h-full"
       repoRoot="/Users/dev/projects/codrag"
       onRepoRootChange={() => {}}
       onBuild={() => {}}
@@ -52,6 +54,7 @@ const mockPanelContent = {
   ),
   search: (
     <SearchPanel
+      className="h-full"
       query=""
       onQueryChange={() => {}}
       k={10}
@@ -63,6 +66,7 @@ const mockPanelContent = {
   ),
   'context-options': (
     <ContextOptionsPanel
+      className="h-full"
       k={5}
       onKChange={() => {}}
       maxChars={4000}
@@ -80,23 +84,24 @@ const mockPanelContent = {
     />
   ),
   results: (
-    <div className="p-4 text-center text-text-muted border border-dashed border-border rounded-lg h-full flex items-center justify-center">
+    <div className="h-full p-4 text-center text-text-muted border border-dashed border-border rounded-lg flex items-center justify-center">
       Perform a search to see results
     </div>
   ),
   'context-output': (
     <ContextOutput
+      className="h-full"
       context=""
       meta={null}
     />
   ),
   roots: (
-    <div className="p-4 text-sm text-text-muted">
+    <div className="h-full p-4 text-sm text-text-muted rounded-lg border border-border bg-surface">
       File tree component would go here
     </div>
   ),
   settings: (
-    <div className="p-4 space-y-4">
+    <div className="h-full p-4 space-y-4 rounded-lg border border-border bg-surface">
       <div className="space-y-2">
         <label className="text-sm font-medium text-text">Include Globs</label>
         <textarea

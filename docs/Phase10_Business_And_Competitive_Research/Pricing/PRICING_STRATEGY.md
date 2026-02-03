@@ -28,8 +28,9 @@ Precedents: TablePlus, Sublime Text, JetBrains.
 - **Limits:**
   - **3 active projects**.
 - **Features:**
-  - Standard Trace Index.
+  - Trace Index.
   - Context Freshness (Real-time watcher).
+  - Full MCP suite.
 - **Purpose:** Freelancers, single-project devs, "getting addicted".
 
 ### Pro License (Perpetual Ownership)
@@ -38,8 +39,7 @@ Precedents: TablePlus, Sublime Text, JetBrains.
   - After 1 year: Keep the last version forever, or renew for **~$30/year** for updates.
 - **Features:**
   - **Unlimited projects**.
-  - **Trace Index** (Structural Intelligence / Call Graphs).
-  - **Full MCP Suite** (including advanced context assembly).
+  - Everything in Starter.
   - **Multi-Repo Agent** capabilities.
   - Priority local indexing.
 - **Launch Strategy:** **"Founder’s Edition"** license at **$49** for the first 500 users.
@@ -71,8 +71,8 @@ Target: Regulated industries (Banking, Defense) requiring air-gapped/governed us
 | Feature | Free | Starter | Pro | Team | Enterprise |
 | :--- | :--- | :--- | :--- | :--- | :--- |
 | **Project Limit** | 1 Repo | 3 Repos | Unlimited | Unlimited | Unlimited |
-| **Indexing** | Basic (Manual) | Real-time | **Trace Index** | Shared Configs | Governed Policy |
-| **MCP Tools** | Standard | Standard | Full Suite | Full Suite | Full Suite |
+| **Indexing** | Basic (Manual) | Real-time + Trace | Real-time + Trace | Shared Configs | Governed Policy |
+| **MCP Tools** | Standard | Full Suite | Full Suite | Full Suite | Full Suite |
 | **Deployment** | Local | Local | Local | Local + Config Sync | Air-gapped / Managed |
 | **Support** | Community | Community | Email | Priority | SLA |
 

@@ -1,3 +1,5 @@
+"use client";
+
 import { Badge, Button, Flex, Text } from '@tremor/react';
 import { 
   Terminal, Search, Cpu, Shield, Layers, Zap, Eye, 

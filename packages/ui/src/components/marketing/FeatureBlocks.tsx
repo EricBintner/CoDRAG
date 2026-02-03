@@ -1,3 +1,5 @@
+"use client";
+
 import { Badge, Card, Flex, Text, Title } from '@tremor/react';
 import { 
   Search, GitBranch, Zap, Lock, RefreshCw, Plug, 

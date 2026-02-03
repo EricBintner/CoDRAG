@@ -1,3 +1,5 @@
+"use client";
+
 import { Text } from '@tremor/react';
 import { Box, Github, Twitter, Linkedin, Mail } from 'lucide-react';
 

@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import type { DashboardLayout } from '../../types/layout';
+import type { DashboardLayout, PanelConfig } from '../../types/layout';
 import { DEFAULT_LAYOUT, LAYOUT_STORAGE_KEY } from '../../types/layout';
 
 interface UseLayoutPersistenceOptions {
@@ -40,21 +40,102 @@ function saveLayout(key: string, layout: DashboardLayout): void {
 }
 
 function migrateLayout(layout: DashboardLayout): DashboardLayout {
-  // Future: Add migration logic when version changes
-  // For now, just ensure all default panels exist
-  const existingIds = new Set(layout.panels.map((p) => p.id));
-  const missingPanels = DEFAULT_LAYOUT.panels.filter(
-    (p) => !existingIds.has(p.id)
-  );
+  // Reset to defaults if version changed (layout heights were adjusted)
+  const versionChanged = layout.version !== DEFAULT_LAYOUT.version;
+  
+  const defaultById = new Map(DEFAULT_LAYOUT.panels.map((p) => [p.id, p] as const));
+  const layoutById = new Map(layout.panels.map((p) => [p.id, p] as const));
 
-  if (missingPanels.length > 0) {
+  const panels: PanelConfig[] = DEFAULT_LAYOUT.panels.map((def) => {
+    const existing = layoutById.get(def.id);
+    // If version changed, use default heights and positions
+    if (versionChanged) {
+      return {
+        id: def.id,
+        visible: typeof existing?.visible === 'boolean' ? existing.visible : def.visible,
+        height: def.height,
+        collapsed: typeof existing?.collapsed === 'boolean' ? existing.collapsed : def.collapsed,
+        x: def.x,
+        y: def.y,
+        w: def.w,
+      };
+    }
     return {
-      ...layout,
-      panels: [...layout.panels, ...missingPanels.map((p) => ({ ...p, visible: false }))],
+      id: def.id,
+      visible:
+        typeof existing?.visible === 'boolean'
+          ? existing.visible
+          : def.visible,
+      height:
+        typeof existing?.height === 'number'
+          ? Math.max(1, existing.height)
+          : Math.max(1, def.height),
+      collapsed:
+        typeof existing?.collapsed === 'boolean'
+          ? existing.collapsed
+          : def.collapsed,
+      x: typeof existing?.x === 'number' ? existing.x : def.x,
+      y: typeof existing?.y === 'number' ? existing.y : undefined,
+      w: typeof existing?.w === 'number' ? existing.w : def.w,
     };
+  });
+
+  // Preserve any panels not (yet) present in DEFAULT_LAYOUT
+  for (const existing of layout.panels) {
+    if (defaultById.has(existing.id)) continue;
+    panels.push({
+      id: existing.id,
+      visible: typeof existing.visible === 'boolean' ? existing.visible : false,
+      height: typeof existing.height === 'number' ? Math.max(1, existing.height) : 2,
+      collapsed: typeof existing.collapsed === 'boolean' ? existing.collapsed : false,
+      x: typeof existing.x === 'number' ? existing.x : 0,
+      y: typeof existing.y === 'number' ? existing.y : undefined,
+      w: typeof existing.w === 'number' ? existing.w : 12,
+    });
   }
 
-  return layout;
+  // Backfill missing y positions per-column to avoid overlap.
+  const orderKeyFor = (id: string): number => {
+    const def = defaultById.get(id);
+    if (!def) return Number.POSITIVE_INFINITY;
+    if (typeof def.y === 'number') return def.y;
+    return DEFAULT_LAYOUT.panels.findIndex((p) => p.id === id);
+  };
+
+  const groups = new Map<string, PanelConfig[]>();
+  for (const p of panels) {
+    const x = typeof p.x === 'number' ? p.x : 0;
+    const w = typeof p.w === 'number' ? p.w : 12;
+    const key = `${x}:${w}`;
+    const list = groups.get(key);
+    if (list) list.push(p);
+    else groups.set(key, [p]);
+  }
+
+  for (const group of groups.values()) {
+    let nextY = 0;
+
+    for (const p of group) {
+      if (typeof p.y !== 'number') continue;
+      const h = p.collapsed ? 1 : Math.max(1, p.height);
+      nextY = Math.max(nextY, p.y + h);
+    }
+
+    const missing = group
+      .filter((p) => typeof p.y !== 'number')
+      .sort((a, b) => orderKeyFor(a.id) - orderKeyFor(b.id));
+
+    for (const p of missing) {
+      p.y = nextY;
+      const h = p.collapsed ? 1 : Math.max(1, p.height);
+      nextY += h;
+    }
+  }
+
+  return {
+    version: DEFAULT_LAYOUT.version,
+    panels,
+  };
 }
 
 export function useLayoutPersistence(

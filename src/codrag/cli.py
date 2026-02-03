@@ -38,11 +38,29 @@ def _base_url(host: str, port: int) -> str:
     return f"http://{host}:{port}"
 
 
+def _unwrap_envelope(data: Any) -> Any:
+    """Unwrap ApiEnvelope response from daemon, returning the inner 'data' field."""
+    if isinstance(data, dict) and "success" in data:
+        if data.get("success"):
+            return data.get("data", {})
+        # Error case - already handled by HTTP status, but just in case
+        err = data.get("error", {})
+        if err:
+            code = err.get("code", "ERROR")
+            msg = err.get("message", "Unknown error")
+            console.print(f"[red]Error ({code}): {msg}[/red]")
+            if err.get("hint"):
+                console.print(f"[dim]Hint: {err['hint']}[/dim]")
+            raise typer.Exit(1)
+    # Not an envelope, return as-is (legacy compatibility)
+    return data
+
+
 def _post_json(url: str, payload: dict) -> Any:
     try:
         r = requests.post(url, json=payload, timeout=30)
         r.raise_for_status()
-        return r.json()
+        return _unwrap_envelope(r.json())
     except requests.exceptions.HTTPError as e:
         try:
             err = e.response.json()
@@ -67,7 +85,7 @@ def _get_json(url: str) -> Any:
     try:
         r = requests.get(url, timeout=30)
         r.raise_for_status()
-        return r.json()
+        return _unwrap_envelope(r.json())
     except requests.exceptions.HTTPError as e:
         try:
             err = e.response.json()
@@ -262,7 +280,6 @@ def remove(
     """
     base = _base_url(host, port)
     
-    # We can't use requests.delete easily with _post_json helper, so custom call here
     url = f"{base}/projects/{project_id}"
     if purge:
         url += "?purge=true"
@@ -270,17 +287,16 @@ def remove(
     try:
         r = requests.delete(url, timeout=30)
         r.raise_for_status()
-        data = r.json()
+        data = _unwrap_envelope(r.json())
+    except typer.Exit:
+        raise
     except Exception as e:
         console.print(f"[red]Error removing project: {e}[/red]")
         raise typer.Exit(1)
 
-    if data.get("success"):
-        console.print(f"[green]Project '{project_id}' removed.[/green]")
-        if data.get("purged"):
-            console.print("[dim]Index data purged.[/dim]")
-    else:
-        console.print(f"[red]Failed to remove project: {data}[/red]")
+    console.print(f"[green]Project '{project_id}' removed.[/green]")
+    if data.get("purged"):
+        console.print("[dim]Index data purged.[/dim]")
 
 
 @app.command()
@@ -402,8 +418,8 @@ def search(
         
         console.print(f"[bold cyan]{i}. {path}:{lines}[/bold cyan] [dim](score: {score:.3f})[/dim]")
         if preview:
-            # Simple syntax highlighting simulation
-            console.print(f"   [dim]{preview[:200].replace('\n', ' ')}...[/dim]")
+            preview_clean = preview[:200].replace('\n', ' ')
+            console.print(f"   [dim]{preview_clean}...[/dim]")
         console.print()
 
 
@@ -548,6 +564,7 @@ def mcp_config(
 
 @app.command()
 def activity(
+    project_id: Optional[str] = typer.Argument(None, help="Project ID (optional if inside project dir)"),
     weeks: int = typer.Option(12, "--weeks", "-w", help="Number of weeks to display"),
     no_legend: bool = typer.Option(False, "--no-legend", help="Hide color legend"),
     no_labels: bool = typer.Option(False, "--no-labels", help="Hide day/month labels"),
@@ -570,8 +587,9 @@ def activity(
     base = _base_url(host, port)
     
     try:
-        # Try to fetch real data from server
-        data = _get_json(f"{base}/activity?weeks={weeks}")
+        pid = _resolve_project(base, project_id)
+        # Try to fetch real data from server (endpoint not yet implemented)
+        data = _get_json(f"{base}/projects/{pid}/activity?weeks={weeks}")
         
         # Convert API response to ActivityHeatmapData
         days = [
@@ -636,19 +654,18 @@ def config(
 
 @app.command()
 def coverage(
+    project_id: Optional[str] = typer.Argument(None, help="Project ID (optional if inside project dir)"),
     host: str = typer.Option("127.0.0.1", "--host", help="Server host"),
     port: int = typer.Option(8400, "--port", help="Server port"),
 ) -> None:
     """Show file tree coverage visualization."""
     from codrag.viz.coverage import render_file_coverage
     
-    # In a real app, we would fetch the file tree from the server
-    # e.g. _get_json(f"{base}/files/tree")
-    # For now, we will show the demo data structure
-    
     base = _base_url(host, port)
     try:
-        data = _get_json(f"{base}/coverage")
+        pid = _resolve_project(base, project_id)
+        # Try to fetch real data from server (endpoint not yet implemented)
+        data = _get_json(f"{base}/projects/{pid}/coverage")
         tree_data = data.get("tree") if isinstance(data, dict) else None
         if not isinstance(tree_data, dict):
             tree_data = data if isinstance(data, dict) else None
@@ -709,6 +726,7 @@ def coverage(
 
 @app.command()
 def overview(
+    project_id: Optional[str] = typer.Argument(None, help="Project ID (optional if inside project dir)"),
     weeks: int = typer.Option(12, "--weeks", "-w", help="Number of weeks for activity"),
     host: str = typer.Option("127.0.0.1", "--host", help="Server host"),
     port: int = typer.Option(8400, "--port", help="Server port"),
@@ -725,8 +743,10 @@ def overview(
     trace_stats = {}
     
     try:
-        # 1. Fetch Status (Health)
-        status_data = _get_json(f"{base}/status")
+        pid = _resolve_project(base, project_id)
+        
+        # 1. Fetch Status (Health) from project-scoped endpoint
+        status_data = _get_json(f"{base}/projects/{pid}/status")
         index = status_data.get("index", {})
         health_stats = {
             "total_files": index.get("total_documents", 0), 
@@ -757,13 +777,13 @@ def overview(
         except:
             pass # Fallback to sample if endpoint missing
             
-        # 3. Fetch Trace Stats
+        # 3. Fetch Trace Stats from project-scoped endpoint
         try:
-            tr_data = _get_json(f"{base}/trace/stats")
+            tr_data = _get_json(f"{base}/projects/{pid}/trace/status")
             trace_stats = {
-                "node_count": tr_data.get("node_count", 0),
-                "edge_count": tr_data.get("edge_count", 0),
-                "avg_degree": tr_data.get("avg_degree", 0.0),
+                "node_count": tr_data.get("counts", {}).get("nodes", 0),
+                "edge_count": tr_data.get("counts", {}).get("edges", 0),
+                "avg_degree": 0.0,  # Not currently provided by trace/status
             }
         except:
             pass # Fallback to empty if endpoint missing

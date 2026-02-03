@@ -108,7 +108,7 @@ Copy:
 ## Pricing page copy (placeholder)
 - **Free Tier:** 1 active repo. Essential search. $0 forever.
 - **Starter Pass:** 3 active repos. Real-time watchers. $29 / 4-months.
-- **Pro License:** Unlimited repos. Trace Index. Full MCP.
+- **Pro License:** Unlimited repos. Everything in Starter + multi-repo workflows.
   - **Founder's Edition:** $49 (Limited time). Yours forever.
   - **Standard:** $79.
 - **Team:** Shared configuration. Centralized policy. $12/seat/mo.

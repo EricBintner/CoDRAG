@@ -125,6 +125,7 @@ These sprints are intentionally cross-phase. Each sprint should end with:
 - [ ] S-07.1 Tauri wrapper + sidecar startup/shutdown + port strategy (Phase08)
 - [ ] S-07.2 OS distribution + signing/notarization plan (Phase11)
 - [ ] S-07.3 Offline-friendly licensing + feature gating plan (Phase11/07)
+- [ ] S-07.4 Active Project Slots enforcement (Phase11/01) — Database migration + API endpoints
 
 ### Sprint S-08: Public docs + design system alignment
 **Goal:** credible public-facing docs, consistent UI primitives across app + site.
@@ -185,9 +186,10 @@ This section tracks shared decisions/strategies that must remain consistent acro
 - **Next actions:** decide PyInstaller vs PyOxidizer for MVP and document rationale
 
 ### STR-09: Licensing + feature gating strategy
-- **Status:** Proposed
+- **Status:** Decided (ADR-013)
 - **Impacts:** Phase07 enforcement points, Phase11 offline distribution, Phase02 UI affordances
-- **Next actions:** decide offline signed keys flow + which features are gated (2-project limit, trace)
+- **Strategy:** Lemon Squeezy (MoR) + Activation Exchange pattern (Online LS Key -> Offline Ed25519 License).
+- **Next actions:** Implement `api.codrag.io` serverless function and client-side activation UI.
 
 ---
 
@@ -245,3 +247,14 @@ Add brief notes here after completing a sprint:
 - [ ] P05-R5 Streamable HTTP transport (for remote/enterprise)
 - [ ] P05-R7 Async Tasks for long builds
 - [ ] P05-I19 PyPI verification for MCP Registry
+
+### 2026-02-02: Documentation alignment + CLI/MCP gaps identified
+
+**What was done:**
+- Aligned `docs/Phase12.../MCP-Shim-strategy-and-examples.md` with canonical domain (`codrag.io`), repo name (`codrag-mcp`), and attribution policy (optional/user-controlled).
+- Updated `docs/Phase14_MCP-CLI/PUBLIC_GITHUB_STRATEGY.md` with current implementation status.
+
+**Known gaps to resolve (CLI/daemon):**
+- [ ] CLI commands (`add`, `list`, `status`, `build`, `search`, `context`) do not unwrap `ApiEnvelope` from server responses — they expect raw dicts but daemon returns `{"success": true, "data": {...}}`.
+- [ ] CLI extras (`activity`, `coverage`, `overview`) call root-level endpoints (`/status`, `/activity`, `/coverage`, `/trace/stats`) that are not implemented on the daemon. Migrate to `/projects/{id}/*` or add compatibility aliases.
+- [ ] MCP direct mode (`codrag mcp --mode direct`) needs verification/smoke test.

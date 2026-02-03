@@ -16,6 +16,7 @@ export interface DashboardGridProps {
   className?: string;
   rowHeight?: number;
   margin?: [number, number];
+  resizable?: boolean;
 }
 
 export function DashboardGrid({
@@ -23,8 +24,9 @@ export function DashboardGrid({
   onLayoutChange,
   children,
   className,
-  rowHeight = 60,
-  margin = [0, 16],
+  rowHeight = 20,
+  margin = [24, 24],
+  resizable = true,
 }: DashboardGridProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [width, setWidth] = useState(1200);
@@ -73,7 +75,7 @@ export function DashboardGrid({
         margin={margin}
         onLayoutChange={handleLayoutChange}
         draggableHandle=".drag-handle"
-        isResizable={true}
+        isResizable={resizable}
         resizeHandles={['s']}
         compactType="vertical"
         preventCollision={false}

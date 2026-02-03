@@ -66,8 +66,9 @@ Must support A0-J2:
 
 ### `/pricing`
 v0 launch:
-- **Free Tier:** 2 projects, $0.
-- **Pro License:** Unlimited, Trace Index.
+- **Free Tier:** 1 active repo, $0.
+- **Starter Pass:** 3 active repos, real-time watchers, Trace Index + Full MCP. $29 / 4-months.
+- **Pro License:** Unlimited repos. Everything in Starter + multi-repo workflows.
   - **Founder's Edition:** $49 (Limited).
   - Standard: $79.
 - **Team:** $12/seat/mo.

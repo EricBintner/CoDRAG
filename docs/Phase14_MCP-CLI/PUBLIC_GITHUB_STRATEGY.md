@@ -227,9 +227,17 @@ Avoid:
 
 ## Work started (in this repo)
 
-- `codrag mcp-config` now supports `--mode auto|project|direct` and matches the server endpoint capabilities.
-- `docs/CLI.md` has been updated to document the `--mode` flag and the full IDE list.
+- `codrag mcp-config` supports `--mode auto|project|direct` and the expanded IDE list (`claude`, `cursor`, `windsurf`, `vscode`, `jetbrains`, `all`).
+- `codrag mcp` supports:
+  - server mode (connects to daemon; supports pinned project via `--project` and auto-detect via `--auto`)
+  - direct mode (`--mode direct`, no daemon)
+- MCP protocol version is `2025-11-25` (implemented in `src/codrag/mcp_server.py` and `src/codrag/mcp_direct.py`).
+- The MCP server (server mode) proxies to canonical `/projects/{project_id}/status|build|search|context` and correctly unwraps the daemon's `ApiEnvelope`.
+
+Known gaps to resolve before calling this “done”:
+- CLI daemon-backed commands in `src/codrag/cli.py` call `/projects/*` but do not consistently unwrap `ApiEnvelope` yet.
+- Some CLI “extras” (`activity`, `coverage`, `overview`) currently call legacy root endpoints (e.g. `/status`, `/activity`, `/coverage`, `/trace/stats`) that are not implemented on the daemon; these should be migrated to project-scoped endpoints or implemented as compatibility aliases.
 
 Starter template for the public repo:
-- `docs/Phase14_MCP-CLI/codrag-mcp-template/`
+- `public/codrag-mcp/`
 

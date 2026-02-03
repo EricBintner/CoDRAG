@@ -1,4 +1,5 @@
 import type { LucideIcon } from 'lucide-react';
+import { getPanelDefinition } from '../config/panelRegistry';
 
 /**
  * Panel configuration for user-saved layout
@@ -8,6 +9,9 @@ export interface PanelConfig {
   visible: boolean;
   height: number;      // Grid row units
   collapsed: boolean;
+  x?: number;          // Grid column position (0-11)
+  y?: number;          // Grid row position
+  w?: number;          // Grid column span (1-12)
 }
 
 /**
@@ -49,9 +53,9 @@ export interface PanelProps {
  */
 export interface GridLayoutItem {
   i: string;      // Panel ID
-  x: number;      // Always 0 (single column)
+  x: number;      // Column position
   y: number;      // Row position
-  w: number;      // Always 12 (full width)
+  w: number;      // Column span
   h: number;      // Height in grid units
   minH?: number;  // Minimum height
   static?: boolean;
@@ -61,16 +65,16 @@ export interface GridLayoutItem {
  * Default layout configuration
  */
 export const DEFAULT_LAYOUT: DashboardLayout = {
-  version: 1,
+  version: 4,
   panels: [
-    { id: 'status', visible: true, height: 2, collapsed: false },
-    { id: 'build', visible: true, height: 2, collapsed: false },
-    { id: 'search', visible: true, height: 3, collapsed: false },
-    { id: 'context-options', visible: true, height: 2, collapsed: false },
-    { id: 'results', visible: true, height: 4, collapsed: false },
-    { id: 'context-output', visible: true, height: 4, collapsed: false },
-    { id: 'roots', visible: true, height: 5, collapsed: false },
-    { id: 'settings', visible: true, height: 4, collapsed: true },
+    { id: 'status', visible: true, height: 8, collapsed: false, x: 0, y: 0, w: 8 },
+    { id: 'build', visible: true, height: 10, collapsed: false, x: 0, y: 8, w: 8 },
+    { id: 'search', visible: true, height: 12, collapsed: false, x: 0, y: 18, w: 8 },
+    { id: 'results', visible: true, height: 10, collapsed: false, x: 0, y: 30, w: 8 },
+    { id: 'roots', visible: true, height: 14, collapsed: false, x: 8, y: 0, w: 4 },
+    { id: 'context-options', visible: true, height: 16, collapsed: false, x: 8, y: 14, w: 4 },
+    { id: 'context-output', visible: true, height: 10, collapsed: false, x: 8, y: 30, w: 4 },
+    { id: 'settings', visible: true, height: 8, collapsed: true, x: 8, y: 40, w: 4 },
   ],
 };
 
@@ -83,19 +87,34 @@ export const LAYOUT_STORAGE_KEY = 'codrag_dashboard_layout';
  * Convert DashboardLayout to react-grid-layout format
  */
 export function toGridLayout(layout: DashboardLayout): GridLayoutItem[] {
-  let y = 0;
+  let fallbackY = 0;
   return layout.panels
     .filter(p => p.visible)
     .map(panel => {
+      const defaultPanel = DEFAULT_LAYOUT.panels.find((p) => p.id === panel.id);
+      const x = typeof panel.x === 'number' ? panel.x : (defaultPanel?.x ?? 0);
+      const w = typeof panel.w === 'number' ? panel.w : (defaultPanel?.w ?? 12);
+
+      const resolvedY =
+        typeof panel.y === 'number'
+          ? panel.y
+          : typeof defaultPanel?.y === 'number'
+            ? defaultPanel.y
+            : fallbackY;
+
+      const panelDef = getPanelDefinition(panel.id);
+      const minH = panelDef?.minHeight ?? 1;
+
       const item: GridLayoutItem = {
         i: panel.id,
-        x: 0,
-        y,
-        w: 12,
+        x,
+        y: resolvedY,
+        w,
         h: panel.collapsed ? 1 : panel.height,
-        minH: 1,
+        minH: panel.collapsed ? 1 : minH,
       };
-      y += item.h;
+
+      fallbackY = Math.max(fallbackY, item.y + item.h);
       return item;
     });
 }
@@ -108,7 +127,7 @@ export function fromGridLayout(
   gridItems: GridLayoutItem[]
 ): DashboardLayout {
   // Sort by y position to get order
-  const sorted = [...gridItems].sort((a, b) => a.y - b.y);
+  const sorted = [...gridItems].sort((a, b) => (a.y - b.y) || (a.x - b.x));
   
   // Build new panels array preserving hidden panels
   const visibleIds = new Set(sorted.map(item => item.i));
@@ -116,11 +135,20 @@ export function fromGridLayout(
   
   const updatedPanels: PanelConfig[] = sorted.map(item => {
     const existing = current.panels.find(p => p.id === item.i);
+    const defaultPanel = DEFAULT_LAYOUT.panels.find((p) => p.id === item.i);
+    const collapsed = existing?.collapsed ?? false;
+    const nextHeight = collapsed
+      ? (existing?.height ?? defaultPanel?.height ?? item.h)
+      : item.h;
+
     return {
       id: item.i,
       visible: true,
-      height: item.h,
-      collapsed: existing?.collapsed ?? false,
+      height: nextHeight,
+      collapsed,
+      x: item.x,
+      y: item.y,
+      w: item.w,
     };
   });
   

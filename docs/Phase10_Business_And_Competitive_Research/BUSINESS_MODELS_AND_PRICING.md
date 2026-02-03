@@ -103,8 +103,8 @@ We have selected a **Perpetual License** model for individuals and a **Seat-Base
 
 **The Strategy (The "Context Drug" Ladder):**
 - **Free:** 1 repo, manual refresh (The Hook).
-- **Starter:** $29/4-mo pass, 3 repos, real-time watcher (The Bridge).
-- **Pro:** $79 One-time, Unlimited repos, Trace Index (Ownership).
+- **Starter:** $29/4-mo pass, 3 repos, real-time watcher, Trace Index + Full MCP (The Bridge).
+- **Pro:** $79 One-time, Unlimited repos, everything in Starter + multi-repo workflows (Ownership).
 - **Team:** $15/mo/seat, Shared config/index (Standardization).
 - **Enterprise:** Custom pricing for air-gapped/compliance needs.
 
@@ -114,8 +114,7 @@ See the detailed strategy in: [Pricing/PRICING_STRATEGY.md](Pricing/PRICING_STRA
 - **Adoption funnel:** Free (1 repo) -> Starter ($29/4mo) -> Pro License ($79).
 - **Packaging:**
     - **Free:** 1 active repo, manual indexing.
-    - **Starter:** 3 active repos, real-time indexing.
-    - **Pro:** Unlimited repos, Trace Index (structural), Full MCP.
+    - **Starter:** 3 active repos, real-time indexing, Trace Index (structural), Full MCP.
+    - **Pro:** Unlimited repos, everything in Starter + multi-repo workflows.
     - **Team:** Shared configs, License management.
 - **Cloud requirement:** None for Pro. Optional "Team Server" for shared configs/indexes in Phase 6.
-

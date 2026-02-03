@@ -27,51 +27,69 @@ export function PanelChrome({
   return (
     <div
       className={cn(
-        'codrag-panel bg-surface border border-border rounded-lg shadow-sm overflow-hidden flex flex-col h-full',
+        'codrag-panel group relative h-full w-full',
         className
       )}
     >
       {/* Panel Header */}
-      <div className="codrag-panel-header flex items-center gap-2 px-3 py-2 border-b border-border bg-surface-raised min-h-[44px]">
+      <div className="codrag-panel-header pointer-events-none absolute right-0 top-2 z-10 flex translate-x-1/2 items-center gap-1">
         {/* Drag Handle */}
-        <div className="drag-handle cursor-grab active:cursor-grabbing p-1 -ml-1 rounded hover:bg-muted transition-colors">
-          <GripVertical className="w-4 h-4 text-text-muted" />
-        </div>
-
-        {/* Icon & Title */}
-        {Icon && <Icon className="w-4 h-4 text-text-muted flex-shrink-0" />}
-        <span className="font-medium text-sm text-text flex-1 truncate">{title}</span>
+        <button
+          type="button"
+          className={cn(
+            'drag-handle pointer-events-auto cursor-grab active:cursor-grabbing rounded-md p-0.5 transition-opacity hover:bg-muted/60',
+            collapsed ? 'opacity-60 hover:opacity-100' : 'opacity-30 hover:opacity-100'
+          )}
+          aria-label={`Drag ${title}`}
+        >
+          <GripVertical className="w-3.5 h-3.5 text-text-muted" />
+        </button>
 
         {/* Controls */}
-        <div className="flex items-center gap-1">
+        <div className="flex items-center gap-1 opacity-0 pointer-events-none transition-opacity group-hover:opacity-100 group-hover:pointer-events-auto">
           {onCollapse && (
             <button
+              type="button"
               onClick={onCollapse}
-              className="p-1 rounded hover:bg-muted transition-colors text-text-muted hover:text-text"
+              className={cn(
+                'p-0.5 rounded-md transition-colors text-text-muted hover:text-text',
+                'hover:bg-muted'
+              )}
               aria-label={collapsed ? 'Expand panel' : 'Collapse panel'}
             >
               {collapsed ? (
-                <ChevronDown className="w-4 h-4" />
+                <ChevronDown className="w-3.5 h-3.5" />
               ) : (
-                <ChevronUp className="w-4 h-4" />
+                <ChevronUp className="w-3.5 h-3.5" />
               )}
             </button>
           )}
           {closeable && onClose && (
             <button
+              type="button"
               onClick={onClose}
-              className="p-1 rounded hover:bg-muted transition-colors text-text-muted hover:text-error"
+              className={cn(
+                'p-0.5 rounded-md transition-colors text-text-muted hover:text-error',
+                'hover:bg-muted'
+              )}
               aria-label="Close panel"
             >
-              <X className="w-4 h-4" />
+              <X className="w-3.5 h-3.5" />
             </button>
           )}
         </div>
       </div>
 
       {/* Panel Content */}
-      {!collapsed && (
-        <div className="codrag-panel-content flex-1 overflow-auto">
+      {collapsed ? (
+        <div className="codrag-panel-content h-full">
+          <div className="h-full rounded-lg border border-border bg-surface-raised px-3 flex items-center gap-2">
+            {Icon && <Icon className="w-4 h-4 text-text-muted flex-shrink-0" />}
+            <span className="font-medium text-sm text-text truncate">{title}</span>
+          </div>
+        </div>
+      ) : (
+        <div className="codrag-panel-content h-full">
           {children}
         </div>
       )}

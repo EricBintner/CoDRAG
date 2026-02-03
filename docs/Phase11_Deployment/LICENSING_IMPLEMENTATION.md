@@ -74,7 +74,7 @@ The CoDRAG desktop app (Tauri/Rust) and daemon (Python) will both contain the **
 
 ### Free Tier (Default state)
 -   `ProjectRegistry`: Enforce `project_count <= 1`.
--   `TraceManager`: Disabled. Returns "Upgrade to Pro" error on `trace_build`.
+-   `TraceManager`: Disabled. Returns "Upgrade to Starter/Pro" error on `trace_build`.
 -   `Dashboard`: Show "Pro" badges on locked features.
 
 ### Starter Tier (Term Pass)
@@ -97,8 +97,7 @@ The CoDRAG desktop app (Tauri/Rust) and daemon (Python) will both contain the **
 
 ### Pro Tier
 -   `ProjectRegistry`: Unlimited.
--   `TraceManager`: Enabled.
--   `MCP`: Full access.
+-   Features: Everything in Starter + multi-repo workflows.
 
 ### Team Tier
 -   **Shared Configs:** Import/Export `.codrag/team_config.json` enabled.
@@ -115,8 +114,13 @@ The CoDRAG desktop app (Tauri/Rust) and daemon (Python) will both contain the **
 -   **Binary Patching:** Users patching the `verify_license()` function. **Mitigation:** Code signing (OS level) helps. Rust logic is harder to patch than JS. Accept that determined crackers will crack; optimize for honest customers.
 
 ## Activation Flow (Direct Sales)
-1.  User buys on website (Stripe).
-2.  Stripe Webhook -> CoDRAG License Service (Cloud).
-3.  Service generates signed Key.
-4.  Service emails Key to user.
-5.  User pastes Key into App -> App validates & saves to disk.
+
+We use **Lemon Squeezy** as the Merchant of Record. To maintain offline capabilities, we use an **Activation Exchange** pattern.
+
+1.  **Purchase:** User buys on website (Lemon Squeezy) -> receives LS License Key via email.
+2.  **Exchange:** User pastes LS Key into CoDRAG App.
+3.  **Validation:** App calls `api.codrag.io/activate` with LS Key.
+4.  **Signing:** Server validates key with Lemon Squeezy API, then generates a **CoDRAG Offline License** (Ed25519 signed payload).
+5.  **Storage:** App saves the signed payload. All future checks are local/offline.
+
+See [LEMON_SQUEEZY_INTEGRATION.md](LEMON_SQUEEZY_INTEGRATION.md) for full details.

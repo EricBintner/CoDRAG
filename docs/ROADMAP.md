@@ -391,7 +391,7 @@ curl http://localhost:8400/projects/test/trace/search \
   - "Founder's Edition" / "Pro" capability flags
 
 - [ ] **Feature Gating Logic**
-  - `ProjectRegistry`: Enforce 2-project limit for Free tier
+  - `ProjectRegistry`: Enforce 1-project limit for Free tier
   - `TraceManager`: Enable/Disable based on license status
   - Dashboard: "Upgrade to Pro" UI triggers
 

@@ -242,21 +242,27 @@ CoDRAG uses a **"Software License"** model for individuals and a **"Seat-Based S
 
 1.  **Free Tier (The Hook):**
     - **$0**.
-    - Limits: 2 active projects.
+    - Limits: 1 active repo.
     - Features: Standard keyword/embedding search.
     - Purpose: Evaluation and hobbyist use.
 
-2.  **Pro License (Personal/Professional):**
+2.  **Starter Pass (The Bridge):**
+    - **$29 / 4-months**.
+    - Limits: 3 active repos.
+    - Features: Real-time watchers, Trace Index, Full MCP suite.
+    - Purpose: Freelancers and solo developers who want the full "aha" experience across a small set of repos.
+
+3.  **Pro License (Personal/Professional):**
     - **$79** (One-time perpetual license).
     - **Founder's Edition:** **$49** for the first 500 users.
-    - Features: Unlimited projects, **Trace Index** (structural signals), Full MCP suite.
+    - Features: Unlimited repos, everything in Starter + multi-repo workflows.
     - Updates: Includes 1 year; optional ~$30/year renewal for updates (app keeps working if not renewed).
 
-3.  **Team Tier (Indexed Harmony):**
+4.  **Team Tier (Indexed Harmony):**
     - **$12/seat/month** (billed annually).
     - Features: **Shared Index Configs** (standardized scoping), Centralized Policy, License Management.
 
-4.  **Enterprise Tier:**
+5.  **Enterprise Tier:**
     - **Custom Pricing**.
     - Features: Air-gapped support, SSO/SCIM, Audit Logs, SLA.
 

@@ -32,7 +32,7 @@ export function ModularDashboard({
   className,
   headerLeft,
   headerRight,
-  rowHeight = 60,
+  rowHeight = 20,
 }: ModularDashboardProps) {
   const {
     layout,
@@ -97,7 +97,7 @@ export function ModularDashboard({
           const content = panelContent[panel.id];
 
           return (
-            <div key={panel.id}>
+            <div key={panel.id} className="h-full">
               <PanelChrome
                 title={def.title}
                 icon={def.icon}

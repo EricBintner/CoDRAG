@@ -1,3 +1,5 @@
+"use client";
+
 // CoDRAG UI - Shared Component Library
 // This package provides the design system foundation for CoDRAG app and website
 

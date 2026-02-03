@@ -87,8 +87,8 @@
 
 Define packaging tiers as a mapping to feature surfaces:
 - **Free (The Hook):** 1 active repo, manual indexing.
-- **Starter (The Bridge):** 3 active repos, real-time indexing ($29/4mo).
-- **Pro (Ownership):** Unlimited repos, Trace Index, Full MCP ($79/life).
+- **Starter (The Bridge):** 3 active repos, real-time indexing, Trace Index + Full MCP ($29/4mo).
+- **Pro (Ownership):** Unlimited repos, everything in Starter + multi-repo workflows ($79/life).
 - **Team (Standardization):** Shared configs, License management ($15/mo/seat).
 - **Enterprise:** Hardening, auth, audit baseline, deployment guidance.
 

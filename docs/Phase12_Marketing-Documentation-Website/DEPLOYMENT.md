@@ -9,6 +9,7 @@ We will deploy the four CoDRAG web applications (`marketing`, `docs`, `support`,
   - `docs.codrag.io` (Documentation)
   - `support.codrag.io` (Support hub)
   - `payments.codrag.io` (Licensing & checkout)
+  - `api.codrag.io` (License Activation Exchange)
 - **Legacy Redirect**: `codrag.ai` -> `codrag.io` (via Cloudflare Page Rules)
 
 ## Deployment Providers
@@ -17,11 +18,12 @@ We will deploy the four CoDRAG web applications (`marketing`, `docs`, `support`,
 Since all apps are built with Next.js App Router, Vercel offers the best zero-config deployment.
 
 1. **Connect GitHub Repo**: Connect `EricBintner/CoDRAG` to Vercel.
-2. **Configure Projects**: Create 4 separate Vercel projects from the same monorepo, setting the **Root Directory** for each:
+2. **Configure Projects**: Create 5 separate Vercel projects from the same monorepo:
    - **Marketing**: `websites/apps/marketing`
    - **Docs**: `websites/apps/docs`
    - **Support**: `websites/apps/support`
    - **Payments**: `websites/apps/payments`
+   - **API**: `websites/apps/api` (Serverless Functions for licensing)
 3. **Build Command**: Vercel detects Next.js automatically.
    - Override command: `cd ../../.. && npx turbo run build --filter=@codrag/marketing` (adjust filter for each app)
    - Or rely on Vercel's monorepo support (it usually handles `turbo` well if configured).

@@ -35,7 +35,7 @@ To go viral, you must appear where developers are looking for "Context solutions
 To make it viral, you need to turn the *output* of the tool into something shareable.
 
 *   **The "Trace Map" Image:** Add a feature in the GUI to "Export Trace Map." It generates a beautiful, high-tech looking SVG/Image of the call graph the AI just used. Developers love sharing "how the AI saw my code" on Twitter/X.
-*   **"Powered by CoDRAG" in Citations:** When the MCP returns context to the IDE, include a header: `<!-- Context provided by CoDRAG (codrag.com) -->`. When users copy-paste their LLM chat logs to colleagues or Discord, your brand is baked into the text.
+*   **Optional "Powered by CoDRAG" attribution:** If (and only if) the user enables attribution, include a header like: `<!-- Context provided by CoDRAG (codrag.io) -->`. When users copy-paste their LLM chat logs to colleagues or Discord, your brand is baked into the text.
 *   **The "Free for Open Source" Badge:** Give a free Pro license to anyone maintainng a repo with >500 stars. They will mention it in their `CONTRIBUTING.md` (e.g., *"To contribute, we recommend using CoDRAG via MCP for full codebase context"*). This is massive for credibility.
 
 ---
@@ -160,9 +160,9 @@ Because if I'm a developer at a big company, and I want to add an MCP to my Curs
 *   If the repo is **GPL or Proprietary**, they get nervous about "License Contamination."
 
 **The CoDRAG Play:**
-1.  **Repo name:** `codrag-mcp-connector`.
+1.  **Repo name:** `codrag-mcp`.
 2.  **License:** **MIT.**
-3.  **Code:** 100% boilerplate logic. It literally just sends a request to `localhost:12345` (where your Desktop app is listening).
+3.  **Code:** 100% boilerplate logic. It literally just sends a request to your local CoDRAG engine/daemon (default: `http://127.0.0.1:8400`).
 4.  **The "Moat":** The Desktop app is the one doing the hard work. It is closed-source and signed.
 
 ### Conclusion: The "Local-First" Advantage

@@ -24,6 +24,7 @@ export default defineConfig({
           react: 'React',
           'react-dom': 'ReactDOM',
         },
+        banner: '"use client";',
       },
     },
   },

@@ -1,15 +1,11 @@
-import type { Metadata } from 'next';
+"use client";
+
 import type { ReactNode } from 'react';
 import { DocsLayout } from '@codrag/ui';
 import { docsSidebar } from '../config/docs';
 
 import '@codrag/ui/styles';
 import './globals.css';
-
-export const metadata: Metadata = {
-  title: 'CoDRAG Documentation',
-  description: 'Documentation for CoDRAG CLI, dashboard, and integrations.',
-};
 
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (

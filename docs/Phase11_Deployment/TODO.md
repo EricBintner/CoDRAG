@@ -24,6 +24,8 @@
 
 ### Licensing + feature gates
 - [ ] P11-I6 Define offline license validation approach (signed keys)
+- [ ] P11-I11 Implement Lemon Squeezy Activation Exchange serverless function (api.codrag.io)
+- [ ] P11-I12 Implement client-side license activation UI (paste LS key)
 - [ ] P11-I7 Define enforcement points:
   - 2-project limit (Free)
   - trace enablement (Pro)

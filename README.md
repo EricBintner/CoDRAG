@@ -1,12 +1,17 @@
 # CoDRAG
-
-**Code Documentation and RAG** — A standalone, multi-project semantic search and codebase intelligence platform.
-
-> *Proprietary Software — All Rights Reserved*
-
----
-
-## CLI + MCP Quickstart
+ 
+ **Local-first codebase intelligence** for developers and IDE agents — semantic search + structural Trace Index + LLM-ready context, all on your machine.
+ 
+ CoDRAG turns “where is this implemented?” into a 5-second, cite-the-source answer:
+ - **Semantic search** across your repos (fast, incremental, persistent)
+ - **Trace Index (code graph)** for symbols/imports/calls so agents can reason structurally
+ - **Context builder** that outputs bounded, attributable chunks for LLMs
+ - **MCP for IDEs** (Cursor, Windsurf, Claude Desktop, VS Code, JetBrains) powered by the same local index
+ - **Local-first by default:** no repo content is uploaded unless you choose
+ 
+ ---
+ 
+ ## CLI + MCP Quickstart
 
 CoDRAG is primarily used in two ways:
 

@@ -34,7 +34,7 @@ const codragFeatures = [
   {
     icon: <Plug className="w-8 h-8" />,
     title: 'MCP Integration',
-    description: 'Works seamlessly with Cursor, Windsurf, and any MCP-compatible IDE.',
+    description: 'Works seamlessly with Cursor, Windsurf, Claude Code, and any MCP-compatible tool.',
     badge: 'New',
   },
 ];

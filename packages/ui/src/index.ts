@@ -58,8 +58,8 @@ export type { PanelChromeProps, DashboardGridProps, PanelPickerProps, ModularDas
 // Components - Marketing & Site (Phase 12)
 export { MarketingHero, FeatureBlocks } from './components/marketing';
 export type { MarketingHeroProps, FeatureBlocksProps, Feature } from './components/marketing';
-export { SiteHeader, SiteFooter } from './components/site';
-export type { SiteHeaderProps, SiteFooterProps, NavLink, FooterSection, FooterLink } from './components/site';
+export { SiteHeader, SiteFooter, DevToolbar } from './components/site';
+export type { SiteHeaderProps, SiteFooterProps, DevToolbarProps, NavLink, FooterSection, FooterLink } from './components/site';
 
 // Components - Docs (Phase 12)
 export { DocsLayout, DocsSidebarNav, TableOfContents } from './components/docs';

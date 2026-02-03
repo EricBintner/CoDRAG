@@ -24,10 +24,9 @@ export default function Page() {
             </div>
           </div>
           <div>
-            <div className="font-semibold">When releases are available</div>
+            <div className="font-semibold">Planned Platforms</div>
             <div className="mt-1 text-sm text-text-muted">
-              This page will include macOS/Windows installers, checksums, and
-              signature verification instructions.
+              We will support macOS (Homebrew, DMG), Windows (winget, MSI), and Linux (AppImage, deb, rpm).
             </div>
           </div>
         </div>

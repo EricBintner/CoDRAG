@@ -25,7 +25,7 @@ export function DashboardGrid({
   children,
   className,
   rowHeight = 20,
-  margin = [24, 24],
+  margin = [12, 12],
   resizable = true,
 }: DashboardGridProps) {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -57,6 +57,7 @@ export function DashboardGrid({
         w: item.w,
         h: item.h,
         minH: item.minH,
+        isResizable: (item as any).isResizable,
       }));
       const updated = fromGridLayout(layout, items);
       onLayoutChange(updated);

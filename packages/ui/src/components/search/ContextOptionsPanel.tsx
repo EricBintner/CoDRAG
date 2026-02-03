@@ -1,5 +1,6 @@
 import { Copy, Settings2 } from 'lucide-react';
-import { Card, Flex, Title, NumberInput, Switch, Button, Text } from '@tremor/react';
+import { Card, Title, NumberInput, Button, Text } from '@tremor/react';
+import { Toggle } from '../primitives/Toggle';
 import { cn } from '../../lib/utils';
 
 export interface ContextOptionsPanelProps {
@@ -50,17 +51,17 @@ export function ContextOptionsPanel({
 }: ContextOptionsPanelProps) {
   return (
     <Card className={cn('border border-border bg-surface shadow-sm', className)}>
-      <Flex justifyContent="between" alignItems="center" className="mb-4">
-        <Flex className="gap-2" justifyContent="start">
-          <Settings2 className="w-5 h-5 text-primary" />
-          <Title className="text-text">Context Options</Title>
-        </Flex>
-        <Flex className="gap-2" justifyContent="end">
+      <div className="flex flex-wrap justify-between items-center mb-4 gap-2">
+        <div className="flex items-center gap-2">
+          <Settings2 className="w-5 h-5 text-primary shrink-0" />
+          <Title className="text-text truncate">Context Options</Title>
+        </div>
+        <div className="flex items-center gap-2 shrink-0">
           <Button
             size="xs"
             onClick={onGetContext}
             disabled={disabled}
-            className="bg-primary hover:bg-primary-hover text-white border-none"
+            className="bg-primary hover:bg-primary-hover text-white border-none whitespace-nowrap"
           >
             Get Context
           </Button>
@@ -70,18 +71,18 @@ export function ContextOptionsPanel({
               variant="secondary"
               onClick={onCopyContext}
               disabled={!hasContext}
-              className="border border-border"
+              className="border border-border whitespace-nowrap"
               icon={Copy}
             >
               Copy
             </Button>
           )}
-        </Flex>
-      </Flex>
+        </div>
+      </div>
 
       <div className="space-y-6">
-        <Flex className="gap-4 flex-wrap" justifyContent="start" alignItems="start">
-          <div className="w-32">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
             <label className="block text-sm font-medium text-text-muted mb-2">
               Chunks (k)
             </label>
@@ -95,7 +96,7 @@ export function ContextOptionsPanel({
             />
           </div>
 
-          <div className="w-32">
+          <div>
             <label className="block text-sm font-medium text-text-muted mb-2">
               Max Chars
             </label>
@@ -108,7 +109,7 @@ export function ContextOptionsPanel({
               className="w-full"
             />
           </div>
-        </Flex>
+        </div>
 
         <div className="border-t border-border" />
 
@@ -116,34 +117,37 @@ export function ContextOptionsPanel({
           <label className="block text-sm font-medium text-text-muted">
             Inclusions
           </label>
-          <Flex className="gap-6 w-auto" justifyContent="start">
+          <div className="flex flex-wrap gap-x-6 gap-y-3">
             <label className="flex items-center gap-2 cursor-pointer hover:opacity-80 transition-opacity">
-              <Switch
+              <Toggle
                 checked={includeSources}
                 onChange={onIncludeSourcesChange}
                 disabled={disabled}
+                size="sm"
               />
-              <Text className="text-sm text-text">Sources</Text>
+              <Text className="text-sm text-text whitespace-nowrap">Sources</Text>
             </label>
 
             <label className="flex items-center gap-2 cursor-pointer hover:opacity-80 transition-opacity">
-              <Switch
+              <Toggle
                 checked={includeScores}
                 onChange={onIncludeScoresChange}
                 disabled={disabled}
+                size="sm"
               />
-              <Text className="text-sm text-text">Scores</Text>
+              <Text className="text-sm text-text whitespace-nowrap">Scores</Text>
             </label>
 
             <label className="flex items-center gap-2 cursor-pointer hover:opacity-80 transition-opacity">
-              <Switch
+              <Toggle
                 checked={structured}
                 onChange={onStructuredChange}
                 disabled={disabled}
+                size="sm"
               />
-              <Text className="text-sm text-text">Structured</Text>
+              <Text className="text-sm text-text whitespace-nowrap">Structured</Text>
             </label>
-          </Flex>
+          </div>
         </div>
       </div>
     </Card>

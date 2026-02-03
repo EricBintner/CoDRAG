@@ -128,7 +128,7 @@ export const FullDashboard: StoryObj = {
           <header className="flex items-center justify-between">
             <h1 className="text-2xl font-bold flex items-center gap-2 text-text">
               <Database className="w-6 h-6" />
-              Code Index Dashboard
+              CoDRAG
             </h1>
             <button className="p-2 rounded hover:bg-surface-raised transition text-text-muted">
               <RefreshCw className="w-5 h-5" />
@@ -279,7 +279,7 @@ export const EmptyState: StoryObj = {
           <header className="flex items-center justify-between">
             <h1 className="text-2xl font-bold flex items-center gap-2 text-text">
               <Database className="w-6 h-6" />
-              Code Index Dashboard
+              CoDRAG
             </h1>
           </header>
 

@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 import type { ReactNode } from 'react';
-import { SiteHeader, SiteFooter } from '@codrag/ui';
+import { DevToolbar, SiteHeader, SiteFooter } from '@codrag/ui';
 
 import '@codrag/ui/styles';
 import './globals.css';
@@ -17,6 +17,8 @@ const navLinks = [
 ];
 
 export default function RootLayout({ children }: { children: ReactNode }) {
+  const showDevToolbar = process.env.NODE_ENV !== 'production';
+
   return (
     <html lang="en" data-codrag-theme="a">
       <body className="flex flex-col min-h-screen bg-background text-text selection:bg-primary/20">
@@ -42,6 +44,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
             email: 'support@codrag.io'
           }}
         />
+        {showDevToolbar && <DevToolbar />}
       </body>
     </html>
   );

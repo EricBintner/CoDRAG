@@ -38,6 +38,15 @@ def _base_url(host: str, port: int) -> str:
     return f"http://{host}:{port}"
 
 
+def _is_server_available(base: str) -> bool:
+    try:
+        r = requests.get(f"{base}/health", timeout=2)
+        r.raise_for_status()
+        return True
+    except Exception:
+        return False
+
+
 def _unwrap_envelope(data: Any) -> Any:
     """Unwrap ApiEnvelope response from daemon, returning the inner 'data' field."""
     if isinstance(data, dict) and "success" in data:
@@ -59,6 +68,31 @@ def _unwrap_envelope(data: Any) -> Any:
 def _post_json(url: str, payload: dict) -> Any:
     try:
         r = requests.post(url, json=payload, timeout=30)
+        r.raise_for_status()
+        return _unwrap_envelope(r.json())
+    except requests.exceptions.HTTPError as e:
+        try:
+            err = e.response.json()
+            if isinstance(err, dict) and "error" in err:
+                code = err["error"].get("code", "ERROR")
+                msg = err["error"].get("message", str(e))
+                console.print(f"[red]Error ({code}): {msg}[/red]")
+                if "hint" in err["error"]:
+                    console.print(f"[dim]Hint: {err['error']['hint']}[/dim]")
+                raise typer.Exit(1)
+        except ValueError:
+            pass
+        console.print(f"[red]HTTP Error: {e}[/red]")
+        raise typer.Exit(1)
+    except requests.exceptions.ConnectionError:
+        console.print(f"[red]Error: Cannot connect to CoDRAG daemon at {url}[/red]")
+        console.print("[dim]Is the server running? Try: codrag serve[/dim]")
+        raise typer.Exit(1)
+
+
+def _delete_json(url: str) -> Any:
+    try:
+        r = requests.delete(url, timeout=30)
         r.raise_for_status()
         return _unwrap_envelope(r.json())
     except requests.exceptions.HTTPError as e:
@@ -283,16 +317,8 @@ def remove(
     url = f"{base}/projects/{project_id}"
     if purge:
         url += "?purge=true"
-        
-    try:
-        r = requests.delete(url, timeout=30)
-        r.raise_for_status()
-        data = _unwrap_envelope(r.json())
-    except typer.Exit:
-        raise
-    except Exception as e:
-        console.print(f"[red]Error removing project: {e}[/red]")
-        raise typer.Exit(1)
+
+    data = _delete_json(url)
 
     console.print(f"[green]Project '{project_id}' removed.[/green]")
     if data.get("purged"):

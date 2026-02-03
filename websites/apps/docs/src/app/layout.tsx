@@ -1,13 +1,15 @@
 "use client";
 
 import type { ReactNode } from 'react';
-import { DocsLayout } from '@codrag/ui';
+import { DevToolbar, DocsLayout } from '@codrag/ui';
 import { docsSidebar } from '../config/docs';
 
 import '@codrag/ui/styles';
 import './globals.css';
 
 export default function RootLayout({ children }: { children: ReactNode }) {
+  const showDevToolbar = process.env.NODE_ENV !== 'production';
+
   return (
     <html lang="en" data-codrag-theme="a">
       <body className="bg-background text-text selection:bg-primary/20">
@@ -35,6 +37,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
         >
           {children}
         </DocsLayout>
+        {showDevToolbar && <DevToolbar />}
       </body>
     </html>
   );

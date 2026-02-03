@@ -38,6 +38,7 @@ export interface PanelDefinition {
   defaultHeight: number;
   category: PanelCategory;
   closeable?: boolean;  // Can be hidden (default true)
+  resizable?: boolean;  // Can be manually resized (default true)
 }
 
 /**
@@ -59,22 +60,23 @@ export interface GridLayoutItem {
   h: number;      // Height in grid units
   minH?: number;  // Minimum height
   static?: boolean;
+  isResizable?: boolean;
 }
 
 /**
  * Default layout configuration
  */
 export const DEFAULT_LAYOUT: DashboardLayout = {
-  version: 4,
+  version: 5,
   panels: [
-    { id: 'status', visible: true, height: 8, collapsed: false, x: 0, y: 0, w: 8 },
-    { id: 'build', visible: true, height: 10, collapsed: false, x: 0, y: 8, w: 8 },
-    { id: 'search', visible: true, height: 12, collapsed: false, x: 0, y: 18, w: 8 },
-    { id: 'results', visible: true, height: 10, collapsed: false, x: 0, y: 30, w: 8 },
-    { id: 'roots', visible: true, height: 14, collapsed: false, x: 8, y: 0, w: 4 },
-    { id: 'context-options', visible: true, height: 16, collapsed: false, x: 8, y: 14, w: 4 },
-    { id: 'context-output', visible: true, height: 10, collapsed: false, x: 8, y: 30, w: 4 },
-    { id: 'settings', visible: true, height: 8, collapsed: true, x: 8, y: 40, w: 4 },
+    { id: 'status', visible: true, height: 6, collapsed: false, x: 0, y: 0, w: 8 },
+    { id: 'build', visible: true, height: 7, collapsed: false, x: 0, y: 6, w: 8 },
+    { id: 'search', visible: true, height: 9, collapsed: false, x: 0, y: 13, w: 8 },
+    { id: 'results', visible: true, height: 8, collapsed: false, x: 0, y: 22, w: 8 },
+    { id: 'roots', visible: true, height: 10, collapsed: false, x: 8, y: 0, w: 4 },
+    { id: 'context-options', visible: true, height: 12, collapsed: false, x: 8, y: 10, w: 4 },
+    { id: 'context-output', visible: true, height: 8, collapsed: false, x: 8, y: 22, w: 4 },
+    { id: 'settings', visible: true, height: 2, collapsed: true, x: 8, y: 30, w: 4 },
   ],
 };
 
@@ -85,38 +87,59 @@ export const LAYOUT_STORAGE_KEY = 'codrag_dashboard_layout';
 
 /**
  * Convert DashboardLayout to react-grid-layout format
+ * 
+ * Note: We set y=0 for all items and let react-grid-layout's
+ * compactType="vertical" handle stacking. This ensures items
+ * compact properly when heights change dynamically.
  */
 export function toGridLayout(layout: DashboardLayout): GridLayoutItem[] {
-  let fallbackY = 0;
-  return layout.panels
-    .filter(p => p.visible)
-    .map(panel => {
+  // Group panels by column (x position) to maintain order within columns
+  const panelsByColumn = new Map<number, typeof layout.panels>();
+  
+  for (const panel of layout.panels.filter(p => p.visible)) {
+    const defaultPanel = DEFAULT_LAYOUT.panels.find((p) => p.id === panel.id);
+    const x = typeof panel.x === 'number' ? panel.x : (defaultPanel?.x ?? 0);
+    const list = panelsByColumn.get(x) ?? [];
+    list.push(panel);
+    panelsByColumn.set(x, list);
+  }
+
+  // Sort each column by the default order (y position in DEFAULT_LAYOUT)
+  const getDefaultY = (id: string): number => {
+    const def = DEFAULT_LAYOUT.panels.find(p => p.id === id);
+    return def?.y ?? 999;
+  };
+
+  const result: GridLayoutItem[] = [];
+  
+  for (const [x, panels] of panelsByColumn) {
+    // Sort by default y position to maintain intended order
+    const sorted = [...panels].sort((a, b) => getDefaultY(a.id) - getDefaultY(b.id));
+    
+    // Stack items in this column - let compactType handle actual positioning
+    let columnY = 0;
+    for (const panel of sorted) {
       const defaultPanel = DEFAULT_LAYOUT.panels.find((p) => p.id === panel.id);
-      const x = typeof panel.x === 'number' ? panel.x : (defaultPanel?.x ?? 0);
       const w = typeof panel.w === 'number' ? panel.w : (defaultPanel?.w ?? 12);
-
-      const resolvedY =
-        typeof panel.y === 'number'
-          ? panel.y
-          : typeof defaultPanel?.y === 'number'
-            ? defaultPanel.y
-            : fallbackY;
-
       const panelDef = getPanelDefinition(panel.id);
       const minH = panelDef?.minHeight ?? 1;
+      const isResizable = panelDef?.resizable ?? true;
 
-      const item: GridLayoutItem = {
+      result.push({
         i: panel.id,
         x,
-        y: resolvedY,
+        y: columnY,
         w,
         h: panel.collapsed ? 1 : panel.height,
         minH: panel.collapsed ? 1 : minH,
-      };
+        isResizable: !panel.collapsed && isResizable,
+      });
+      
+      columnY += panel.collapsed ? 1 : panel.height;
+    }
+  }
 
-      fallbackY = Math.max(fallbackY, item.y + item.h);
-      return item;
-    });
+  return result;
 }
 
 /**

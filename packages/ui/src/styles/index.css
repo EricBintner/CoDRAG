@@ -6,29 +6,56 @@
 @tailwind components;
 @tailwind utilities;
 
-/* react-grid-layout resize handle styling */
+/* Hide browser's default number input spinners */
+input[type="number"]::-webkit-outer-spin-button,
+input[type="number"]::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+input[type="number"] {
+  -moz-appearance: textfield;
+  appearance: textfield;
+}
+
+/* react-grid-layout resize handle styling - textarea-like corner grip */
 .react-resizable-handle {
-  position: absolute;
-  width: 100%;
-  height: 8px;
-  bottom: 0;
-  left: 0;
-  cursor: ns-resize;
+  position: absolute !important;
+  width: 16px !important;
+  height: 16px !important;
+  bottom: 4px !important;
+  right: 4px !important;
+  left: auto !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  cursor: nwse-resize;
   background: transparent;
   opacity: 0;
   transition: opacity 0.2s ease;
+  z-index: 10;
 }
 
+/* Diagonal grip lines like textarea resize */
 .react-resizable-handle::after {
   content: '';
   position: absolute;
-  left: 50%;
+  right: 2px;
   bottom: 2px;
-  transform: translateX(-50%);
-  width: 40px;
-  height: 4px;
-  border-radius: 2px;
-  background: var(--color-border);
+  width: 8px;
+  height: 8px;
+  background: linear-gradient(
+    135deg,
+    transparent 0%,
+    transparent 30%,
+    var(--color-text-muted) 30%,
+    var(--color-text-muted) 40%,
+    transparent 40%,
+    transparent 60%,
+    var(--color-text-muted) 60%,
+    var(--color-text-muted) 70%,
+    transparent 70%,
+    transparent 100%
+  );
+  opacity: 0.5;
 }
 
 .react-grid-item:hover .react-resizable-handle,
@@ -36,7 +63,8 @@
   opacity: 1;
 }
 
+.react-resizable-handle:hover::after,
 .react-resizable-handle:active::after {
-  background: var(--color-primary);
+  opacity: 1;
 }
 

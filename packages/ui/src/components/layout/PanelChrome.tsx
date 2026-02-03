@@ -12,6 +12,7 @@ export interface PanelChromeProps {
   onClose?: () => void;
   children: ReactNode;
   className?: string;
+  fillHeight?: boolean;
 }
 
 export function PanelChrome({
@@ -23,11 +24,13 @@ export function PanelChrome({
   onClose,
   children,
   className,
+  fillHeight = true,
 }: PanelChromeProps) {
   return (
     <div
       className={cn(
-        'codrag-panel group relative h-full w-full',
+        'codrag-panel group relative w-full',
+        fillHeight && 'h-full',
         className
       )}
     >
@@ -82,14 +85,14 @@ export function PanelChrome({
 
       {/* Panel Content */}
       {collapsed ? (
-        <div className="codrag-panel-content h-full">
-          <div className="h-full rounded-lg border border-border bg-surface-raised px-3 flex items-center gap-2">
+        <div className={cn('codrag-panel-content', fillHeight && 'h-full')}>
+          <div className={cn('rounded-lg border border-border bg-surface-raised px-3 flex items-center gap-2', fillHeight && 'h-full')}>
             {Icon && <Icon className="w-4 h-4 text-text-muted flex-shrink-0" />}
             <span className="font-medium text-sm text-text truncate">{title}</span>
           </div>
         </div>
       ) : (
-        <div className="codrag-panel-content h-full">
+        <div className={cn('codrag-panel-content overflow-hidden', fillHeight && 'h-full')}>
           {children}
         </div>
       )}

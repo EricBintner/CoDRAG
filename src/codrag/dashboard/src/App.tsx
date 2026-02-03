@@ -886,7 +886,7 @@ const DASHBOARD_PANELS: PanelDefinition[] = [
             headerLeft={
               <h1 className="text-2xl font-bold flex items-center gap-2 text-text">
                 <Database className="w-6 h-6" />
-                Code Index Dashboard
+                CoDRAG
               </h1>
             }
             headerRight={

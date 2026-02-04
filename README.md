@@ -49,6 +49,22 @@ codrag mcp-config --ide cursor
 
 For the full CLI reference, see `docs/CLI.md`.
 
+### GUI (Dashboard)
+
+CoDRAG also ships with a **GUI dashboard** for day-to-day workflows:
+
+- **Project visibility** (index status, staleness, trace status)
+- **Build controls** and configuration editing
+- **Search + preview** and **context assembly** (LLM-ready output)
+- A modular layout you can tailor to your workflow
+
+<img src="dashboard-demo.png" width="100%" alt="CoDRAG dashboard" />
+
+```bash
+# Open the dashboard in your browser
+codrag ui
+```
+
 ## Vision
 
 CoDRAG is a **local-first, team-ready** application that provides:

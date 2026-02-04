@@ -1,11 +1,11 @@
 import type { Meta, StoryObj } from '@storybook/react';
 import { useState } from 'react';
 import { Database, Search, Settings2, FileText, FolderTree, Hammer, SlidersHorizontal, List } from 'lucide-react';
-import { PanelPicker } from './PanelPicker';
+import { PanelPicker } from '../../components/layout/PanelPicker';
 import type { DashboardLayout, PanelDefinition } from '../../types/layout';
 
 const meta: Meta<typeof PanelPicker> = {
-  title: 'Layout/PanelPicker',
+  title: 'Dashboard/Primitives/PanelPicker',
   component: PanelPicker,
   parameters: {
     layout: 'centered',

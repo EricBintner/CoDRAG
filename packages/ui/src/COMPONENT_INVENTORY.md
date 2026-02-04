@@ -134,7 +134,7 @@ This document catalogs all UI components needed for CoDRAG across all tiers and 
 ### 6.1 LLM Status
 | Component | Status | Purpose |
 |-----------|--------|---------|
-| `LLMStatusCard` | ✅ | Ollama/CLaRa connection status |
+| `LLMStatusWidget` | ✅ | Ollama/CLaRa connection status |
 | `OllamaStatusBadge` | 🔲 | Ollama connection state |
 | `ClaraStatusBadge` | 🔲 | CLaRa connection state (optional service) |
 | `ModelList` | 🔲 | Available embedding models |
@@ -250,7 +250,7 @@ Already scaffolded: Status, Navigation, Search, Context, Patterns
 - `AddProjectModal`
 - `ProjectSettingsPanel`
 - `GlobalSettingsModal`
-- `LLMStatusCard`
+- `LLMStatusWidget`
 - `WatchStatusIndicator`
 - `TraceStatusCard`
 - `LicenseStatusCard`

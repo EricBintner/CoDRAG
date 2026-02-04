@@ -1,6 +1,7 @@
 import { cn } from '../../lib/utils';
 import type { TeamConfigStatus as TeamConfigStatusType, TeamConfig } from '../../types';
 import { Users, FileText, AlertTriangle, RefreshCw, Eye, AlertCircle } from 'lucide-react';
+import { Button } from '../primitives/Button';
 
 export interface TeamConfigStatusProps {
   status: TeamConfigStatusType;
@@ -51,13 +52,15 @@ export function TeamConfigStatus({
         </span>
         
         {status !== 'none' && onViewConfig && (
-          <button 
+          <Button 
             onClick={onViewConfig}
-            className="flex items-center gap-1 text-xs font-medium text-text-muted hover:text-text transition-colors"
+            variant="ghost"
+            size="sm"
+            icon={Eye}
+            className="h-auto py-1 px-2 text-xs"
           >
-            <Eye className="w-3.5 h-3.5" />
             View Config
-          </button>
+          </Button>
         )}
       </div>
       
@@ -68,13 +71,15 @@ export function TeamConfigStatus({
             Your local project settings differ from the team configuration.
           </p>
           {onReapply && (
-            <button 
+            <Button 
               onClick={onReapply}
-              className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded bg-surface hover:bg-surface-raised text-warning border border-warning/20 text-xs font-medium transition-colors shadow-sm"
+              variant="outline"
+              size="sm"
+              icon={RefreshCw}
+              className="border-warning/20 text-warning hover:bg-warning-muted/10 hover:text-warning"
             >
-              <RefreshCw className="w-3.5 h-3.5" />
               Re-apply Team Config
-            </button>
+            </Button>
           )}
         </div>
       )}

@@ -1,10 +1,11 @@
 import type { Meta, StoryObj } from '@storybook/react';
 import { useState } from 'react';
 import { Database, Search, Settings2 } from 'lucide-react';
-import { PanelChrome } from './PanelChrome';
+import { PanelChrome } from '../../components/layout/PanelChrome';
+import { Button } from '../../components/primitives/Button';
 
 const meta: Meta<typeof PanelChrome> = {
-  title: 'Layout/PanelChrome',
+  title: 'Dashboard/Primitives/PanelChrome',
   component: PanelChrome,
   parameters: {
     layout: 'padded',
@@ -122,12 +123,9 @@ export const Interactive: Story = {
 
     if (!visible) {
       return (
-        <button
-          onClick={() => setVisible(true)}
-          className="px-4 py-2 bg-primary text-white rounded-md"
-        >
+        <Button onClick={() => setVisible(true)}>
           Show Panel
-        </button>
+        </Button>
       );
     }
 

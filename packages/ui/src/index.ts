@@ -39,15 +39,15 @@ export { EmptyState, LoadingState, ErrorState } from './components/patterns';
 export type { EmptyStateProps, LoadingStateProps, ErrorStateProps } from './components/patterns';
 
 // Components - Dashboard
-export { IndexStatusCard, BuildCard, IndexStatsDisplay } from './components/dashboard';
-export type { IndexStatusCardProps, IndexStats, BuildCardProps, IndexStatsProps, StatItem } from './components/dashboard';
+export { IndexStatusCard, BuildCard, IndexStatsDisplay, LLMStatusWidget } from './components/dashboard';
+export type { IndexStatusCardProps, IndexStats, BuildCardProps, IndexStatsProps, StatItem, LLMStatusWidgetProps, LLMServiceStatus } from './components/dashboard';
 
 // Components - LLM
-export { LLMStatusCard, ModelCard, EndpointManager, AIModelsSettings } from './components/llm';
+export { ModelCard, EndpointManager, AIModelsSettings } from './components/llm';
 
 // Components - Project
-export { FolderTree, sampleFileTree, ProjectSettingsPanel } from './components/project';
-export type { FolderTreeProps, TreeNode, FileStatus, ProjectSettingsPanelProps } from './components/project';
+export { FolderTree, sampleFileTree, ProjectSettingsPanel, FolderTreePanel, PinnedTextFilesPanel } from './components/project';
+export type { FolderTreeProps, TreeNode, FileStatus, ProjectSettingsPanelProps, FolderTreePanelProps, PinnedTextFilesPanelProps, PinnedTextFile } from './components/project';
 
 // Components - Layout (Modular Dashboard - Phase 15)
 export { PanelChrome, DashboardGrid, PanelPicker, ModularDashboard, useLayoutPersistence } from './components/layout';

@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { cn } from '../../lib/utils';
 import { Copy, Check } from 'lucide-react';
+import { Button } from '../primitives/Button';
 
 export interface CopyButtonProps {
   text: string;
@@ -33,19 +34,20 @@ export function CopyButton({
   };
 
   return (
-    <button
+    <Button
       onClick={handleCopy}
+      variant={copied ? "outline" : "ghost"}
+      size="sm"
       className={cn(
-        'inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium rounded-md transition-colors',
-        'border border-border',
+        'text-xs font-medium transition-all',
         copied 
-          ? 'bg-success-muted/10 text-success border-success-muted/30' 
-          : 'bg-surface hover:bg-surface-raised text-text-muted hover:text-text',
+          ? 'bg-success-muted/10 text-success border-success-muted/30 hover:bg-success-muted/20 hover:text-success' 
+          : 'text-text-muted hover:text-text',
         className
       )}
+      icon={copied ? Check : Copy}
     >
-      {copied ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
       {copied ? 'Copied!' : label}
-    </button>
+    </Button>
   );
 }

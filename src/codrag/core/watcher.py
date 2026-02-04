@@ -40,6 +40,7 @@ class AutoRebuildWatcher:
         self._last_rebuild_at: Optional[str] = None
         self._last_trigger_at_epoch: Optional[float] = None
         self._next_rebuild_at: Optional[str] = None
+        self._stale_since: Optional[str] = None  # ISO timestamp when index became stale
 
         self._extra_exclude_globs: List[str] = ["**/.codrag/**"]
 
@@ -66,6 +67,7 @@ class AutoRebuildWatcher:
             self._last_event_at = None
             self._last_rebuild_at = None
             self._next_rebuild_at = None
+            self._stale_since = None
 
             handler = _AutoRebuildEventHandler(self)
             observer = Observer()
@@ -107,15 +109,21 @@ class AutoRebuildWatcher:
             next_rebuild_at = self._next_rebuild_at
             last_event_at = self._last_event_at
             last_rebuild_at = self._last_rebuild_at
+            stale_since = self._stale_since
 
         if enabled and self._is_building():
             state = "building"
+
+        # Index is stale if there are pending paths OR if changes were detected
+        # after the last rebuild completed (stale_since is set)
+        is_stale = pending_paths_count > 0 or stale_since is not None
 
         return {
             "enabled": enabled,
             "state": state,
             "debounce_ms": debounce_ms,
-            "stale": False,
+            "stale": is_stale,
+            "stale_since": stale_since,
             "pending": pending_paths_count > 0,
             "pending_paths_count": pending_paths_count,
             "next_rebuild_at": next_rebuild_at,
@@ -169,6 +177,10 @@ class AutoRebuildWatcher:
 
             self._pending_paths.add(rel_posix)
             self._last_event_at = now_iso
+            
+            # Mark as stale if not already
+            if self._stale_since is None:
+                self._stale_since = now_iso
 
             if self._is_building() or self._state == "building":
                 self._state = "building"
@@ -274,6 +286,7 @@ class AutoRebuildWatcher:
             self._last_rebuild_at = now_iso
 
             if self._pending_paths:
+                # Still have pending changes - remain stale but continue debouncing
                 self._state = "debouncing"
                 delay = max(0.1, self.debounce_ms / 1000.0)
                 self._next_rebuild_at = (datetime.now(timezone.utc) + _seconds(delay)).isoformat()
@@ -281,8 +294,10 @@ class AutoRebuildWatcher:
                 self._timer.daemon = True
                 self._timer.start()
             else:
+                # No pending changes - index is now up-to-date
                 self._state = "idle"
                 self._next_rebuild_at = None
+                self._stale_since = None  # Clear staleness
 
     def _load_policy_globs(self) -> tuple[list[str], list[str]]:
         path = policy_path_for_index(self.index_dir)

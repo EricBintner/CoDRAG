@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Check, Plus, RotateCcw } from 'lucide-react';
 import type { DashboardLayout, PanelDefinition } from '../../types/layout';
 import { cn } from '../../lib/utils';
+import { Button } from '../primitives/Button';
 
 export interface PanelPickerProps {
   layout: DashboardLayout;
@@ -37,15 +38,16 @@ export function PanelPicker({
 
   return (
     <div className={cn('relative', className)}>
-      <button
+      <Button
         onClick={() => setOpen(!open)}
-        className="flex items-center gap-2 px-3 py-2 text-sm font-medium bg-surface-raised border border-border rounded-md hover:bg-muted transition-colors text-text"
+        variant="outline"
+        size="sm"
         aria-expanded={open}
         aria-haspopup="true"
+        icon={Plus}
       >
-        <Plus className="w-4 h-4" />
-        <span>Panels</span>
-      </button>
+        Panels
+      </Button>
 
       {open && (
         <>
@@ -69,32 +71,35 @@ export function PanelPicker({
                 const Icon = def.icon;
 
                 return (
-                  <button
+                  <Button
                     key={def.id}
                     onClick={() => handleToggle(def.id)}
+                    variant="ghost"
                     className={cn(
-                      'w-full flex items-center gap-3 px-3 py-2 text-sm text-left hover:bg-muted transition-colors',
+                      'w-full justify-start rounded-none h-auto py-2 px-3',
                       isVisible ? 'text-text' : 'text-text-muted'
                     )}
                   >
-                    <Icon className="w-4 h-4 flex-shrink-0" />
-                    <span className="flex-1 truncate">{def.title}</span>
+                    <Icon className="w-4 h-4 mr-3 flex-shrink-0" />
+                    <span className="flex-1 text-left truncate text-sm">{def.title}</span>
                     {isVisible && (
                       <Check className="w-4 h-4 text-success flex-shrink-0" />
                     )}
-                  </button>
+                  </Button>
                 );
               })}
             </div>
 
             <div className="p-2 border-t border-border">
-              <button
+              <Button
                 onClick={handleReset}
-                className="w-full flex items-center justify-center gap-2 px-3 py-2 text-sm text-text-muted hover:text-text hover:bg-muted rounded-md transition-colors"
+                variant="ghost"
+                size="sm"
+                className="w-full justify-center text-text-muted hover:text-text hover:bg-muted"
+                icon={RotateCcw}
               >
-                <RotateCcw className="w-4 h-4" />
-                <span>Reset Layout</span>
-              </button>
+                Reset Layout
+              </Button>
             </div>
           </div>
         </>

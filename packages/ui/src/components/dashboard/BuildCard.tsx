@@ -1,5 +1,6 @@
-import { FolderOpen, Play, Loader2 } from 'lucide-react';
-import { Card, Title, TextInput, Button } from '@tremor/react';
+import { FolderOpen, Play } from 'lucide-react';
+import { Card, Title, TextInput } from '@tremor/react';
+import { Button } from '../primitives/Button';
 import { cn } from '../../lib/utils';
 
 export interface BuildCardProps {
@@ -9,6 +10,7 @@ export interface BuildCardProps {
   building?: boolean;
   disabled?: boolean;
   className?: string;
+  bare?: boolean;
 }
 
 /**
@@ -25,13 +27,18 @@ export function BuildCard({
   building = false,
   disabled = false,
   className,
+  bare = false,
 }: BuildCardProps) {
+  const Container = bare ? 'div' : Card;
+
   return (
-    <Card className={cn('border border-border bg-surface shadow-sm', className)}>
-      <Title className="text-text mb-4 flex items-center gap-2">
-        <FolderOpen className="w-5 h-5 text-primary" />
-        Build Index
-      </Title>
+    <Container className={cn(!bare && 'border border-border bg-surface shadow-sm', className)}>
+      {!bare && (
+        <Title className="text-text mb-4 flex items-center gap-2">
+          <FolderOpen className="w-5 h-5 text-primary" />
+          Build Index
+        </Title>
+      )}
 
       <div className="space-y-6">
         <div>
@@ -50,12 +57,13 @@ export function BuildCard({
         <Button
           onClick={onBuild}
           disabled={building || disabled || !repoRoot.trim()}
-          className="w-full bg-primary hover:bg-primary-hover text-white border-none"
-          icon={building ? Loader2 : Play}
+          className="w-full"
+          loading={building}
+          icon={!building ? Play : undefined}
         >
           {building ? 'Building...' : 'Start Build'}
         </Button>
       </div>
-    </Card>
+    </Container>
   );
 }

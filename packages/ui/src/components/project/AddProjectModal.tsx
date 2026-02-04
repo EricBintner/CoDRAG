@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { cn } from '../../lib/utils';
 import type { ProjectMode } from '../../types';
 import { FolderPlus, X, Folder, Layout } from 'lucide-react';
+import { Button } from '../primitives/Button';
 
 export interface AddProjectModalProps {
   isOpen: boolean;
@@ -47,12 +48,14 @@ export function AddProjectModal({
             <FolderPlus className="w-5 h-5 text-primary" />
             Add Project
           </h2>
-          <button
+          <Button
+            variant="ghost"
+            size="icon-sm"
             onClick={onClose}
-            className="p-1 rounded-md text-text-muted hover:text-text hover:bg-surface-raised transition-colors"
+            aria-label="Close"
           >
             <X className="w-5 h-5" />
-          </button>
+          </Button>
         </div>
         
         <div className="p-6 space-y-5">
@@ -121,19 +124,18 @@ export function AddProjectModal({
         
         {/* Actions */}
         <div className="flex justify-end gap-3 p-4 border-t border-border bg-surface-raised/30">
-          <button
+          <Button
+            variant="outline"
             onClick={onClose}
-            className="px-4 py-2 text-sm font-medium text-text hover:bg-surface-raised rounded-md border border-transparent hover:border-border transition-all"
           >
             Cancel
-          </button>
-          <button
+          </Button>
+          <Button
             onClick={handleSubmit}
             disabled={!path.trim()}
-            className="px-4 py-2 text-sm font-medium text-white bg-primary hover:bg-primary-hover disabled:opacity-50 disabled:cursor-not-allowed rounded-md shadow-sm transition-all"
           >
             Add Project
-          </button>
+          </Button>
         </div>
       </div>
     </div>

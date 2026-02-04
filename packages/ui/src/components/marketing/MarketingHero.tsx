@@ -1,4 +1,7 @@
-import { Badge, Button, Flex, Text } from '@tremor/react';
+"use client";
+
+import { Badge, Flex, Text } from '@tremor/react';
+import { Button } from '../primitives/Button';
 import { 
   Terminal, Search, Cpu, Shield, Layers, Zap, Eye, 
   Database, Server, Lock, Activity, FileText, Code, 
@@ -69,10 +72,10 @@ function CenteredHero() {
 
         {/* CTAs */}
         <Flex className="mt-10 gap-4" justifyContent="center" alignItems="center">
-          <Button size="lg" className="bg-primary hover:bg-primary-hover text-white px-8 py-3 text-base font-semibold shadow-lg shadow-primary/25">
+          <Button size="lg" className="shadow-lg shadow-primary/25">
             Download for macOS
           </Button>
-          <Button size="lg" variant="secondary" className="border-2 border-border px-8 py-3 text-base font-semibold">
+          <Button size="lg" variant="outline" className="border-2">
             View Documentation
           </Button>
         </Flex>
@@ -96,7 +99,7 @@ function CenteredHero() {
 
       {/* Product screenshot placeholder */}
       <div className="relative mx-8 mb-8 md:mx-16">
-        <div className="rounded-xl border border-border bg-background shadow-2xl overflow-hidden">
+        <div className="rounded-xl border border-border bg-surface shadow-2xl overflow-hidden">
           <div className="flex items-center gap-2 px-4 py-3 border-b border-border bg-surface">
             <div className="flex gap-1.5">
               <span className="w-3 h-3 rounded-full bg-error/60" />
@@ -149,12 +152,21 @@ function NeoBrutalistHero() {
           </p>
 
           <div className="mt-8 flex flex-col sm:flex-row gap-4">
-            <button className="border-2 border-border bg-primary text-white px-8 py-4 font-bold text-lg hover:translate-x-1 hover:translate-y-1 hover:shadow-none shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] transition-all flex items-center gap-2">
-              <Download className="w-6 h-6" /> DOWNLOAD_NOW.EXE
-            </button>
-            <button className="border-2 border-border bg-surface text-text px-8 py-4 font-bold text-lg hover:translate-x-1 hover:translate-y-1 hover:shadow-none shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] transition-all flex items-center gap-2">
-              <FileText className="w-6 h-6" /> READ_MANIFESTO
-            </button>
+            <Button 
+              size="lg"
+              className="border-2 border-border bg-primary text-white font-bold text-lg hover:translate-x-1 hover:translate-y-1 hover:shadow-none shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] transition-all rounded-none"
+              icon={Download}
+            >
+              DOWNLOAD_NOW.EXE
+            </Button>
+            <Button 
+              size="lg"
+              variant="outline"
+              className="border-2 border-border bg-surface text-text font-bold text-lg hover:translate-x-1 hover:translate-y-1 hover:shadow-none shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] transition-all rounded-none"
+              icon={FileText}
+            >
+              READ_MANIFESTO
+            </Button>
           </div>
         </div>
 
@@ -209,9 +221,11 @@ function SwissHero() {
           <div className="space-y-4">
             <p className="text-2xl font-medium">CoDRAG v1.0</p>
             <p className="opacity-80">International Typographic Style applied to developer tools.</p>
-            <button className="mt-8 bg-white text-primary px-6 py-3 rounded-full font-bold w-full flex items-center justify-between group">
+            <Button 
+              className="mt-8 bg-white text-primary rounded-full font-bold w-full flex items-center justify-between group hover:bg-white/90 border-none"
+            >
               Get Started <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-            </button>
+            </Button>
           </div>
         </div>
       </div>
@@ -241,12 +255,12 @@ function GlassHero() {
           </p>
 
           <Flex className="gap-4" justifyContent="center">
-            <button className="backdrop-blur-md bg-primary/80 hover:bg-primary text-white px-8 py-4 rounded-xl font-semibold transition-all shadow-lg hover:shadow-primary/30 border border-white/20">
+            <Button size="lg" className="backdrop-blur-md bg-primary/80 hover:bg-primary text-white rounded-xl shadow-lg hover:shadow-primary/30 border border-white/20">
               Download Beta
-            </button>
-            <button className="backdrop-blur-md bg-white/40 hover:bg-white/60 text-text px-8 py-4 rounded-xl font-semibold transition-all border border-white/40">
+            </Button>
+            <Button size="lg" variant="ghost" className="backdrop-blur-md bg-white/40 hover:bg-white/60 text-text rounded-xl border border-white/40">
               Explore Features
-            </button>
+            </Button>
           </Flex>
         </div>
 
@@ -313,9 +327,11 @@ function RetroHero() {
           </p>
         </div>
 
-        <button className="mt-12 bg-transparent border-2 border-primary text-primary hover:bg-primary hover:text-white px-10 py-4 text-xl font-bold uppercase tracking-widest transition-all shadow-[0_0_20px_rgba(255,0,255,0.4)] hover:shadow-[0_0_40px_rgba(255,0,255,0.8)]">
+        <Button 
+          className="mt-12 bg-transparent border-2 border-primary text-primary hover:bg-primary hover:text-white px-10 py-4 text-xl font-bold uppercase tracking-widest transition-all shadow-[0_0_20px_rgba(255,0,255,0.4)] hover:shadow-[0_0_40px_rgba(255,0,255,0.8)] rounded-none h-auto"
+        >
           Jack In
-        </button>
+        </Button>
       </div>
     </div>
   );
@@ -349,10 +365,10 @@ function SplitHero() {
         </div>
 
         <Flex className="mt-10 gap-4">
-          <Button className="bg-primary hover:bg-primary-hover text-white px-6 py-2.5 font-semibold">
+          <Button size="lg" className="font-semibold">
             Get Early Access
           </Button>
-          <Button variant="secondary" className="border border-border px-6 py-2.5">
+          <Button size="lg" variant="outline" className="font-semibold">
             Watch Demo
           </Button>
         </Flex>
@@ -428,12 +444,18 @@ function StudioHero() {
           </div>
 
           <div className="flex gap-4 pt-4">
-            <button className="px-8 py-3 bg-text text-background font-mono text-sm hover:bg-primary transition-colors flex items-center gap-2">
-              <Download className="w-4 h-4" /> [ DOWNLOAD_STUDIO ]
-            </button>
-            <button className="px-8 py-3 border border-text text-text font-serif italic hover:bg-surface-raised transition-colors flex items-center gap-2">
-              Read the manifesto <ArrowRight className="w-4 h-4" />
-            </button>
+            <Button 
+              className="px-8 py-6 bg-text text-background font-mono text-sm hover:bg-primary transition-colors gap-2 rounded-none"
+              icon={Download}
+            >
+              [ DOWNLOAD_STUDIO ]
+            </Button>
+            <Button 
+              variant="outline"
+              className="px-8 py-6 border-text text-text font-serif italic hover:bg-surface-raised transition-colors gap-2 rounded-none"
+            >
+              Read the manifesto <ArrowRight className="w-4 h-4 ml-2" />
+            </Button>
           </div>
         </div>
 
@@ -540,12 +562,12 @@ function YaleHero() {
             <div className="pl-6 md:border-l md:border-border">
               <span className="font-sans font-bold text-sm mb-4 block">Get Started</span>
               <div className="flex flex-col gap-2">
-                <button className="text-left py-2 font-sans font-medium text-sm hover:text-primary transition-colors flex items-center gap-2">
-                  <Download className="w-4 h-4" /> Download Installer
-                </button>
-                <button className="text-left py-2 font-sans font-medium text-sm hover:text-primary transition-colors flex items-center gap-2">
-                  <Code className="w-4 h-4" /> View Source
-                </button>
+                <Button variant="ghost" className="justify-start px-0 hover:bg-transparent hover:text-primary h-auto py-2" icon={Download}>
+                  Download Installer
+                </Button>
+                <Button variant="ghost" className="justify-start px-0 hover:bg-transparent hover:text-primary h-auto py-2" icon={Code}>
+                  View Source
+                </Button>
               </div>
             </div>
           </div>
@@ -575,12 +597,19 @@ function FocusHero() {
         </p>
 
         <div className="flex flex-col sm:flex-row gap-6 justify-center items-center">
-          <button className="w-full sm:w-auto px-8 py-4 bg-primary text-white text-lg font-bold rounded-lg hover:bg-primary-hover focus:ring-4 focus:ring-primary/50 transition-all shadow-lg transform hover:-translate-y-1">
+          <Button 
+            size="lg" 
+            className="w-full sm:w-auto px-8 py-6 text-lg font-bold shadow-lg transform hover:-translate-y-1 h-auto"
+          >
             Install for macOS
-          </button>
-          <button className="w-full sm:w-auto px-8 py-4 bg-surface text-text border-2 border-text text-lg font-bold rounded-lg hover:bg-surface-raised focus:ring-4 focus:ring-text/30 transition-all">
+          </Button>
+          <Button 
+            size="lg" 
+            variant="outline" 
+            className="w-full sm:w-auto px-8 py-6 text-lg font-bold border-2 h-auto"
+          >
             View Live Demo
-          </button>
+          </Button>
         </div>
 
         <div className="mt-16 grid grid-cols-1 md:grid-cols-3 gap-8 text-left">
@@ -651,9 +680,9 @@ function EnterpriseHero() {
             </div>
           </div>
 
-          <button className="bg-primary text-white px-6 py-3 font-medium text-sm w-fit hover:bg-primary-hover shadow-sm">
+          <Button size="lg" className="w-fit shadow-sm">
             Contact Sales
-          </button>
+          </Button>
         </div>
 
         {/* Right: Dashboard Preview */}

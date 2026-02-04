@@ -16,6 +16,7 @@ export interface IndexStatusCardProps {
   building?: boolean;
   lastError?: string | null;
   className?: string;
+  bare?: boolean;
 }
 
 /**
@@ -31,16 +32,19 @@ export function IndexStatusCard({
   building = false,
   lastError,
   className,
+  bare = false,
 }: IndexStatusCardProps) {
+  const Container = bare ? 'div' : Card;
+  
   return (
-    <Card className={cn('border border-border bg-surface shadow-sm', className)}>
+    <Container className={cn(!bare && 'border border-border bg-surface shadow-sm', className)}>
       <Flex justifyContent="between" alignItems="start">
         <div>
           <Flex className="gap-3" alignItems="center">
-            <Folder className="w-8 h-8 text-primary" />
+            {!bare && <Folder className="w-8 h-8 text-primary" />}
             <div>
-              <Title className="text-text">Current Project</Title>
-              <Text className="font-mono text-sm text-text-subtle">{stats.index_dir || 'No project loaded'}</Text>
+              {!bare && <Title className="text-text">Current Project</Title>}
+              <Text className={cn("font-mono text-sm text-text-subtle", bare && "text-xs")}>{stats.index_dir || 'No project loaded'}</Text>
             </div>
           </Flex>
         </div>
@@ -74,6 +78,6 @@ export function IndexStatusCard({
           </span>
         </div>
       )}
-    </Card>
+    </Container>
   );
 }

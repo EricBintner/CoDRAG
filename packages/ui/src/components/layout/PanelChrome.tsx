@@ -1,13 +1,15 @@
-import { ChevronDown, ChevronUp, GripVertical, X } from 'lucide-react';
+import { ChevronDown, ChevronUp, GripVertical, Maximize2, X } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import type { ReactNode } from 'react';
 import { cn } from '../../lib/utils';
+import { Button } from '../primitives/Button';
 
 export interface PanelChromeProps {
   title: string;
   icon?: LucideIcon;
   collapsed?: boolean;
   onCollapse?: () => void;
+  onDetails?: () => void;
   closeable?: boolean;
   onClose?: () => void;
   children: ReactNode;
@@ -19,6 +21,7 @@ export function PanelChrome({
   icon: Icon,
   collapsed = false,
   onCollapse,
+  onDetails,
   closeable = true,
   onClose,
   children,
@@ -27,51 +30,83 @@ export function PanelChrome({
   return (
     <div
       className={cn(
-        'codrag-panel bg-surface border border-border rounded-lg shadow-sm overflow-hidden flex flex-col h-full',
+        'codrag-panel group relative w-full bg-surface border border-border shadow-sm rounded-lg overflow-hidden flex flex-col',
+        fillHeight && 'h-full',
         className
       )}
     >
       {/* Panel Header */}
-      <div className="codrag-panel-header flex items-center gap-2 px-3 py-2 border-b border-border bg-surface-raised min-h-[44px]">
-        {/* Drag Handle */}
-        <div className="drag-handle cursor-grab active:cursor-grabbing p-1 -ml-1 rounded hover:bg-muted transition-colors">
-          <GripVertical className="w-4 h-4 text-text-muted" />
+      <div className={cn(
+        "codrag-panel-header flex items-center justify-between px-3 py-2 bg-surface border-b border-border min-h-[40px]",
+        collapsed && "border-b-0"
+      )}>
+        <div className="flex items-center gap-2 overflow-hidden">
+          {Icon && <Icon className="w-4 h-4 text-text-muted flex-shrink-0" />}
+          <span className="font-medium text-sm text-text truncate select-none">{title}</span>
         </div>
 
-        {/* Icon & Title */}
-        {Icon && <Icon className="w-4 h-4 text-text-muted flex-shrink-0" />}
-        <span className="font-medium text-sm text-text flex-1 truncate">{title}</span>
-
-        {/* Controls */}
         <div className="flex items-center gap-1">
-          {onCollapse && (
-            <button
-              onClick={onCollapse}
-              className="p-1 rounded hover:bg-muted transition-colors text-text-muted hover:text-text"
-              aria-label={collapsed ? 'Expand panel' : 'Collapse panel'}
+          {/* Controls */}
+          <div className="flex items-center gap-1">
+             {/* Drag Handle */}
+            <Button
+              variant="ghost"
+              size="icon-sm"
+              className="drag-handle cursor-grab active:cursor-grabbing text-text-muted hover:text-text"
+              aria-label={`Drag ${title}`}
             >
-              {collapsed ? (
-                <ChevronDown className="w-4 h-4" />
-              ) : (
-                <ChevronUp className="w-4 h-4" />
-              )}
-            </button>
-          )}
-          {closeable && onClose && (
-            <button
-              onClick={onClose}
-              className="p-1 rounded hover:bg-muted transition-colors text-text-muted hover:text-error"
-              aria-label="Close panel"
-            >
-              <X className="w-4 h-4" />
-            </button>
-          )}
+              <GripVertical className="w-3.5 h-3.5" />
+            </Button>
+
+            {onDetails && (
+              <Button
+                variant="ghost"
+                size="icon-sm"
+                onClick={onDetails}
+                className="text-text-muted hover:text-text"
+                aria-label="Details"
+              >
+                <Maximize2 className="w-3.5 h-3.5" />
+              </Button>
+            )}
+            {onCollapse && (
+              <Button
+                variant="ghost"
+                size="icon-sm"
+                onClick={onCollapse}
+                className="text-text-muted hover:text-text"
+                aria-label={collapsed ? 'Expand panel' : 'Collapse panel'}
+              >
+                {collapsed ? (
+                  <ChevronDown className="w-3.5 h-3.5" />
+                ) : (
+                  <ChevronUp className="w-3.5 h-3.5" />
+                )}
+              </Button>
+            )}
+            {closeable && onClose && (
+              <Button
+                variant="ghost"
+                size="icon-sm"
+                onClick={onClose}
+                className="text-text-muted hover:text-error hover:bg-error-muted/20"
+                aria-label="Close panel"
+              >
+                <X className="w-3.5 h-3.5" />
+              </Button>
+            )}
+          </div>
         </div>
       </div>
 
       {/* Panel Content */}
       {!collapsed && (
-        <div className="codrag-panel-content flex-1 overflow-auto">
+        <div
+          className={cn(
+            'codrag-panel-content flex-1 min-h-0 bg-surface',
+            fillHeight ? 'h-full overflow-hidden' : 'overflow-visible'
+          )}
+        >
           {children}
         </div>
       )}

@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from '@storybook/react';
 import { SiteHeader } from '../../components/site/SiteHeader';
 
 const meta: Meta<typeof SiteHeader> = {
-  title: 'Site/SiteHeader',
+  title: 'Website/Layout/SiteHeader',
   component: SiteHeader,
   parameters: {
     layout: 'fullscreen',

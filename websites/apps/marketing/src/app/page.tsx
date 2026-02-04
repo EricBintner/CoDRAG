@@ -1,5 +1,6 @@
 import { MarketingHero, FeatureBlocks } from '@codrag/ui';
 import { Search, GitBranch, Zap, Lock, RefreshCw, Plug } from 'lucide-react';
+import { DevMarketingHero } from './DevMarketingHero';
 
 const codragFeatures = [
   {
@@ -40,11 +41,13 @@ const codragFeatures = [
 ];
 
 export default function Page() {
+  const showDevToolbar = process.env.NODE_ENV !== 'production';
+
   return (
     <main className="min-h-screen bg-background text-text">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-12 space-y-24">
         {/* Hero Section */}
-        <MarketingHero variant="split" />
+        {showDevToolbar ? <DevMarketingHero /> : <MarketingHero variant="split" />}
 
         {/* Features Section */}
         <section>

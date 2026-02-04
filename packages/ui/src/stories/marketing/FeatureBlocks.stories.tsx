@@ -3,7 +3,7 @@ import { FeatureBlocks } from '../../components/marketing/FeatureBlocks';
 import { codragFeatures, marketingFeatures } from '../../components/marketing/FeatureBlocks';
 
 const meta: Meta<typeof FeatureBlocks> = {
-  title: 'Marketing/FeatureBlocks',
+  title: 'Website/Marketing/FeatureBlocks',
   component: FeatureBlocks,
   parameters: {
     layout: 'padded',

@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from '@storybook/react';
 import { BuildProgress } from '../../components/status/BuildProgress';
 
 const meta: Meta<typeof BuildProgress> = {
-  title: 'Components/Status/BuildProgress',
+  title: 'Dashboard/Widgets/Status/BuildProgress',
   component: BuildProgress,
   tags: ['autodocs'],
   parameters: {

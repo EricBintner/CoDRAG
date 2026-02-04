@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react';
 import { cn } from '../../lib/utils';
 import { PanelLeftClose, PanelLeftOpen, Box } from 'lucide-react';
+import { Button } from '../primitives/Button';
 
 export interface SidebarProps {
   children: ReactNode;
@@ -42,13 +43,15 @@ export function Sidebar({
           </span>
         )}
         {onCollapseToggle && (
-          <button
+          <Button
+            variant="ghost"
+            size="icon-sm"
             onClick={onCollapseToggle}
-            className="p-1.5 rounded-md hover:bg-surface-raised text-text-muted hover:text-text transition-colors"
-            title={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+            className="text-text-muted hover:text-text"
+            aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
           >
             {collapsed ? <PanelLeftOpen className="w-5 h-5" /> : <PanelLeftClose className="w-5 h-5" />}
-          </button>
+          </Button>
         )}
       </div>
       <div className="flex-1 overflow-y-auto py-2">

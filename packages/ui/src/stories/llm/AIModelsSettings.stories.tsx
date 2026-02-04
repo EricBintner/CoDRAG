@@ -9,7 +9,7 @@ import type {
 } from '../../types';
 
 const meta: Meta<typeof AIModelsSettings> = {
-  title: 'Pages/Settings/AIModelsSettings',
+  title: 'Dashboard/Widgets/Settings/AIModelsSettings',
   component: AIModelsSettings,
   tags: ['autodocs'],
   parameters: {

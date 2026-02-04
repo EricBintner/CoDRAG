@@ -8,7 +8,7 @@ import type { SearchResult, CodeChunk } from '../../types';
 
 // SearchInput Stories
 const searchInputMeta: Meta<typeof SearchInput> = {
-  title: 'Components/Search/SearchInput',
+  title: 'Dashboard/Widgets/Search/Components',
   component: SearchInput,
   tags: ['autodocs'],
 };

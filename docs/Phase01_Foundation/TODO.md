@@ -12,15 +12,15 @@
 ## Research completion checklist (P01-R*)
 These items are the Phase01-specific gates from `../PHASE_RESEARCH_GATES.md` and `../RESEARCH_BACKLOG.md`.
 
-- [ ] P01-R1 Define canonical `manifest.json` schema (required fields + meaning + forward-compat plan)
-- [ ] P01-R2 Define stable chunk/document ID strategy and guarantees
+- [p] P01-R1 Define canonical `manifest.json` schema (required fields + meaning + forward-compat plan)
+- [p] P01-R2 Define stable chunk/document ID strategy and guarantees
 - [ ] P01-R3 Define optional FTS capability detection + reporting (and fallback behavior)
-- [ ] P01-R4 Define interrupted/partial build detection + deterministic recovery behavior
+- [p] P01-R4 Define interrupted/partial build detection + deterministic recovery behavior
 - [ ] P01-R5 Define baseline performance envelope (what repo sizes/counts are acceptable for MVP)
 
 ## Implementation backlog (P01-I*)
-- [ ] P01-I1 ProjectRegistry schema + CRUD (multi-project foundations)
-- [ ] P01-I2 Project storage layout (standalone default; embedded later) aligned with ADR-003
+- [x] P01-I1 ProjectRegistry schema + CRUD (multi-project foundations)
+- [x] P01-I2 Project storage layout (standalone default; embedded later) aligned with ADR-003
 - [ ] P01-I3 Build pipeline correctness:
   - scan (include/exclude, max file bytes)
   - chunk
@@ -41,6 +41,14 @@ These items are the Phase01-specific gates from `../PHASE_RESEARCH_GATES.md` and
   - structured output option
 - [ ] P01-I7 Error envelope parity (HTTP) with Phase02 UI expectations
 - [ ] P01-I8 Ensure “last known-good snapshot” behavior: search/context remain available while builds run
+
+### Near-term additions (unblocked, high leverage)
+- [ ] Add real `span`/line-range propagation end-to-end (chunking → documents.json → /search + /context)
+- [ ] Add atomic build swap (temp dir + rename) and “partial build recovery” detection
+- [ ] Manifest schema versioning decision + implementation (`format_version` and rebuild/migrate policy)
+- [ ] Primer hook points for Phase01:
+  - store primer config in project config and/or `repo_policy.json`
+  - index primer file(s) deterministically
 
 ### Unification / reuse (P01-U*)
 - [ ] P01-U1 Confirm whether CoDRAG daemon should proxy to `code_index/` as a thin adapter (per Phase69 notes)

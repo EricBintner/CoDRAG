@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { cn } from '../../lib/utils';
 import type { SavedEndpoint, LLMProvider, EndpointTestResult } from '../../types';
 import { Plus, Trash2, Edit2, Play, CheckCircle, AlertCircle, Server } from 'lucide-react';
+import { Button } from '../primitives/Button';
 
 export interface EndpointManagerProps {
   endpoints: SavedEndpoint[];
@@ -174,19 +175,20 @@ export function EndpointManager({
                       />
                     </div>
                   )}
-                  <div className="flex gap-2 justify-end">
-                    <button 
+                  <div className="flex gap-2 pt-2 justify-end">
+                    <Button 
                       onClick={resetForm}
-                      className="px-3 py-1.5 text-xs font-medium rounded-md bg-surface border border-border text-text hover:bg-surface-raised transition-colors"
+                      variant="outline"
+                      size="sm"
                     >
                       Cancel
-                    </button>
-                    <button 
+                    </Button>
+                    <Button 
                       onClick={handleSaveEdit}
-                      className="px-3 py-1.5 text-xs font-medium rounded-md bg-primary text-white hover:bg-primary-hover transition-colors"
+                      size="sm"
                     >
                       Save Changes
-                    </button>
+                    </Button>
                   </div>
                 </div>
               ) : (
@@ -217,28 +219,33 @@ export function EndpointManager({
                     )}
                   </div>
                   <div className="flex gap-2 ml-4">
-                    <button
+                    <Button
                       onClick={() => handleTest(ep)}
                       disabled={testingId === ep.id}
-                      className="p-1.5 rounded-md text-text-muted hover:text-text hover:bg-surface-raised transition-colors disabled:opacity-50"
-                      title="Test Connection"
+                      variant="ghost"
+                      size="icon-sm"
+                      className={cn(testingId === ep.id && "opacity-70")}
+                      aria-label="Test Connection"
                     >
                       <Play className={cn("w-4 h-4", testingId === ep.id && "animate-pulse")} />
-                    </button>
-                    <button
+                    </Button>
+                    <Button
                       onClick={() => handleEdit(ep)}
-                      className="p-1.5 rounded-md text-text-muted hover:text-text hover:bg-surface-raised transition-colors"
-                      title="Edit"
+                      variant="ghost"
+                      size="icon-sm"
+                      aria-label="Edit"
                     >
                       <Edit2 className="w-4 h-4" />
-                    </button>
-                    <button
+                    </Button>
+                    <Button
                       onClick={() => onDelete(ep.id)}
-                      className="p-1.5 rounded-md text-text-muted hover:text-error hover:bg-error-muted/10 transition-colors"
-                      title="Delete"
+                      variant="ghost"
+                      size="icon-sm"
+                      className="hover:bg-error-muted/10 hover:text-error"
+                      aria-label="Delete"
                     >
                       <Trash2 className="w-4 h-4" />
-                    </button>
+                    </Button>
                   </div>
                 </div>
               )}
@@ -298,18 +305,19 @@ export function EndpointManager({
             </div>
           )}
           <div className="flex gap-2 pt-2">
-            <button 
+            <Button 
               onClick={handleAdd}
-              className="px-4 py-2 text-sm font-medium rounded-md bg-primary text-white hover:bg-primary-hover transition-colors"
+              size="sm"
             >
               Add Endpoint
-            </button>
-            <button 
+            </Button>
+            <Button 
               onClick={resetForm}
-              className="px-4 py-2 text-sm font-medium rounded-md bg-surface border border-border text-text hover:bg-surface-raised transition-colors"
+              variant="outline"
+              size="sm"
             >
               Cancel
-            </button>
+            </Button>
           </div>
         </div>
       ) : (

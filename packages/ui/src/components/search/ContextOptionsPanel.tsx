@@ -1,5 +1,8 @@
 import { Copy, Settings2 } from 'lucide-react';
-import { Card, Flex, Title, NumberInput, Switch, Button, Text } from '@tremor/react';
+import { Card, Title, Text } from '@tremor/react';
+import { Button } from '../primitives/Button';
+import { Toggle } from '../primitives/Toggle';
+import { StepperNumberInput } from '../primitives/StepperNumberInput';
 import { cn } from '../../lib/utils';
 
 export interface ContextOptionsPanelProps {
@@ -18,6 +21,7 @@ export interface ContextOptionsPanelProps {
   hasContext?: boolean;
   disabled?: boolean;
   className?: string;
+  bare?: boolean;
 }
 
 /**
@@ -47,66 +51,57 @@ export function ContextOptionsPanel({
   hasContext = false,
   disabled = false,
   className,
+  bare = false,
 }: ContextOptionsPanelProps) {
+  const Container = bare ? 'div' : Card;
+
   return (
-    <Card className={cn('border border-border bg-surface shadow-sm', className)}>
-      <Flex justifyContent="between" alignItems="center" className="mb-4">
-        <Flex className="gap-2" justifyContent="start">
-          <Settings2 className="w-5 h-5 text-primary" />
-          <Title className="text-text">Context Options</Title>
-        </Flex>
-        <Flex className="gap-2" justifyContent="end">
-          <Button
-            size="xs"
-            onClick={onGetContext}
-            disabled={disabled}
-            className="bg-primary hover:bg-primary-hover text-white border-none"
-          >
-            Get Context
-          </Button>
-          {onCopyContext && (
+    <Container className={cn(!bare && 'border border-border bg-surface shadow-sm', className)}>
+      {!bare && (
+        <div className="flex flex-wrap justify-between items-center mb-4 gap-2">
+          <div className="flex items-center gap-2">
+            <Settings2 className="w-5 h-5 text-primary shrink-0" />
+            <Title className="text-text truncate">Context Options</Title>
+          </div>
+          <div className="flex items-center gap-2 shrink-0">
             <Button
-              size="xs"
-              variant="secondary"
-              onClick={onCopyContext}
-              disabled={!hasContext}
-              className="border border-border"
-              icon={Copy}
+              size="sm"
+              onClick={onGetContext}
+              disabled={disabled}
+              className="whitespace-nowrap"
             >
-              Copy
+              Get Context
             </Button>
-          )}
-        </Flex>
-      </Flex>
+            {onCopyContext && (
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={onCopyContext}
+                disabled={!hasContext}
+                className="whitespace-nowrap"
+                icon={Copy}
+              >
+                Copy
+              </Button>
+            )}
+          </div>
+        </div>
+      )}
 
       <div className="space-y-6">
-        <Flex className="gap-4 flex-wrap" justifyContent="start" alignItems="start">
-          <div className="w-32">
+        <div className="flex flex-wrap gap-4">
+          <div className="flex-1 min-w-[12rem]">
             <label className="block text-sm font-medium text-text-muted mb-2">
               Chunks (k)
             </label>
-            <NumberInput
-              value={k}
-              onValueChange={onKChange}
-              min={1}
-              max={50}
-              disabled={disabled}
-              className="w-full"
-            />
+            <StepperNumberInput value={k} onValueChange={onKChange} min={1} max={50} disabled={disabled} />
           </div>
 
-          <div className="w-32">
+          <div className="flex-1 min-w-[12rem]">
             <label className="block text-sm font-medium text-text-muted mb-2">
               Max Chars
             </label>
-            <NumberInput
-              value={maxChars}
-              onValueChange={onMaxCharsChange}
-              min={200}
-              max={200000}
-              disabled={disabled}
-              className="w-full"
-            />
+            <StepperNumberInput value={maxChars} onValueChange={onMaxCharsChange} min={200} max={200000} step={100} disabled={disabled} />
           </div>
         </Flex>
 
@@ -146,6 +141,6 @@ export function ContextOptionsPanel({
           </Flex>
         </div>
       </div>
-    </Card>
+    </Container>
   );
 }

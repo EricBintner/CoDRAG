@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from '@storybook/react';
 import { MarketingHero } from '../../components/marketing/MarketingHero';
 
 const meta: Meta<typeof MarketingHero> = {
-  title: 'Marketing/MarketingHero',
+  title: 'Website/Marketing/Hero',
   component: MarketingHero,
   parameters: {
     layout: 'fullscreen',

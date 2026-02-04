@@ -470,6 +470,11 @@ def mcp(
     mode: str = typer.Option("server", "--mode", "-m", help="Mode: server | direct"),
     daemon_url: str = typer.Option("http://127.0.0.1:8400", "--daemon", "-d", help="CoDRAG daemon URL (Server Mode)"),
     repo_root: str = typer.Option(None, "--repo-root", "-r", help="Repository root (Direct Mode). Defaults to cwd."),
+    debug: bool = typer.Option(False, "--debug", help="Enable debug logging (stderr)."),
+    log_file: Optional[str] = typer.Option(None, "--log-file", help="Write MCP debug logs to a file (rotating)."),
+    transport: str = typer.Option("stdio", "--transport", "-t", help="Transport: stdio | http"),
+    host: str = typer.Option("127.0.0.1", "--host", help="HTTP transport host"),
+    port: int = typer.Option(8401, "--port", help="HTTP transport port"),
 ) -> None:
     """
     Run the Model Context Protocol (MCP) server.
@@ -479,13 +484,22 @@ def mcp(
     Modes:
       server (default): Bridges IDE to the running CoDRAG daemon.
       direct: Runs the CoDRAG engine in-process (no daemon required).
+      
+    Transports:
+      stdio (default): Standard input/output (for local IDEs).
+      http: Server-Sent Events (SSE) over HTTP (for remote/containerized IDEs).
     """
-    from codrag.mcp_server import main as mcp_server_main
+    from codrag.mcp_server import main as mcp_server_main, configure_logging
     from codrag.mcp_direct import DirectMCPServer, run_stdio
     import asyncio
     
     if mode == "direct":
+        if transport == "http":
+            print("[codrag] Error: Direct mode currently only supports stdio transport.", file=sys.stderr)
+            raise typer.Exit(1)
+            
         root = Path(repo_root).resolve() if repo_root else Path.cwd()
+        configure_logging(debug=bool(debug), log_file=log_file)
         print(f"[codrag] Starting MCP (Direct Mode) at {root}...", file=sys.stderr)
         server = DirectMCPServer(repo_root=root)
         asyncio.run(run_stdio(server))
@@ -496,6 +510,11 @@ def mcp(
             daemon_url=daemon_url,
             project_id=project_id,
             auto_detect=auto,
+            debug=bool(debug),
+            log_file=log_file,
+            transport=transport,
+            host=host,
+            port=port,
         )
 
 
@@ -570,8 +589,16 @@ def activity(
     base = _base_url(host, port)
     
     try:
-        # Try to fetch real data from server
-        data = _get_json(f"{base}/activity?weeks={weeks}")
+        if not _is_server_available(base):
+            raise requests.exceptions.ConnectionError()
+        pid = _resolve_project(base, project_id)
+        # Try to fetch real data from server (endpoint not yet implemented)
+        url = f"{base}/projects/{pid}/activity?weeks={weeks}"
+        r = requests.get(url, timeout=30)
+        if r.status_code == 404:
+            raise ValueError("Activity API not available")
+        r.raise_for_status()
+        data = _unwrap_envelope(r.json())
         
         # Convert API response to ActivityHeatmapData
         days = [
@@ -588,6 +615,8 @@ def activity(
             totals=data.get("totals", {"embeddings": 0, "trace": 0, "builds": 0}),
         )
         
+    except typer.Exit:
+        raise
     except requests.exceptions.ConnectionError:
         # Server not running - use sample data for demo
         console.print("[yellow]Server not connected. Showing sample data.[/yellow]\n")
@@ -647,62 +676,76 @@ def coverage(
     # For now, we will show the demo data structure
     
     base = _base_url(host, port)
+    demo_tree_data = {
+        "name": "src",
+        "type": "dir",
+        "coverage": 0.75,
+        "children": [
+            {
+                "name": "api",
+                "type": "dir",
+                "coverage": 1.0,
+                "children": [
+                    {"name": "server.py", "type": "file", "status": "indexed"},
+                    {"name": "routes.py", "type": "file", "status": "indexed"},
+                    {"name": "schema.py", "type": "file", "status": "indexed"},
+                ],
+            },
+            {
+                "name": "core",
+                "type": "dir",
+                "coverage": 0.8,
+                "children": [
+                    {"name": "index.py", "type": "file", "status": "indexed"},
+                    {"name": "search.py", "type": "file", "status": "indexed"},
+                    {"name": "experimental.py", "type": "file", "status": "excluded"},
+                ],
+            },
+            {
+                "name": "utils",
+                "type": "dir",
+                "coverage": 0.5,
+                "children": [
+                    {"name": "helpers.py", "type": "file", "status": "indexed"},
+                    {"name": "legacy.py", "type": "file", "status": "excluded"},
+                ],
+            },
+            {
+                "name": "tests",
+                "type": "dir",
+                "coverage": 0.0,
+                "children": [
+                    {"name": "test_api.py", "type": "file", "status": "excluded"},
+                    {"name": "test_core.py", "type": "file", "status": "excluded"},
+                ],
+            },
+        ],
+    }
     try:
-        data = _get_json(f"{base}/coverage")
+        if not _is_server_available(base):
+            raise requests.exceptions.ConnectionError()
+        pid = _resolve_project(base, project_id)
+        # Try to fetch real data from server (endpoint not yet implemented)
+        url = f"{base}/projects/{pid}/coverage"
+        r = requests.get(url, timeout=30)
+        if r.status_code == 404:
+            raise ValueError("Coverage API not available")
+        r.raise_for_status()
+        data = _unwrap_envelope(r.json())
         tree_data = data.get("tree") if isinstance(data, dict) else None
         if not isinstance(tree_data, dict):
             tree_data = data if isinstance(data, dict) else None
         if not isinstance(tree_data, dict):
             raise ValueError("Invalid coverage response")
         render_file_coverage(tree_data, console=console)
+    except typer.Exit:
+        raise
     except requests.exceptions.ConnectionError:
         console.print("[yellow]Server not connected. Showing demo data.[/yellow]\n")
-        tree_data = {
-            "name": "src",
-            "type": "dir",
-            "coverage": 0.75,
-            "children": [
-                {
-                    "name": "api",
-                    "type": "dir",
-                    "coverage": 1.0,
-                    "children": [
-                        {"name": "server.py", "type": "file", "status": "indexed"},
-                        {"name": "routes.py", "type": "file", "status": "indexed"},
-                        {"name": "schema.py", "type": "file", "status": "indexed"},
-                    ],
-                },
-                {
-                    "name": "core",
-                    "type": "dir",
-                    "coverage": 0.8,
-                    "children": [
-                        {"name": "index.py", "type": "file", "status": "indexed"},
-                        {"name": "search.py", "type": "file", "status": "indexed"},
-                        {"name": "experimental.py", "type": "file", "status": "excluded"},
-                    ],
-                },
-                {
-                    "name": "utils",
-                    "type": "dir",
-                    "coverage": 0.5,
-                    "children": [
-                        {"name": "helpers.py", "type": "file", "status": "indexed"},
-                        {"name": "legacy.py", "type": "file", "status": "excluded"},
-                    ],
-                },
-                {
-                    "name": "tests",
-                    "type": "dir",
-                    "coverage": 0.0,
-                    "children": [
-                        {"name": "test_api.py", "type": "file", "status": "excluded"},
-                        {"name": "test_core.py", "type": "file", "status": "excluded"},
-                    ],
-                },
-            ],
-        }
-        render_file_coverage(tree_data, console=console)
+        render_file_coverage(demo_tree_data, console=console)
+    except ValueError as e:
+        console.print(f"[yellow]Coverage API not available ({e}). Showing demo data.[/yellow]\n")
+        render_file_coverage(demo_tree_data, console=console)
     except Exception as e:
         console.print(f"[red]Error: {e}[/red]")
 
@@ -725,22 +768,34 @@ def overview(
     trace_stats = {}
     
     try:
-        # 1. Fetch Status (Health)
-        status_data = _get_json(f"{base}/status")
+        if not _is_server_available(base):
+            raise requests.exceptions.ConnectionError()
+        pid = _resolve_project(base, project_id)
+        
+        # 1. Fetch Status (Health) from project-scoped endpoint
+        status_data = _get_json(f"{base}/projects/{pid}/status")
         index = status_data.get("index", {})
+        trace = status_data.get("trace", {})
+        total_chunks = index.get("total_chunks", 0)
+        trace_counts = trace.get("counts", {}) if isinstance(trace, dict) else {}
         health_stats = {
-            "total_files": index.get("total_documents", 0), 
-            "indexed_files": index.get("total_documents", 0),
-            "embeddings_count": index.get("total_documents", 0),
-            "trace_nodes": 0,
-            "trace_edges": 0,
-            "last_build": index.get("built_at", "Never"),
+            "total_files": total_chunks,
+            "indexed_files": total_chunks,
+            "embeddings_count": total_chunks,
+            "trace_nodes": trace_counts.get("nodes", 0),
+            "trace_edges": trace_counts.get("edges", 0),
+            "last_build": index.get("last_build_at", "Never"),
             "disk_usage_mb": 0.0,
         }
         
         # 2. Fetch Activity
         try:
-            act_data = _get_json(f"{base}/activity?weeks={weeks}")
+            url = f"{base}/projects/{pid}/activity?weeks={weeks}"
+            r = requests.get(url, timeout=30)
+            if r.status_code == 404:
+                raise ValueError("Activity API not available")
+            r.raise_for_status()
+            act_data = _unwrap_envelope(r.json())
             days = [
                 ActivityDay(
                     date=d["date"],
@@ -761,15 +816,22 @@ def overview(
         try:
             tr_data = _get_json(f"{base}/trace/stats")
             trace_stats = {
-                "node_count": tr_data.get("node_count", 0),
-                "edge_count": tr_data.get("edge_count", 0),
-                "avg_degree": tr_data.get("avg_degree", 0.0),
+                "node_count": tr_data.get("counts", {}).get("nodes", 0),
+                "edge_count": tr_data.get("counts", {}).get("edges", 0),
+                "avg_degree": (
+                    (2.0 * float(tr_data.get("counts", {}).get("edges", 0)))
+                    / float(tr_data.get("counts", {}).get("nodes", 0))
+                )
+                if float(tr_data.get("counts", {}).get("nodes", 0) or 0) > 0
+                else 0.0,
             }
         except:
             pass # Fallback to empty if endpoint missing
 
-        render_dashboard(health_stats, activity_data, trace_stats, console=console)
+        render_dashboard(health_stats, activity_data, trace_stats, weeks=weeks, console=console)
         
+    except typer.Exit:
+        raise
     except requests.exceptions.ConnectionError:
         console.print("[yellow]Server not connected. Showing demo dashboard.[/yellow]\n")
         
@@ -784,7 +846,7 @@ def overview(
             "node_count": 850, "edge_count": 2341, "avg_degree": 5.5
         }
         
-        render_dashboard(demo_health, demo_activity, demo_trace, console=console)
+        render_dashboard(demo_health, demo_activity, demo_trace, weeks=weeks, console=console)
         
     except Exception as e:
         console.print(f"[red]Error: {e}[/red]")

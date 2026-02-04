@@ -6,3 +6,9 @@ export type { ProjectSettingsPanelProps } from './ProjectSettingsPanel';
 
 export { FolderTree, sampleFileTree } from './FolderTree';
 export type { FolderTreeProps, TreeNode, FileStatus } from './FolderTree';
+
+export { FolderTreePanel } from './FolderTreePanel';
+export type { FolderTreePanelProps } from './FolderTreePanel';
+
+export { PinnedTextFilesPanel } from './PinnedTextFilesPanel';
+export type { PinnedTextFilesPanelProps, PinnedTextFile } from './PinnedTextFilesPanel';

@@ -22,6 +22,10 @@
 - [ ] P07-I5 Corruption detection (manifest/documents inconsistency) → hard fail with “Full rebuild” remediation
 - [ ] P07-I6 Disk pressure detection → fail early with `DISK_FULL`/`INSUFFICIENT_SPACE`
 
+### Cross-cutting gaps already identified
+- [ ] Resolve envelope helper duplication (`src/codrag/api/envelope.py` vs `src/codrag/api/responses.py`) and ensure single source of truth
+- [ ] Test/runtime alignment: ensure `pytest` works out-of-the-box (either add missing dev deps or simplify default pytest config)
+
 ### Observability + troubleshooting
 - [ ] P07-I7 Logging plan:
   - per-project rotated build logs

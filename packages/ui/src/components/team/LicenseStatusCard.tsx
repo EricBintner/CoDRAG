@@ -1,6 +1,7 @@
 import { cn } from '../../lib/utils';
 import type { LicenseInfo, LicenseTier } from '../../types';
 import { CreditCard, AlertCircle, Users, Calendar, ArrowUpCircle, Settings } from 'lucide-react';
+import { Button } from '../primitives/Button';
 
 export interface LicenseStatusCardProps {
   license: LicenseInfo;
@@ -100,22 +101,23 @@ export function LicenseStatusCard({
       {/* Actions */}
       <div className="flex gap-2">
         {license.tier === 'free' && onUpgrade && (
-          <button 
+          <Button 
             onClick={onUpgrade}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-primary hover:bg-primary-hover text-white text-sm font-medium transition-colors shadow-sm"
+            size="sm"
+            icon={ArrowUpCircle}
           >
-            <ArrowUpCircle className="w-4 h-4" />
             Upgrade to Pro
-          </button>
+          </Button>
         )}
         {onManageLicense && (
-          <button 
+          <Button 
             onClick={onManageLicense}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-surface hover:bg-surface-raised border border-border text-text text-sm font-medium transition-colors"
+            variant="outline"
+            size="sm"
+            icon={Settings}
           >
-            <Settings className="w-4 h-4" />
             Manage License
-          </button>
+          </Button>
         )}
       </div>
     </div>

@@ -2,6 +2,7 @@ import type { ProjectSummary } from '../../types';
 import { StatusBadge } from '../status/StatusBadge';
 import { cn } from '../../lib/utils';
 import { FolderPlus } from 'lucide-react';
+import { Button } from '../primitives/Button';
 
 export interface ProjectListProps {
   projects: ProjectSummary[];
@@ -80,13 +81,14 @@ export function ProjectList({
         )}
       </div>
       <div className="p-4 border-t border-border">
-        <button
+        <Button
           onClick={onAddProject}
-          className="w-full flex items-center justify-center gap-2 py-2 px-4 rounded-md border border-border bg-surface hover:bg-surface-raised text-text text-sm font-medium transition-colors"
+          variant="outline"
+          className="w-full bg-surface hover:bg-surface-raised"
+          icon={FolderPlus}
         >
-          <FolderPlus className="w-4 h-4" />
           Add Project
-        </button>
+        </Button>
       </div>
     </div>
   );

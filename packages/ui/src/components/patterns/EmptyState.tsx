@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react';
 import { cn } from '../../lib/utils';
+import { Button } from '../primitives/Button';
 
 export interface EmptyStateProps {
   title: string;
@@ -45,12 +46,12 @@ export function EmptyState({
       )}
       {action && (
         <div className="mt-6">
-          <button 
+          <Button 
             onClick={action.onClick}
-            className="px-4 py-2 rounded-md bg-primary hover:bg-primary-hover text-white text-sm font-medium transition-colors shadow-sm"
+            size="sm"
           >
             {action.label}
-          </button>
+          </Button>
         </div>
       )}
     </div>

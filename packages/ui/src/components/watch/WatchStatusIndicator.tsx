@@ -1,6 +1,7 @@
 import { cn } from '../../lib/utils';
 import type { WatchState, WatchStatus } from '../../types';
 import { Eye, Clock, AlertTriangle, PlayCircle, Loader2 } from 'lucide-react';
+import { Button } from '../primitives/Button';
 
 export interface WatchStatusIndicatorProps {
   status: WatchStatus;
@@ -88,13 +89,15 @@ export function WatchStatusIndicator({
       )}
 
       {status.stale && status.state !== 'building' && onRebuildNow && (
-        <button
+        <Button
           onClick={onRebuildNow}
-          className="self-start inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-surface hover:bg-surface-raised border border-border text-xs font-medium text-text transition-colors shadow-sm"
+          variant="outline"
+          size="sm"
+          className="self-start shadow-sm bg-surface"
+          icon={PlayCircle}
         >
-          <PlayCircle className="w-3.5 h-3.5" />
           Rebuild Now
-        </button>
+        </Button>
       )}
     </div>
   );

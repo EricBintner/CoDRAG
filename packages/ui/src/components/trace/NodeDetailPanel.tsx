@@ -1,6 +1,7 @@
 import { cn } from '../../lib/utils';
 import type { TraceNode, TraceEdge } from '../../types';
 import { CopyButton } from '../context/CopyButton';
+import { Button } from '../primitives/Button';
 import { FileCode, X, Share2, Zap, Eye, EyeOff, Box, ArrowRight, ArrowLeft } from 'lucide-react';
 
 export interface NodeDetailPanelProps {
@@ -46,12 +47,15 @@ export function NodeDetailPanel({
           </p>
         </div>
         {onClose && (
-          <button
+          <Button
+            variant="ghost"
+            size="icon-sm"
             onClick={onClose}
-            className="p-1.5 rounded-md text-text-muted hover:text-text hover:bg-surface-raised transition-colors shrink-0"
+            className="shrink-0"
+            aria-label="Close"
           >
             <X className="w-4 h-4" />
-          </button>
+          </Button>
         )}
       </div>
 

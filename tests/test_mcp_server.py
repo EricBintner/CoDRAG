@@ -20,6 +20,9 @@ from codrag.mcp_server import (
     DaemonUnavailableError,
     InvalidParamsError,
     MethodNotFoundError,
+    ProjectSelectionAmbiguousError,
+    MAX_SEARCH_K,
+    MAX_CONTEXT_CHARS,
 )
 
 
@@ -206,6 +209,22 @@ class TestToolStatus:
             with pytest.raises(DaemonUnavailableError):
                 await server.tool_status()
 
+    @pytest.mark.asyncio
+    async def test_status_project_selection_ambiguous_raises(self):
+        """Test status without project selection raises PROJECT_SELECTION_AMBIGUOUS."""
+        srv = MCPServer(daemon_url="http://127.0.0.1:8400", project_id=None, auto_detect=False)
+        with patch.object(srv, "_api_get", new_callable=AsyncMock) as mock_get:
+            mock_get.return_value = {
+                "projects": [
+                    {"id": "p1", "name": "A", "path": "/tmp/a"},
+                    {"id": "p2", "name": "B", "path": "/tmp/b"},
+                ]
+            }
+
+            with pytest.raises(ProjectSelectionAmbiguousError) as e:
+                await srv.tool_status()
+            assert "PROJECT_SELECTION_AMBIGUOUS" in str(e.value)
+
 
 class TestToolBuild:
     """Test codrag_build tool."""
@@ -265,6 +284,13 @@ class TestToolSearch:
         with pytest.raises(InvalidParamsError):
             await server.tool_search(query="   ")
 
+    @pytest.mark.asyncio
+    async def test_search_k_too_large(self, server):
+        """Test search rejects pathological k values."""
+        with pytest.raises(InvalidParamsError) as e:
+            await server.tool_search(query="test", k=MAX_SEARCH_K + 1)
+        assert f"max {MAX_SEARCH_K}" in str(e.value)
+
 
 class TestToolContext:
     """Test codrag_context tool."""
@@ -297,6 +323,13 @@ class TestToolContext:
         """Test context with empty query raises error."""
         with pytest.raises(InvalidParamsError):
             await server.tool_context(query="")
+
+    @pytest.mark.asyncio
+    async def test_context_max_chars_too_large(self, server):
+        """Test context rejects pathological max_chars values."""
+        with pytest.raises(InvalidParamsError) as e:
+            await server.tool_context(query="test", max_chars=MAX_CONTEXT_CHARS + 1)
+        assert f"max {MAX_CONTEXT_CHARS}" in str(e.value)
 
 
 # =============================================================================
@@ -401,6 +434,60 @@ class TestToolsCall:
             assert "result" in response
             assert response["result"]["isError"] is True
             assert "Cannot connect" in response["result"]["content"][0]["text"]
+
+    @pytest.mark.asyncio
+    async def test_call_search_k_too_large_returns_tool_error(self, server):
+        request = {
+            "jsonrpc": "2.0",
+            "id": 14,
+            "method": "tools/call",
+            "params": {
+                "name": "codrag_search",
+                "arguments": {"query": "find", "k": MAX_SEARCH_K + 1},
+            },
+        }
+
+        response = await server.handle_request(request)
+        assert response["result"]["isError"] is True
+        assert f"max {MAX_SEARCH_K}" in response["result"]["content"][0]["text"]
+
+    @pytest.mark.asyncio
+    async def test_call_context_max_chars_too_large_returns_tool_error(self, server):
+        request = {
+            "jsonrpc": "2.0",
+            "id": 15,
+            "method": "tools/call",
+            "params": {
+                "name": "codrag_context",
+                "arguments": {"query": "find", "max_chars": MAX_CONTEXT_CHARS + 1},
+            },
+        }
+
+        response = await server.handle_request(request)
+        assert response["result"]["isError"] is True
+        assert f"max {MAX_CONTEXT_CHARS}" in response["result"]["content"][0]["text"]
+
+    @pytest.mark.asyncio
+    async def test_call_status_project_selection_ambiguous_returns_tool_error(self):
+        srv = MCPServer(daemon_url="http://127.0.0.1:8400", project_id=None, auto_detect=False)
+        with patch.object(srv, "_api_get", new_callable=AsyncMock) as mock_get:
+            mock_get.return_value = {
+                "projects": [
+                    {"id": "p1", "name": "A", "path": "/tmp/a"},
+                    {"id": "p2", "name": "B", "path": "/tmp/b"},
+                ]
+            }
+
+            request = {
+                "jsonrpc": "2.0",
+                "id": 16,
+                "method": "tools/call",
+                "params": {"name": "codrag_status", "arguments": {}},
+            }
+
+            response = await srv.handle_request(request)
+            assert response["result"]["isError"] is True
+            assert "PROJECT_SELECTION_AMBIGUOUS" in response["result"]["content"][0]["text"]
 
 
 # =============================================================================

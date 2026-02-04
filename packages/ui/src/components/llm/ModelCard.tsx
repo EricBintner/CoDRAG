@@ -1,8 +1,8 @@
-import { Button } from '@tremor/react';
+import { Button } from '../primitives/Button';
 import { cn } from '../../lib/utils';
 import type { SavedEndpoint, EndpointTestResult, ModelSource } from '../../types';
 import type { ReactNode } from 'react';
-import { CheckCircle, AlertCircle, Download, Cloud, Server, Database } from 'lucide-react';
+import { CheckCircle, AlertCircle, Download, Cloud, Server, Database, RefreshCw } from 'lucide-react';
 
 export interface ModelCardProps {
   title: string;
@@ -173,16 +173,15 @@ export function ModelCard({
                   {/* Custom arrow could go here */}
                 </div>
                 {onRefreshModels && (
-                  <button
+                  <Button
                     onClick={onRefreshModels}
                     disabled={loadingModels}
-                    className="px-3 py-2 rounded-md bg-surface-raised border border-border text-text-muted hover:text-text hover:bg-border transition-colors disabled:opacity-50"
+                    variant="outline"
+                    className="bg-surface-raised hover:bg-border border-border h-full aspect-square p-0 w-[38px]"
                     title="Refresh Models"
                   >
-                    <svg className={cn("w-4 h-4", loadingModels && "animate-spin")} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                    </svg>
-                  </button>
+                    <RefreshCw className={cn("w-4 h-4", loadingModels && "animate-spin")} />
+                  </Button>
                 )}
               </div>
             </div>
@@ -218,13 +217,13 @@ export function ModelCard({
                 </div>
               </div>
             ) : (
-              <button
+              <Button
                 onClick={onHFDownload}
-                className="w-full py-2 px-4 bg-primary hover:bg-primary-hover text-white rounded-md text-sm font-medium transition-colors flex items-center justify-center gap-2"
+                className="w-full"
+                icon={Download}
               >
-                <Download className="w-4 h-4" />
                 Download Model
-              </button>
+              </Button>
             )}
           </div>
         </div>
@@ -234,7 +233,7 @@ export function ModelCard({
       {onTest && source === 'endpoint' && endpoint && (
         <div className="mt-6 pt-4 border-t border-border">
           <Button
-            size="xs"
+            size="sm"
             variant="secondary"
             onClick={onTest}
             loading={testingConnection}

@@ -9,6 +9,15 @@ from .repo_profile import DEFAULT_ROLE_WEIGHTS, profile_repo
 
 DEFAULT_POLICY_FILENAME = "repo_policy.json"
 
+# Default primer configuration
+DEFAULT_PRIMER_CONFIG = {
+    "enabled": True,
+    "filenames": ["AGENTS.md", "CODRAG_PRIMER.md", "PROJECT_PRIMER.md"],
+    "score_boost": 0.25,  # Added to similarity score for primer chunks
+    "always_include": False,  # If True, primer chunks always appear in context
+    "max_primer_chars": 2000,  # Max chars to include from primer when always_include=True
+}
+
 
 def policy_path_for_index(index_dir: Path) -> Path:
     return Path(index_dir) / DEFAULT_POLICY_FILENAME
@@ -59,6 +68,37 @@ def _normalize_role_weights(v: Any) -> Dict[str, float]:
     return out or dict(DEFAULT_ROLE_WEIGHTS)
 
 
+def _normalize_primer_config(v: Any) -> Dict[str, Any]:
+    """Normalize primer configuration, filling in defaults for missing fields."""
+    if not isinstance(v, dict):
+        return dict(DEFAULT_PRIMER_CONFIG)
+    
+    out = dict(DEFAULT_PRIMER_CONFIG)  # Start with defaults
+    
+    if "enabled" in v:
+        out["enabled"] = bool(v["enabled"])
+    
+    if "filenames" in v and isinstance(v["filenames"], list):
+        out["filenames"] = [str(f) for f in v["filenames"] if isinstance(f, str) and f.strip()]
+    
+    if "score_boost" in v:
+        try:
+            out["score_boost"] = max(0.0, min(1.0, float(v["score_boost"])))
+        except (TypeError, ValueError):
+            pass
+    
+    if "always_include" in v:
+        out["always_include"] = bool(v["always_include"])
+    
+    if "max_primer_chars" in v:
+        try:
+            out["max_primer_chars"] = max(100, int(v["max_primer_chars"]))
+        except (TypeError, ValueError):
+            pass
+    
+    return out
+
+
 def policy_from_profile(profile: Dict[str, Any], repo_root: Path) -> Dict[str, Any]:
     rec = profile.get("recommended") or {}
 
@@ -69,6 +109,7 @@ def policy_from_profile(profile: Dict[str, Any], repo_root: Path) -> Dict[str, A
         "include_globs": _normalize_globs(rec.get("include_globs")),
         "exclude_globs": _normalize_globs(rec.get("exclude_globs")),
         "role_weights": _normalize_role_weights(rec.get("role_weights")),
+        "primer": _normalize_primer_config(rec.get("primer")),
         "path_roles": profile.get("path_roles") or [],
         "detected_languages": profile.get("detected_languages") or [],
         "marker_files": profile.get("marker_files") or [],
@@ -87,6 +128,7 @@ def ensure_repo_policy(index_dir: Path, repo_root: Path, force: bool = False) ->
             existing["include_globs"] = _normalize_globs(existing.get("include_globs"))
             existing["exclude_globs"] = _normalize_globs(existing.get("exclude_globs"))
             existing["role_weights"] = _normalize_role_weights(existing.get("role_weights"))
+            existing["primer"] = _normalize_primer_config(existing.get("primer"))
             return existing
 
     profile = profile_repo(repo_root)

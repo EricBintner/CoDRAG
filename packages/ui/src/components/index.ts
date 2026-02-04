@@ -46,7 +46,7 @@ export { SymbolResultRow } from './trace/SymbolResultRow';
 export { NodeDetailPanel } from './trace/NodeDetailPanel';
 
 // LLM Service Components
-export { LLMStatusCard } from './llm/LLMStatusCard';
+export { LLMStatusWidget } from './dashboard/LLMStatusWidget';
 export { ModelCard } from './llm/ModelCard';
 export { EndpointManager } from './llm/EndpointManager';
 export { AIModelsSettings } from './llm/AIModelsSettings';

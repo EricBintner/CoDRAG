@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { cn } from '../../lib/utils';
 import { AlertCircle, ChevronDown, ChevronUp, RefreshCw, X } from 'lucide-react';
+import { Button } from '../primitives/Button';
 
 export interface ErrorStateProps {
   title?: string;
@@ -58,22 +59,24 @@ export function ErrorState({
           )}
 
           {/* Details toggle */}
-          <button
+          <Button
+            variant="ghost"
+            size="sm"
             onClick={() => setShowDetails(!showDetails)}
-            className="flex items-center gap-1 text-xs font-medium text-text-muted hover:text-text transition-colors mb-3"
+            className="text-text-muted hover:text-text h-auto p-0 hover:bg-transparent mb-3"
           >
             {showDetails ? (
               <>
-                <ChevronUp className="w-3 h-3" />
+                <ChevronUp className="w-3 h-3 mr-1" />
                 Hide details
               </>
             ) : (
               <>
-                <ChevronDown className="w-3 h-3" />
+                <ChevronDown className="w-3 h-3 mr-1" />
                 Show details
               </>
             )}
-          </button>
+          </Button>
 
           {showDetails && (
             <div className="mb-4 p-3 bg-surface border border-border rounded-md font-mono text-xs text-text overflow-x-auto">
@@ -85,22 +88,24 @@ export function ErrorState({
           {(onRetry || onDismiss) && (
             <div className="flex gap-2">
               {onRetry && (
-                <button 
+                <Button 
                   onClick={onRetry} 
-                  className="px-3 py-1.5 rounded-md bg-error text-white text-xs font-medium hover:bg-error-hover transition-colors flex items-center gap-1.5 shadow-sm"
+                  variant="destructive"
+                  size="sm"
+                  icon={RefreshCw}
                 >
-                  <RefreshCw className="w-3 h-3" />
                   Retry
-                </button>
+                </Button>
               )}
               {onDismiss && (
-                <button 
+                <Button 
                   onClick={onDismiss} 
-                  className="px-3 py-1.5 rounded-md bg-surface hover:bg-surface-raised border border-border text-text text-xs font-medium transition-colors flex items-center gap-1.5"
+                  variant="outline"
+                  size="sm"
+                  icon={X}
                 >
-                  <X className="w-3 h-3" />
                   Dismiss
-                </button>
+                </Button>
               )}
             </div>
           )}

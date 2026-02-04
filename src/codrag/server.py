@@ -10,11 +10,12 @@ Usage:
 from __future__ import annotations
 
 import argparse
+import fnmatch
 import hashlib
 import json
 import logging
 import threading
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
@@ -80,6 +81,7 @@ _project_last_build_result: Dict[str, Dict[str, Any]] = {}
 _project_last_build_error: Dict[str, str] = {}
 _project_trace_build_lock = threading.Lock()
 _project_trace_build_threads: Dict[str, threading.Thread] = {}
+_project_watchers: Dict[str, AutoRebuildWatcher] = {}
 
 
 _DEFAULT_UI_CONFIG: Dict[str, Any] = {
@@ -117,12 +119,7 @@ def _default_ui_config() -> Dict[str, Any]:
     cfg["repo_root"] = repo_root
 
     if repo_root:
-        rr = Path(repo_root)
-        core: List[str] = []
-        for cand in ["Docs_Halley/_MASTER_CROSSREFERENCE", "halley_core", "code_index"]:
-            if (rr / cand).exists():
-                core.append(cand)
-        cfg["core_roots"] = core
+        cfg["core_roots"] = []
 # Default LLM Config
     ollama_url = str(_config.get("ollama_url") or "http://localhost:11434")
     model = str(_config.get("model") or "nomic-embed-text")
@@ -302,6 +299,188 @@ def _project_trace_status(project: Project) -> Dict[str, Any]:
     status["enabled"] = True
     status["building"] = _is_project_trace_building(project.id)
     return status
+
+
+def _get_project_watcher(project: Project) -> Optional[AutoRebuildWatcher]:
+    """Get existing watcher for a project (does not create one)."""
+    return _project_watchers.get(project.id)
+
+
+def _get_project_watcher_status(project: Project) -> Dict[str, Any]:
+    """Get watcher status for a project."""
+    watcher = _get_project_watcher(project)
+    if watcher is None:
+        return {
+            "enabled": False,
+            "state": "disabled",
+            "stale": False,
+            "stale_since": None,
+            "pending": False,
+            "pending_paths_count": 0,
+        }
+    return watcher.status()
+
+
+def _read_json_file(path: Path) -> Optional[Dict[str, Any]]:
+    try:
+        if not path.exists():
+            return None
+        with open(path, "r", encoding="utf-8") as f:
+            data = json.load(f)
+        if not isinstance(data, dict):
+            return None
+        return data
+    except Exception:
+        return None
+
+
+def _parse_iso_datetime(value: Optional[str]) -> Optional[datetime]:
+    if not value:
+        return None
+    s = str(value).strip()
+    if not s:
+        return None
+    try:
+        if s.endswith("Z"):
+            s = s[:-1] + "+00:00"
+        return datetime.fromisoformat(s)
+    except Exception:
+        return None
+
+
+def _project_activity_payload(project: Project, weeks: int) -> Dict[str, Any]:
+    idx = _get_project_index(project)
+    idx_status = _project_index_status(idx, _project_last_build_error.get(project.id))
+    trace_status = _project_trace_status(project)
+
+    idx_dir = project_index_dir(project)
+    idx_manifest = _read_json_file(idx_dir / "manifest.json")
+    trace_manifest = _read_json_file(idx_dir / "trace_manifest.json")
+
+    start_date = (datetime.now(timezone.utc) - timedelta(days=int(weeks) * 7)).date()
+    by_date: Dict[str, Dict[str, Any]] = {}
+
+    def _add(date_str: str, *, embeddings: int = 0, trace: int = 0, builds: int = 0) -> None:
+        cur = by_date.get(date_str)
+        if cur is None:
+            cur = {"date": date_str, "embeddings": 0, "trace": 0, "builds": 0}
+            by_date[date_str] = cur
+        cur["embeddings"] = int(cur.get("embeddings", 0)) + int(embeddings)
+        cur["trace"] = int(cur.get("trace", 0)) + int(trace)
+        cur["builds"] = int(cur.get("builds", 0)) + int(builds)
+
+    idx_built_at = (idx_manifest or {}).get("built_at") or idx_status.get("last_build_at")
+    idx_dt = _parse_iso_datetime(str(idx_built_at) if idx_built_at else None)
+    if idx_dt is not None and idx_dt.date() >= start_date and bool(idx_status.get("exists", False)):
+        b = (idx_manifest or {}).get("build")
+        embedded_files = 0
+        if isinstance(b, dict):
+            embedded_files = int(b.get("files_embedded") or 0)
+        if embedded_files <= 0:
+            embedded_files = int(idx_status.get("total_chunks") or 0)
+        _add(idx_dt.date().isoformat(), embeddings=embedded_files, builds=1)
+
+    trace_built_at = None
+    if isinstance(trace_manifest, dict):
+        trace_built_at = trace_manifest.get("built_at")
+    if trace_built_at is None and isinstance(trace_status, dict):
+        trace_built_at = trace_status.get("last_build_at")
+    trace_dt = _parse_iso_datetime(str(trace_built_at) if trace_built_at else None)
+    if trace_dt is not None and trace_dt.date() >= start_date and bool(trace_status.get("exists", False)):
+        counts = (trace_manifest or {}).get("counts") if isinstance(trace_manifest, dict) else None
+        nodes = 0
+        if isinstance(counts, dict):
+            nodes = int(counts.get("nodes") or 0)
+        if nodes <= 0:
+            nodes = int((trace_status.get("counts") or {}).get("nodes") or 0)
+        _add(trace_dt.date().isoformat(), trace=nodes, builds=1)
+
+    days = [by_date[k] for k in sorted(by_date.keys())]
+    totals = {
+        "embeddings": sum(int(d.get("embeddings", 0)) for d in days),
+        "trace": sum(int(d.get("trace", 0)) for d in days),
+        "builds": sum(int(d.get("builds", 0)) for d in days),
+    }
+    return {"days": days, "totals": totals}
+
+
+def _build_coverage_tree(repo_root: Path, include_globs: List[str], exclude_globs: List[str]) -> Dict[str, Any]:
+    repo_root = Path(repo_root).expanduser().resolve()
+    include_globs = list(include_globs or [])
+    exclude_globs = list(exclude_globs or [])
+
+    files = set()
+    for pat in include_globs:
+        try:
+            for p in repo_root.glob(pat):
+                files.add(p)
+        except Exception:
+            continue
+
+    root: Dict[str, Any] = {"name": repo_root.name or "root", "type": "dir", "children": []}
+
+    def _ensure_dir(parent: Dict[str, Any], name: str) -> Dict[str, Any]:
+        children = parent.get("children")
+        if not isinstance(children, list):
+            children = []
+            parent["children"] = children
+        for c in children:
+            if isinstance(c, dict) and c.get("type") == "dir" and c.get("name") == name:
+                return c
+        node: Dict[str, Any] = {"name": name, "type": "dir", "children": []}
+        children.append(node)
+        return node
+
+    for p in sorted(files, key=lambda x: str(x)):
+        try:
+            if not p.is_file():
+                continue
+            rel_path = str(p.relative_to(repo_root))
+        except Exception:
+            continue
+
+        parts = list(Path(rel_path).parts)
+        if not parts:
+            continue
+
+        parent = root
+        for part in parts[:-1]:
+            parent = _ensure_dir(parent, part)
+
+        status = "excluded" if any(Path(rel_path).match(pat) for pat in exclude_globs) else "indexed"
+        children = parent.get("children")
+        if not isinstance(children, list):
+            children = []
+            parent["children"] = children
+        children.append({"name": parts[-1], "type": "file", "status": status})
+
+    def _compute(node: Dict[str, Any]) -> tuple[int, int]:
+        if node.get("type") != "dir":
+            return (1, 1) if node.get("status") == "indexed" else (0, 1)
+
+        indexed = 0
+        total = 0
+        for child in node.get("children", []) or []:
+            if not isinstance(child, dict):
+                continue
+            i, t = _compute(child)
+            indexed += i
+            total += t
+        node["coverage"] = (indexed / total) if total else 0.0
+        return indexed, total
+
+    def _sort(node: Dict[str, Any]) -> None:
+        children = node.get("children")
+        if not isinstance(children, list):
+            return
+        children.sort(key=lambda c: (0 if isinstance(c, dict) and c.get("type") == "dir" else 1, str(c.get("name") or "")))
+        for child in children:
+            if isinstance(child, dict) and child.get("type") == "dir":
+                _sort(child)
+
+    _compute(root)
+    _sort(root)
+    return root
 
 
 def _get_trace_index() -> TraceIndex:
@@ -763,15 +942,243 @@ def get_project_status(project_id: str) -> Dict[str, Any]:
     proj = _require_project(project_id)
     idx = _get_project_index(proj)
 
-    watch = {"enabled": False, "state": "disabled"}
+    watch = _get_project_watcher_status(proj)
     data = {
         "building": _is_project_building(proj.id),
         "stale": bool(watch.get("stale", False)),
+        "stale_since": watch.get("stale_since"),
         "index": _project_index_status(idx, _project_last_build_error.get(proj.id)),
         "trace": _project_trace_status(proj),
         "watch": watch,
     }
     return ok(data)
+
+
+@app.post("/projects/{project_id}/watch/start")
+def start_project_watch(
+    project_id: str,
+    debounce_ms: int = Query(5000, ge=500, le=60000),
+    min_gap_ms: int = Query(2000, ge=500, le=30000),
+) -> Dict[str, Any]:
+    """Enable auto-rebuild watcher for a project."""
+    proj = _require_project(project_id)
+    idx = _get_project_index(proj)
+    
+    # Stop existing watcher if any
+    existing = _project_watchers.get(proj.id)
+    if existing is not None:
+        existing.stop()
+    
+    def trigger_build(paths: List[str]) -> bool:
+        return _start_project_build(proj) is not None
+    
+    def is_building() -> bool:
+        return _is_project_building(proj.id)
+    
+    watcher = AutoRebuildWatcher(
+        repo_root=Path(proj.path),
+        index_dir=idx.index_dir,
+        on_trigger_build=trigger_build,
+        is_building=is_building,
+        debounce_ms=debounce_ms,
+        min_rebuild_gap_ms=min_gap_ms,
+    )
+    watcher.start()
+    _project_watchers[proj.id] = watcher
+    
+    return ok({"enabled": True, "status": watcher.status()})
+
+
+@app.post("/projects/{project_id}/watch/stop")
+def stop_project_watch(project_id: str) -> Dict[str, Any]:
+    """Disable auto-rebuild watcher for a project."""
+    proj = _require_project(project_id)
+    
+    watcher = _project_watchers.pop(proj.id, None)
+    if watcher is not None:
+        watcher.stop()
+    
+    return ok({"enabled": False})
+
+
+@app.get("/projects/{project_id}/watch/status")
+def get_project_watch_status(project_id: str) -> Dict[str, Any]:
+    """Get watcher status for a project."""
+    proj = _require_project(project_id)
+    return ok(_get_project_watcher_status(proj))
+
+
+@app.get("/projects/{project_id}/activity")
+def get_project_activity(project_id: str, weeks: int = Query(12, ge=1, le=52)) -> Dict[str, Any]:
+    proj = _require_project(project_id)
+    data = _project_activity_payload(proj, int(weeks))
+    return ok(data)
+
+
+@app.get("/projects/{project_id}/coverage")
+def get_project_coverage(project_id: str) -> Dict[str, Any]:
+    proj = _require_project(project_id)
+
+    cfg = proj.config or {}
+    include_raw = cfg.get("include_globs") if isinstance(cfg, dict) else None
+    exclude_raw = cfg.get("exclude_globs") if isinstance(cfg, dict) else None
+    include_globs = list(include_raw) if isinstance(include_raw, list) else list(_DEFAULT_UI_CONFIG.get("include_globs") or [])
+    exclude_globs = list(exclude_raw) if isinstance(exclude_raw, list) else list(_DEFAULT_UI_CONFIG.get("exclude_globs") or [])
+
+    if proj.mode == "embedded":
+        if "**/.codrag/**" not in exclude_globs:
+            exclude_globs.append("**/.codrag/**")
+
+    repo_root = Path(proj.path).expanduser().resolve()
+    if not repo_root.exists():
+        raise ApiException(status_code=400, code="PROJECT_PATH_MISSING", message="Project path not found")
+
+    tree = _build_coverage_tree(repo_root, include_globs, exclude_globs)
+    return ok({"tree": tree})
+
+
+@app.get("/projects/{project_id}/file")
+def get_project_file_content(project_id: str, path: str = Query(..., min_length=1)) -> Dict[str, Any]:
+    proj = _require_project(project_id)
+
+    cfg = proj.config or {}
+    include_raw = cfg.get("include_globs") if isinstance(cfg, dict) else None
+    exclude_raw = cfg.get("exclude_globs") if isinstance(cfg, dict) else None
+    include_globs = list(include_raw) if isinstance(include_raw, list) else list(_DEFAULT_UI_CONFIG.get("include_globs") or [])
+    exclude_globs = list(exclude_raw) if isinstance(exclude_raw, list) else list(_DEFAULT_UI_CONFIG.get("exclude_globs") or [])
+    max_file_bytes = int((cfg.get("max_file_bytes") or 400_000) if isinstance(cfg, dict) else 400_000)
+
+    if proj.mode == "embedded":
+        if "**/.codrag/**" not in exclude_globs:
+            exclude_globs.append("**/.codrag/**")
+
+    repo_root = Path(proj.path).expanduser().resolve()
+    if not repo_root.exists() or not repo_root.is_dir():
+        raise ApiException(status_code=400, code="PROJECT_PATH_MISSING", message="Project path not found")
+
+    rel_path = Path(str(path).strip().lstrip("/"))
+    if rel_path.is_absolute() or ".." in rel_path.parts:
+        raise ApiException(
+            status_code=400,
+            code="INVALID_PATH",
+            message="Invalid file path",
+            hint="Provide a repo-root-relative path without '..' segments.",
+        )
+
+    rel_str = str(rel_path)
+
+    def _glob_match(rel: str, pat: str) -> bool:
+        rel = rel.replace("\\", "/")
+        pat = str(pat or "")
+        if not pat:
+            return False
+        if fnmatch.fnmatch(rel, pat):
+            return True
+        if pat.startswith("**/") and fnmatch.fnmatch(rel, pat[3:]):
+            return True
+        return False
+
+    def _matches_any(rel: str, patterns: List[str]) -> bool:
+        for pat in patterns:
+            try:
+                if _glob_match(rel, str(pat)):
+                    return True
+            except Exception:
+                continue
+        return False
+
+    if not _matches_any(rel_str, include_globs):
+        raise ApiException(
+            status_code=403,
+            code="FILE_NOT_INCLUDED",
+            message="File is not included by project policy",
+            hint="Update include_globs to allow this file.",
+        )
+
+    if _matches_any(rel_str, exclude_globs):
+        raise ApiException(
+            status_code=403,
+            code="FILE_EXCLUDED",
+            message="File is excluded by project policy",
+            hint="Update exclude_globs to allow this file.",
+        )
+
+    abs_path = (repo_root / rel_path).resolve()
+    if not abs_path.is_relative_to(repo_root):
+        raise ApiException(
+            status_code=400,
+            code="INVALID_PATH",
+            message="Invalid file path",
+            hint="Provide a repo-root-relative path.",
+        )
+
+    if not abs_path.exists() or not abs_path.is_file():
+        raise ApiException(status_code=404, code="FILE_NOT_FOUND", message="File not found")
+
+    size = abs_path.stat().st_size
+    if size > max_file_bytes:
+        raise ApiException(
+            status_code=413,
+            code="FILE_TOO_LARGE",
+            message=f"File exceeds max_file_bytes ({max_file_bytes} bytes)",
+            hint="Increase max_file_bytes in project settings or pin a smaller file.",
+            details={"max_file_bytes": max_file_bytes, "bytes": size},
+        )
+
+    try:
+        with open(abs_path, "r", encoding="utf-8", errors="replace") as f:
+            content = f.read(max_file_bytes + 1)
+    except Exception:
+        raise ApiException(status_code=500, code="FILE_READ_FAILED", message="Failed to read file")
+
+    if len(content.encode("utf-8", errors="ignore")) > max_file_bytes:
+        raise ApiException(
+            status_code=413,
+            code="FILE_TOO_LARGE",
+            message=f"File exceeds max_file_bytes ({max_file_bytes} bytes)",
+            hint="Increase max_file_bytes in project settings or pin a smaller file.",
+            details={"max_file_bytes": max_file_bytes, "bytes": size},
+        )
+
+    return ok(
+        {
+            "file": {
+                "path": rel_str,
+                "name": abs_path.name,
+                "content": content,
+                "bytes": int(size),
+                "max_file_bytes": int(max_file_bytes),
+            }
+        }
+    )
+
+
+@app.get("/projects/{project_id}/roots")
+def get_project_roots(project_id: str) -> Dict[str, Any]:
+    """Get available root directories for a project."""
+    proj = _require_project(project_id)
+    project_root = Path(proj.path).expanduser().resolve()
+    
+    if not project_root.exists() or not project_root.is_dir():
+        raise ApiException(status_code=400, code="PROJECT_PATH_MISSING", message="Project path not found")
+
+    roots: List[str] = []
+    
+    # Generic discovery: list all top-level directories except ignored ones
+    ignore = {".git", ".venv", "node_modules", "__pycache__", ".next", "dist", "build", ".codrag", ".idea", ".vscode"}
+    try:
+        for item in sorted(project_root.iterdir()):
+            if not item.is_dir():
+                continue
+            if item.name.startswith("."):
+                continue
+            if item.name in ignore:
+                continue
+            roots.append(item.name)
+    except Exception:
+        pass
+
+    return ok({"roots": roots})
 
 
 @app.post("/projects/{project_id}/build")
@@ -1412,25 +1819,9 @@ def available_roots(repo_root: Optional[str] = None):
         raise HTTPException(status_code=400, detail=f"repo_root not found: {project_root}")
 
     roots: List[str] = []
-
-    docs_halley = project_root / "Docs_Halley"
-    if docs_halley.exists():
-        for item in sorted(docs_halley.iterdir()):
-            if item.is_dir() and item.name.startswith("Phase"):
-                roots.append(f"Docs_Halley/{item.name}")
-
-    known = [
-        "Docs_Halley/_MASTER_CROSSREFERENCE",
-        "halley_core",
-        "halley_core/frontend/src",
-        "code_index",
-        "config",
-    ]
-    for k in known:
-        if (project_root / k).exists() and k not in roots:
-            roots.append(k)
-
-    ignore = {".git", ".venv", "node_modules", "__pycache__", ".next", "dist", "build"}
+    
+    # Generic discovery: list all top-level directories except ignored ones
+    ignore = {".git", ".venv", "node_modules", "__pycache__", ".next", "dist", "build", ".codrag", ".idea", ".vscode"}
     try:
         for item in sorted(project_root.iterdir()):
             if not item.is_dir():
@@ -1439,8 +1830,7 @@ def available_roots(repo_root: Optional[str] = None):
                 continue
             if item.name in ignore:
                 continue
-            if item.name not in roots:
-                roots.append(item.name)
+            roots.append(item.name)
     except Exception:
         pass
 

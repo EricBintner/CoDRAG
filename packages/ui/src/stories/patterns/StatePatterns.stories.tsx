@@ -5,7 +5,7 @@ import { ErrorState } from '../../components/patterns/ErrorState';
 
 // EmptyState Stories
 const emptyStateMeta: Meta<typeof EmptyState> = {
-  title: 'Patterns/StatePatterns',
+  title: 'Foundations/Patterns/StatePatterns',
   component: EmptyState,
   tags: ['autodocs'],
   parameters: {

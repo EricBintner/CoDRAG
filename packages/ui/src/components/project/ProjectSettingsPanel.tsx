@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { cn } from '../../lib/utils';
 import type { ProjectConfig } from '../../types';
 import { Plus, X, Save } from 'lucide-react';
+import { Button } from '../primitives/Button';
 
 export interface ProjectSettingsPanelProps {
   config: ProjectConfig;
@@ -9,6 +10,7 @@ export interface ProjectSettingsPanelProps {
   onSave: () => void;
   isDirty?: boolean;
   className?: string;
+  bare?: boolean;
 }
 
 export function ProjectSettingsPanel({
@@ -17,6 +19,7 @@ export function ProjectSettingsPanel({
   onSave,
   isDirty = false,
   className,
+  bare = false,
 }: ProjectSettingsPanelProps) {
   const [includeInput, setIncludeInput] = useState('');
   const [excludeInput, setExcludeInput] = useState('');
@@ -77,7 +80,11 @@ export function ProjectSettingsPanel({
   );
 
   return (
-    <div className={cn('codrag-card space-y-8 bg-surface p-6 rounded-lg border border-border', className)}>
+    <div className={cn(
+      'space-y-8',
+      !bare && 'codrag-card bg-surface p-6 rounded-lg border border-border',
+      className
+    )}>
       {/* Include Globs */}
       <section>
         <h3 className="text-sm font-semibold text-text mb-1">Include Patterns</h3>
@@ -93,14 +100,15 @@ export function ProjectSettingsPanel({
             onKeyDown={(e) => e.key === 'Enter' && addIncludeGlob()}
             className="flex-1 bg-surface-raised border border-border rounded-md px-3 py-1.5 text-sm text-text placeholder:text-text-subtle focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all"
           />
-          <button 
+          <Button 
             onClick={addIncludeGlob}
             disabled={!includeInput.trim()}
-            className="px-3 py-1.5 bg-surface hover:bg-surface-raised border border-border rounded-md text-sm font-medium text-text disabled:opacity-50 transition-colors flex items-center gap-1"
+            size="sm"
+            variant="outline"
+            icon={Plus}
           >
-            <Plus className="w-4 h-4" />
             Add
-          </button>
+          </Button>
         </div>
         <div className="flex flex-wrap gap-2">
           {config.include_globs.map((glob) => (
@@ -109,12 +117,14 @@ export function ProjectSettingsPanel({
               className="inline-flex items-center gap-1.5 rounded-md bg-surface-raised border border-border px-2.5 py-1 text-xs text-text font-mono"
             >
               {glob}
-              <button
+              <Button
                 onClick={() => removeIncludeGlob(glob)}
-                className="text-text-subtle hover:text-error transition-colors rounded-full hover:bg-error-muted/10 p-0.5"
+                variant="ghost"
+                size="icon-sm"
+                className="h-4 w-4 p-0 hover:bg-error-muted/10 hover:text-error text-text-subtle"
               >
                 <X className="w-3 h-3" />
-              </button>
+              </Button>
             </span>
           ))}
         </div>
@@ -135,14 +145,15 @@ export function ProjectSettingsPanel({
             onKeyDown={(e) => e.key === 'Enter' && addExcludeGlob()}
             className="flex-1 bg-surface-raised border border-border rounded-md px-3 py-1.5 text-sm text-text placeholder:text-text-subtle focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all"
           />
-          <button 
+          <Button 
             onClick={addExcludeGlob}
             disabled={!excludeInput.trim()}
-            className="px-3 py-1.5 bg-surface hover:bg-surface-raised border border-border rounded-md text-sm font-medium text-text disabled:opacity-50 transition-colors flex items-center gap-1"
+            size="sm"
+            variant="outline"
+            icon={Plus}
           >
-            <Plus className="w-4 h-4" />
             Add
-          </button>
+          </Button>
         </div>
         <div className="flex flex-wrap gap-2">
           {config.exclude_globs.map((glob) => (
@@ -151,12 +162,14 @@ export function ProjectSettingsPanel({
               className="inline-flex items-center gap-1.5 rounded-md bg-surface-raised border border-border px-2.5 py-1 text-xs text-text font-mono"
             >
               {glob}
-              <button
+              <Button
                 onClick={() => removeExcludeGlob(glob)}
-                className="text-text-subtle hover:text-error transition-colors rounded-full hover:bg-error-muted/10 p-0.5"
+                variant="ghost"
+                size="icon-sm"
+                className="h-4 w-4 p-0 hover:bg-error-muted/10 hover:text-error text-text-subtle"
               >
                 <X className="w-3 h-3" />
-              </button>
+              </Button>
             </span>
           ))}
         </div>
@@ -243,13 +256,13 @@ export function ProjectSettingsPanel({
       {/* Save Button */}
       {isDirty && (
         <div className="pt-6 border-t border-border sticky bottom-0 bg-surface -mb-6 pb-6">
-          <button 
+          <Button 
             onClick={onSave}
-            className="w-full bg-primary hover:bg-primary-hover text-white rounded-md px-4 py-2 font-medium text-sm transition-colors shadow-sm flex items-center justify-center gap-2"
+            className="w-full shadow-sm"
+            icon={Save}
           >
-            <Save className="w-4 h-4" />
             Save Changes
-          </button>
+          </Button>
         </div>
       )}
     </div>

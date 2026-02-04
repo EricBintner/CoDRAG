@@ -1,4 +1,5 @@
-import { Card, Badge, Button } from '@tremor/react';
+import { Card, Badge } from '@tremor/react';
+import { Button } from '../primitives/Button';
 import { cn } from '../../lib/utils';
 import type { TraceStatus } from '../../types';
 
@@ -73,12 +74,12 @@ export function TraceStatusCard({
 
         <div className="flex gap-2">
           {!status.enabled && onEnableTrace && (
-            <Button size="xs" onClick={onEnableTrace}>
+            <Button size="sm" onClick={onEnableTrace}>
               Enable Trace
             </Button>
           )}
           {status.enabled && !status.building && onBuildTrace && (
-            <Button size="xs" variant="secondary" onClick={onBuildTrace}>
+            <Button size="sm" variant="secondary" onClick={onBuildTrace}>
               {status.exists ? 'Rebuild Trace' : 'Build Trace'}
             </Button>
           )}

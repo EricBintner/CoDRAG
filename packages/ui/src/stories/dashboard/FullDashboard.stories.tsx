@@ -1,22 +1,26 @@
 import type { Meta, StoryObj } from '@storybook/react';
-import { useState } from 'react';
-import { Database, RefreshCw } from 'lucide-react';
-import { Grid, Col, Card, Title, Flex, Badge, Text } from '@tremor/react';
+import { useState, useMemo, useCallback } from 'react';
+import { Database, RefreshCw, Network, Settings, FolderTree as FolderTreeIcon } from 'lucide-react';
+import { Badge } from '@tremor/react';
 import { IndexStatusCard } from '../../components/dashboard/IndexStatusCard';
 import { BuildCard } from '../../components/dashboard/BuildCard';
-import { IndexStatsDisplay, LLMStatusCard, StatItem, type LLMServiceStatus } from '../../components/dashboard/index';
+import { LLMStatusWidget, type LLMServiceStatus } from '../../components/dashboard/index';
 import { SearchPanel } from '../../components/search/SearchPanel';
 import { ContextOptionsPanel } from '../../components/search/ContextOptionsPanel';
 import { SearchResultsList } from '../../components/search/SearchResultsList';
 import type { SearchResult } from '../../types';
 import { ChunkPreview } from '../../components/search/ChunkPreview';
 import { ContextOutput } from '../../components/search/ContextOutput';
-import { FolderTree } from '../../components/project/FolderTree';
-import { sampleFileTree } from '../../components/project/index';
+import { FolderTree, sampleFileTree } from '../../components/project/index';
+import { FolderTreePanel } from '../../components/project/FolderTreePanel';
+import { PinnedTextFilesPanel, type PinnedTextFile } from '../../components/project/PinnedTextFilesPanel';
 import { TraceGraph, TraceGraphMini, SymbolSearchInput, type TraceNode } from '../../components/trace/index';
+import { ModularDashboard } from '../../components/layout/ModularDashboard';
+import type { PanelDefinition } from '../../types/layout';
+import { ProjectSettingsPanel } from '../../components/project/ProjectSettingsPanel';
 
 const meta: Meta = {
-  title: 'Pages/Dashboard',
+  title: 'Dashboard/Layouts/FullDashboard',
   tags: ['autodocs'],
   parameters: {
     layout: 'fullscreen',
@@ -24,13 +28,6 @@ const meta: Meta = {
 };
 
 export default meta;
-
-const sampleIndexStats: StatItem[] = [
-  { label: 'Total Files', value: 1234, change: '+12 today', trend: 'up' },
-  { label: 'Chunks', value: 12904, change: '+847 today', trend: 'up' },
-  { label: 'Embeddings', value: '768-dim', change: 'nomic-embed-text' },
-  { label: 'Last Build', value: '2m ago', change: 'Auto-rebuild on' },
-];
 
 const sampleTraceNodes: TraceNode[] = [
   { id: '1', name: 'build_project', kind: 'symbol', language: 'Python', inDegree: 3, outDegree: 5 },
@@ -84,6 +81,28 @@ const mockResults: SearchResult[] = [
   },
 ];
 
+import { PANEL_REGISTRY } from '../../config/panelRegistry';
+
+// Define panels for the story by extending the registry
+const STORY_PANELS: PanelDefinition[] = [
+  ...PANEL_REGISTRY,
+  { id: 'trace-mini', title: 'Trace Index', icon: Network, minHeight: 6, defaultHeight: 8, category: 'status', closeable: true, resizable: false },
+  { id: 'trace-explorer', title: 'Symbol Explorer', icon: Network, minHeight: 8, defaultHeight: 12, category: 'search', closeable: true },
+];
+
+// Recursive helper to find file name by path in the sample tree
+const findFileName = (nodes: typeof sampleFileTree, targetPath: string, currentPath = ''): string | undefined => {
+  for (const node of nodes) {
+    const nodePath = currentPath ? `${currentPath}/${node.name}` : node.name;
+    if (nodePath === targetPath) return node.name;
+    if (node.children) {
+      const found = findFileName(node.children, targetPath, nodePath);
+      if (found) return found;
+    }
+  }
+  return undefined;
+};
+
 export const FullDashboard: StoryObj = {
   render: () => {
     const [repoRoot, setRepoRoot] = useState('/path/to/my-project');
@@ -105,6 +124,45 @@ export const FullDashboard: StoryObj = {
     const [structured, setStructured] = useState(false);
     const [context, setContext] = useState('');
 
+    // RAG inclusion state (primary functionality)
+    const [includedPaths, setIncludedPaths] = useState<Set<string>>(new Set(['src', 'docs']));
+
+    const handleToggleInclude = useCallback((paths: string[], action: 'add' | 'remove') => {
+      setIncludedPaths((prev) => {
+        const next = new Set(prev);
+        for (const path of paths) {
+          if (action === 'remove') {
+            next.delete(path);
+          } else {
+            next.add(path);
+          }
+        }
+        return next;
+      });
+    }, []);
+
+    // Pinned files state (secondary functionality for detail view)
+    const [pinnedFiles, setPinnedFiles] = useState<PinnedTextFile[]>([]);
+
+    const handlePinFile = useCallback((path: string) => {
+      // Mock fetching file content
+      const name = findFileName(sampleFileTree, path) || path.split('/').pop() || 'unknown';
+      const newFile: PinnedTextFile = {
+        id: path,
+        path,
+        name,
+        content: `// Content for ${name}\n// Loaded from ${path}\n\nexport const ${name.replace(/\./g, '_')} = () => {\n  console.log("Hello from ${name}");\n};\n`
+      };
+      setPinnedFiles((files) => {
+        if (files.some(f => f.id === path)) return files;
+        return [...files, newFile];
+      });
+    }, []);
+
+    const handleUnpin = useCallback((fileId: string) => {
+      setPinnedFiles((files) => files.filter((f) => f.id !== fileId));
+    }, []);
+
     const handleBuild = () => {
       setBuilding(true);
       setTimeout(() => setBuilding(false), 2000);
@@ -122,150 +180,247 @@ export const FullDashboard: StoryObj = {
       setContext('# Source: src/api/client.ts ...');
     };
 
+    const panelContent = useMemo(() => ({
+      status: (
+        <div className="p-4">
+          <IndexStatusCard
+            stats={{
+              loaded: true,
+              total_documents: 1234,
+              model: 'nomic-embed-text',
+              built_at: new Date().toISOString(),
+              index_dir: 'LinuxBrain',
+            }}
+            building={building}
+            bare
+          />
+        </div>
+      ),
+      build: (
+        <div className="p-4">
+          <BuildCard
+            repoRoot={repoRoot}
+            onRepoRootChange={setRepoRoot}
+            onBuild={handleBuild}
+            building={building}
+            bare
+          />
+        </div>
+      ),
+      'llm-status': (
+        <div className="p-4">
+          <LLMStatusWidget services={sampleLLMServices} bare />
+        </div>
+      ),
+      search: (
+        <div className="p-4">
+          <SearchPanel
+            query={query}
+            onQueryChange={setQuery}
+            k={searchK}
+            onKChange={setSearchK}
+            minScore={minScore}
+            onMinScoreChange={setMinScore}
+            onSearch={handleSearch}
+            loading={searchLoading}
+            bare
+          />
+        </div>
+      ),
+      'context-options': (
+        <div className="p-4">
+          <ContextOptionsPanel
+            k={contextK}
+            onKChange={setContextK}
+            maxChars={maxChars}
+            onMaxCharsChange={setMaxChars}
+            includeSources={includeSources}
+            onIncludeSourcesChange={setIncludeSources}
+            includeScores={includeScores}
+            onIncludeScoresChange={setIncludeScores}
+            structured={structured}
+            onStructuredChange={setStructured}
+            onGetContext={handleGetContext}
+            onCopyContext={() => navigator.clipboard.writeText(context)}
+            hasContext={!!context}
+            disabled={!query.trim()}
+            bare
+          />
+        </div>
+      ),
+      results: (
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 h-full overflow-hidden p-4">
+          <div className="h-full overflow-y-auto min-h-0">
+            <SearchResultsList
+              results={results}
+              selectedId={selectedChunk?.chunk_id}
+              onSelect={setSelectedChunk}
+            />
+          </div>
+          <div className="h-full overflow-y-auto min-h-0 border-l border-border pl-4">
+            <ChunkPreview
+              content={selectedChunk?.content}
+              sourcePath={selectedChunk?.source_path}
+              section={selectedChunk?.section}
+              bare
+            />
+          </div>
+        </div>
+      ),
+      'context-output': (
+        <ContextOutput
+          context={context}
+          meta={context ? { chunks: [], total_chars: context.length, estimated_tokens: 100 } : null}
+          bare
+        />
+      ),
+      roots: (
+        <div className="h-full p-0">
+          <FolderTreePanel
+            data={sampleFileTree}
+            includedPaths={includedPaths}
+            onToggleInclude={handleToggleInclude}
+            className="h-full border-0 shadow-none"
+            title="Index Scope"
+            bare
+          />
+        </div>
+      ),
+      'file-tree': (
+        <div className="h-full p-0">
+          <FolderTreePanel
+            data={sampleFileTree}
+            includedPaths={includedPaths}
+            onToggleInclude={handleToggleInclude}
+            className="h-full border-0 shadow-none"
+            title="Project Files"
+            bare
+          />
+        </div>
+      ),
+      'pinned-files': (
+        <div className="h-full p-0">
+          <PinnedTextFilesPanel
+            files={pinnedFiles}
+            onUnpin={handleUnpin}
+            className="h-full border-0 shadow-none"
+            bare
+          />
+        </div>
+      ),
+      settings: (
+         <div className="p-4">
+           <ProjectSettingsPanel
+             config={{
+               include_globs: ['**/*.ts'],
+               exclude_globs: ['**/node_modules/**'],
+               max_file_bytes: 1024,
+               trace: { enabled: true },
+               auto_rebuild: { enabled: false }
+             }}
+             onChange={() => {}}
+             onSave={() => {}}
+             bare
+           />
+         </div>
+      ),
+      'trace-mini': (
+        <div className="space-y-4 p-4">
+          <div className="flex justify-between items-center">
+            <Badge color="blue" size="xs">Pro</Badge>
+          </div>
+          <TraceGraphMini nodeCount={847} edgeCount={2341} />
+        </div>
+      ),
+      'trace-explorer': (
+        <div className="h-full flex flex-col p-4">
+          <div className="mb-4">
+            <SymbolSearchInput 
+              value={symbolQuery}
+              onChange={setSymbolQuery}
+            />
+          </div>
+          <div className="flex-1 min-h-0">
+            <TraceGraph 
+              nodes={sampleTraceNodes} 
+              edges={[]} 
+              selectedNode={selectedTraceNode}
+              onSelectNode={setSelectedTraceNode}
+            />
+          </div>
+        </div>
+      )
+    }), [repoRoot, building, query, searchK, minScore, searchLoading, results, selectedChunk, contextK, maxChars, includeSources, includeScores, structured, context, symbolQuery, selectedTraceNode, includedPaths, pinnedFiles, handleToggleInclude, handleUnpin]);
+
+    const panelDetails = useMemo(() => ({
+      'llm-status': (
+        <div className="p-6">
+          <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
+            <Settings className="w-6 h-6" />
+            LLM Settings
+          </h2>
+          <div className="p-4 bg-surface-raised rounded-lg border border-border">
+            Mock AIModelsSettings content would go here.
+          </div>
+        </div>
+      ),
+      roots: (
+        <div className="p-6 h-full flex flex-col">
+          <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
+            <FolderTreeIcon className="w-6 h-6" />
+            File Explorer
+          </h2>
+          <div className="flex-1 border border-border rounded-lg overflow-hidden">
+            <FolderTree 
+              data={sampleFileTree}
+              includedPaths={includedPaths}
+              onToggleInclude={handleToggleInclude}
+              onNodeClick={(node, path) => {
+                if (node.type === 'file') handlePinFile(path);
+              }}
+            />
+          </div>
+        </div>
+      ),
+      'file-tree': (
+        <div className="p-6 h-full flex flex-col">
+          <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
+            <FolderTreeIcon className="w-6 h-6" />
+            File Explorer (Expanded)
+          </h2>
+          <div className="flex-1 border border-border rounded-lg overflow-hidden">
+            <FolderTree 
+              data={sampleFileTree}
+              includedPaths={includedPaths}
+              onToggleInclude={handleToggleInclude}
+              onNodeClick={(node, path) => {
+                if (node.type === 'file') handlePinFile(path);
+              }}
+            />
+          </div>
+        </div>
+      )
+    }), [includedPaths, handleToggleInclude, handlePinFile]);
+
     return (
       <div className="min-h-screen bg-background p-6">
-        <div className="max-w-7xl mx-auto space-y-6">
-          <header className="flex items-center justify-between">
+        <ModularDashboard
+          panelDefinitions={STORY_PANELS}
+          panelContent={panelContent}
+          panelDetails={panelDetails}
+          storageKey="storybook_fulldashboard_layout"
+          headerLeft={
             <h1 className="text-2xl font-bold flex items-center gap-2 text-text">
               <Database className="w-6 h-6" />
               Code Index Dashboard
             </h1>
+          }
+          headerRight={
             <button className="p-2 rounded hover:bg-surface-raised transition text-text-muted">
               <RefreshCw className="w-5 h-5" />
             </button>
-          </header>
-
-          <IndexStatsDisplay stats={sampleIndexStats} />
-
-          <Grid numItems={1} numItemsLg={3} className="gap-6">
-             {/* Left Column: Project & Search */}
-             <Col numColSpan={1} numColSpanLg={2}>
-               <div className="space-y-6">
-                 {/* Project Status */}
-                 <div className="space-y-4">
-                   <IndexStatusCard
-                    stats={{
-                      loaded: true,
-                      total_documents: 1234,
-                      model: 'nomic-embed-text',
-                      built_at: new Date().toISOString(),
-                      index_dir: 'LinuxBrain',
-                    }}
-                    building={building}
-                   />
-                   <BuildCard
-                    repoRoot={repoRoot}
-                    onRepoRootChange={setRepoRoot}
-                    onBuild={handleBuild}
-                    building={building}
-                   />
-                 </div>
-
-                 {/* Search */}
-                 <SearchPanel
-                  query={query}
-                  onQueryChange={setQuery}
-                  k={searchK}
-                  onKChange={setSearchK}
-                  minScore={minScore}
-                  onMinScoreChange={setMinScore}
-                  onSearch={handleSearch}
-                  loading={searchLoading}
-                 />
-
-                 {results.length > 0 && (
-                   <SearchResultsList
-                    results={results}
-                    selectedId={selectedChunk?.chunk_id}
-                    onSelect={setSelectedChunk}
-                   />
-                 )}
-               </div>
-             </Col>
-
-             {/* Right Column: Files & Trace */}
-             <Col>
-               <div className="space-y-6">
-                 {/* Folder Tree */}
-                 <Card className="border border-border bg-surface shadow-sm">
-                   <Flex justifyContent="between" alignItems="center" className="mb-4">
-                     <Title className="text-text">Indexed Files</Title>
-                     <Badge color="gray" size="xs">1,234 files</Badge>
-                   </Flex>
-                   <div className="max-h-[300px] overflow-y-auto -mx-2">
-                     <FolderTree data={sampleFileTree} />
-                   </div>
-                 </Card>
-
-                 {/* Trace Graph Mini */}
-                 <Card className="border border-border bg-surface shadow-sm">
-                   <Flex justifyContent="between" alignItems="center" className="mb-4">
-                     <Title className="text-text">Trace Index</Title>
-                     <Badge color="blue" size="xs">Pro</Badge>
-                   </Flex>
-                   <TraceGraphMini nodeCount={847} edgeCount={2341} />
-                   <Text className="text-text-subtle text-xs mt-3">
-                     Symbol relationships and import graph
-                   </Text>
-                 </Card>
-
-                 {/* LLM Services */}
-                 <LLMStatusCard services={sampleLLMServices} />
-
-                 {/* Context Controls */}
-                 <ContextOptionsPanel
-                  k={contextK}
-                  onKChange={setContextK}
-                  maxChars={maxChars}
-                  onMaxCharsChange={setMaxChars}
-                  includeSources={includeSources}
-                  onIncludeSourcesChange={setIncludeSources}
-                  includeScores={includeScores}
-                  onIncludeScoresChange={setIncludeScores}
-                  structured={structured}
-                  onStructuredChange={setStructured}
-                  onGetContext={handleGetContext}
-                  onCopyContext={() => navigator.clipboard.writeText(context)}
-                  hasContext={!!context}
-                  disabled={!query.trim()}
-                 />
-               </div>
-             </Col>
-          </Grid>
-
-          {/* Trace Details Row */}
-          <Grid numItems={1} numItemsLg={2} className="gap-6">
-            <Card className="border border-border bg-surface shadow-sm">
-              <Title className="text-text mb-4">Symbol Explorer</Title>
-              <div className="mb-6">
-                <SymbolSearchInput 
-                  value={symbolQuery}
-                  onChange={setSymbolQuery}
-                />
-              </div>
-              <TraceGraph 
-                nodes={sampleTraceNodes} 
-                edges={[]} 
-                selectedNode={selectedTraceNode}
-                onSelectNode={setSelectedTraceNode}
-              />
-            </Card>
-
-            <div className="space-y-6">
-               {selectedChunk && (
-                 <ChunkPreview
-                   content={selectedChunk.content}
-                   sourcePath={selectedChunk.source_path}
-                   section={selectedChunk.section}
-                 />
-               )}
-               <ContextOutput
-                 context={context}
-                 meta={context ? { chunks: [], total_chars: context.length, estimated_tokens: 100 } : null}
-               />
-            </div>
-          </Grid>
-        </div>
+          }
+        />
       </div>
     );
   },
@@ -273,42 +428,47 @@ export const FullDashboard: StoryObj = {
 
 export const EmptyState: StoryObj = {
   render: () => {
+    const panelContent = {
+      status: (
+        <div className="p-4">
+          <IndexStatusCard stats={{ loaded: false }} bare />
+        </div>
+      ),
+      build: (
+        <div className="p-4">
+          <BuildCard repoRoot="" onRepoRootChange={() => {}} onBuild={() => {}} bare />
+        </div>
+      ),
+      search: (
+        <div className="p-4">
+          <SearchPanel
+            query=""
+            onQueryChange={() => {}}
+            k={8}
+            onKChange={() => {}}
+            minScore={0.15}
+            onMinScoreChange={() => {}}
+            onSearch={() => {}}
+            disabled
+            bare
+          />
+        </div>
+      ),
+    };
+
     return (
       <div className="min-h-screen bg-background p-6">
-        <div className="max-w-7xl mx-auto space-y-6">
-          <header className="flex items-center justify-between">
+        <ModularDashboard
+          panelDefinitions={STORY_PANELS}
+          panelContent={panelContent}
+          storageKey="storybook_emptystate_layout"
+          headerLeft={
             <h1 className="text-2xl font-bold flex items-center gap-2 text-text">
               <Database className="w-6 h-6" />
               Code Index Dashboard
             </h1>
-          </header>
-
-          <Grid numItems={1} numItemsLg={3} className="gap-6">
-            <Col numColSpan={1} numColSpanLg={2}>
-              <div className="space-y-6">
-                 <IndexStatusCard stats={{ loaded: false }} />
-                 <BuildCard
-                    repoRoot=""
-                    onRepoRootChange={() => {}}
-                    onBuild={() => {}}
-                 />
-                 <SearchPanel
-                    query=""
-                    onQueryChange={() => {}}
-                    k={8}
-                    onKChange={() => {}}
-                    minScore={0.15}
-                    onMinScoreChange={() => {}}
-                    onSearch={() => {}}
-                    disabled
-                 />
-              </div>
-            </Col>
-            <Col>
-              {/* Empty right column */}
-            </Col>
-          </Grid>
-        </div>
+          }
+        />
       </div>
     );
   },

@@ -1,5 +1,6 @@
 import { cn } from '../../lib/utils';
 import { X } from 'lucide-react';
+import { Button } from '../primitives/Button';
 
 export interface ProjectTab {
   id: string;
@@ -52,21 +53,23 @@ export function ProjectTabs({
             <span className="truncate text-sm pr-6 w-full">
               {tab.name}
             </span>
-            <button
+            <Button
+              variant="ghost"
+              size="icon-sm"
               onClick={(e) => {
                 e.stopPropagation();
                 onTabClose(tab.id);
               }}
               className={cn(
-                'absolute right-2 top-1/2 -translate-y-1/2 p-0.5 rounded-full',
-                'text-text-subtle hover:text-text hover:bg-surface-raised',
+                'absolute right-1 top-1/2 -translate-y-1/2 w-6 h-6',
+                'text-text-subtle hover:text-text',
                 'opacity-0 group-hover:opacity-100 transition-opacity',
                 isActive && 'opacity-100' // Always show close on active tab
               )}
-              title={`Close ${tab.name}`}
+              aria-label={`Close ${tab.name}`}
             >
-              <X className="w-3.5 h-3.5" />
-            </button>
+              <X className="w-3 h-3" />
+            </Button>
           </div>
         );
       })}

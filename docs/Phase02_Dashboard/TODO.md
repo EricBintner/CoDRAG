@@ -105,3 +105,62 @@ Relevant entries in `../MASTER_TODO.md`:
 ## Notes / blockers
 - [ ] Decide where “project path” is shown vs hidden (future remote mode redaction requirements)
 - [ ] Decide whether the dashboard needs a “diagnostics” panel in MVP (Phase07 suggests it)
+
+## Pinned Files feature (dashboard panels) — status, research, plan
+
+### Completed
+- [x] UI: added new dashboard panel category `projects` and default layout entries for:
+  - `file-tree` (hidden by default)
+  - `pinned-files` (hidden by default)
+- [x] UI: registered panel definitions in `packages/ui/src/config/panelRegistry.ts`:
+  - `file-tree`
+  - `pinned-files`
+- [x] UI: `FolderTree` now propagates `onNodeClick` down the entire tree (nested items).
+- [x] Backend: added canonical endpoint for file content (project-scoped):
+  - `GET /projects/{project_id}/file?path=<repo-root-relative-path>`
+  - Guards:
+    - path traversal prevention (`..`, absolute paths)
+    - repo-root containment checks
+    - `max_file_bytes` limit
+    - include/exclude policy checks
+
+### Remaining TODOs
+- [ ] Frontend: add `usePinnedFiles` hook
+  - localStorage persistence (paths + ordering)
+  - fetch content for pinned paths via backend endpoint
+  - error + loading states per file
+- [ ] Frontend: wire panels into `src/codrag/dashboard/src/App.tsx`
+  - replace/augment existing `roots` sidebar/tree usage with `FolderTreePanel`
+  - add `PinnedTextFilesPanel` into `panelContent`
+  - ensure panel registry/layout picker shows the new `projects` category
+- [ ] Storybook: update `packages/ui/src/stories/dashboard/FullDashboard.stories.tsx`
+  - include `FolderTreePanel` and `PinnedTextFilesPanel`
+  - demonstrate pin/unpin interaction
+- [ ] UI package polish:
+  - add missing `.hide-scrollbar` and `.custom-scrollbar` utilities to `packages/ui/src/styles/index.css`
+  - export `FolderTreePanel` and `PinnedTextFilesPanel` from UI barrels (and update package exports if needed)
+
+### Research notes (backend file content)
+- There was no existing endpoint to fetch arbitrary file content by repo-root-relative path; existing endpoints were chunk-oriented.
+- The file content endpoint must be **project-scoped** under `/projects/{project_id}` (canonical API surface).
+- Path and policy safety:
+  - We prevent traversal via `..` parts and absolute paths.
+  - We ensure the resolved absolute path is inside `repo_root`.
+  - We enforce `max_file_bytes`.
+  - We enforce include/exclude globs.
+
+### Important implementation note (glob matching)
+- Python `Path.match()` has surprising semantics with patterns like `**/*.md` and `**/.git/**` for root-level paths (e.g. `README.md` and `.git/...`).
+- The endpoint currently uses `fnmatch` + a small normalization rule: if a pattern starts with `**/`, also test the same pattern with that prefix stripped.
+  - This allows root-level `README.md` to match `**/*.md`.
+  - This also allows root-level `node_modules/...` or `.git/...` to match the equivalent without `**/`.
+
+### Next integration plan
+- Add `getProjectFileContent(projectId, path)` to `packages/ui/src/api/client.ts` + TS types.
+- Implement `usePinnedFiles({ projectId })` in the dashboard app:
+  - source of truth: `Set<string>` of pinned paths + ordered array
+  - derive `PinnedTextFile[]` by fetching content
+  - map `path -> id` (e.g. stable `id = path`)
+- Wire:
+  - `FolderTreePanel` gets `pinnedPaths` + `onTogglePin`.
+  - `PinnedTextFilesPanel` gets `files` + `onUnpin`.

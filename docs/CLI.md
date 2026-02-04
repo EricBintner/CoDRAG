@@ -415,6 +415,8 @@ codrag mcp [OPTIONS]
 | `--mode` | `-m` | `server` | Mode: `server` or `direct` |
 | `--daemon` | `-d` | `http://127.0.0.1:8400` | CoDRAG daemon URL |
 | `--repo-root` | `-r` | CWD | Repository root (direct mode) |
+| `--debug` |  | `false` | Enable debug logging (stderr) |
+| `--log-file` |  | none | Write MCP debug logs to a file (rotating) |
 
 **Modes:**
 
@@ -479,7 +481,7 @@ codrag mcp-config --mode project --project abc123 --ide cursor
   "mcpServers": {
     "codrag": {
       "command": "codrag",
-      "args": ["mcp", "--auto"]
+      "args": ["mcp", "--auto", "--daemon", "http://127.0.0.1:8400"]
     }
   }
 }

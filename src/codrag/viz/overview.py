@@ -19,6 +19,7 @@ def render_dashboard(
     health_stats: dict,
     activity_data: ActivityHeatmapData,
     trace_stats: dict,
+    weeks: int = 12,
     console: Console | None = None
 ) -> None:
     """
@@ -73,7 +74,7 @@ def render_dashboard(
     render_index_health(health_stats, console=console)
     console.print("")
     
-    render_activity_heatmap(activity_data, weeks=12, console=console)
+    render_activity_heatmap(activity_data, weeks=weeks, console=console)
     console.print("")
     
     render_trace_stats(trace_stats, console=console)

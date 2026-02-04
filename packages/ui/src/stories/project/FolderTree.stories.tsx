@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { FolderTree, sampleFileTree, TreeNode } from '../../components/project';
 
 const meta: Meta<typeof FolderTree> = {
-  title: 'Project/FolderTree',
+  title: 'Dashboard/Widgets/FolderTree',
   component: FolderTree,
   parameters: {
     layout: 'padded',
@@ -27,17 +27,38 @@ export const Compact: Story = {
   },
 };
 
-export const Selectable: Story = {
+export const RagInclusion: Story = {
   render: () => {
-    const [selectedPaths, setSelectedPaths] = useState<Set<string>>(new Set(['src/codrag/core']));
+    // Initialize with paths that have indexed/pending status in the sample data
+    const [includedPaths, setIncludedPaths] = useState<Set<string>>(new Set([
+      'src',
+      'src/codrag',
+      'src/codrag/server.py',
+      'src/codrag/cli.py',
+      'src/codrag/__init__.py',
+      'src/codrag/core',
+      'src/codrag/core/registry.py',
+      'src/codrag/core/embedding.py',
+      'src/codrag/core/trace.py',
+      'src/codrag/core/watcher.py',
+      'src/codrag/api',
+      'src/codrag/api/routes.py',
+      'src/codrag/api/auth.py',
+      'docs',
+      'docs/ARCHITECTURE.md',
+      'docs/API.md',
+      'docs/ROADMAP.md',
+    ]));
 
-    const handleSelect = (_node: TreeNode, path: string) => {
-      setSelectedPaths((prev) => {
+    const handleToggleInclude = (paths: string[], action: 'add' | 'remove') => {
+      setIncludedPaths((prev) => {
         const next = new Set(prev);
-        if (next.has(path)) {
-          next.delete(path);
-        } else {
-          next.add(path);
+        for (const path of paths) {
+          if (action === 'remove') {
+            next.delete(path);
+          } else {
+            next.add(path);
+          }
         }
         return next;
       });
@@ -45,17 +66,47 @@ export const Selectable: Story = {
 
     return (
       <div className="space-y-4">
-        <div className="text-sm text-gray-400">
-          Selected: {selectedPaths.size > 0 ? Array.from(selectedPaths).join(', ') : 'None'}
+        <div className="p-3 bg-surface-raised rounded-lg border border-border">
+          <div className="text-xs text-text-subtle mb-1">Folder Selection Behavior</div>
+          <div className="text-sm text-text-muted space-y-1">
+            <div>• <strong>Click folder row</strong> → selects/deselects ALL children recursively</div>
+            <div>• <strong>Click arrow (▶)</strong> → only expands/collapses folder</div>
+            <div>• <strong>Click file</strong> → toggles just that file</div>
+            <div>• <span className="text-primary/60">Partial selection</span> = some children selected (folder stays bold)</div>
+            <div>• <span className="text-text-subtle opacity-50">Ignored items</span> (like node_modules) cannot be selected</div>
+          </div>
+        </div>
+        <div className="text-xs text-text-subtle">
+          Included: {includedPaths.size} paths
         </div>
         <FolderTree
           data={sampleFileTree}
-          selectable
-          onSelect={handleSelect}
-          selectedPaths={selectedPaths}
+          includedPaths={includedPaths}
+          onToggleInclude={handleToggleInclude}
         />
       </div>
     );
+  },
+  parameters: {
+    docs: {
+      description: {
+        story: `
+**RAG Inclusion** is the primary functionality of the FolderTree.
+
+**Status Flow:**
+- **Unselected items**: No indicator - user hasn't added them to RAG
+- **Selected → Pending**: Item is queued for indexing
+- **Pending → Indexed**: Item has been processed, shows chunk count
+- **Ignored**: Items like node_modules that cannot be selected
+
+**Interaction:**
+- Click anywhere on a row to toggle selection (not just the icon)
+- Folders expand/collapse AND toggle selection on click
+- Chevron button only toggles expand/collapse
+- Ignored items have no hover state and cannot be clicked
+        `,
+      },
+    },
   },
 };
 

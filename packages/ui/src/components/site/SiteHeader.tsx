@@ -1,6 +1,7 @@
 import { Badge } from '@tremor/react';
 import { Box, Menu, Search, X } from 'lucide-react';
 import { useState } from 'react';
+import { Button } from '../primitives/Button';
 
 export interface NavLink {
   label: string;
@@ -92,12 +93,14 @@ export function SiteHeader({
             {actions}
           </div>
 
-          <button
-            className="md:hidden p-2 text-text-muted hover:bg-surface-raised rounded-md"
+          <Button
+            variant="ghost"
+            size="icon"
+            className="md:hidden"
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
           >
             {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
-          </button>
+          </Button>
         </div>
       </div>
 

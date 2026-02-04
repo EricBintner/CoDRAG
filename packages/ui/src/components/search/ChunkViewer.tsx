@@ -2,6 +2,7 @@ import type { CodeChunk } from '../../types';
 import { CopyButton } from '../context/CopyButton';
 import { cn } from '../../lib/utils';
 import { X, FileCode } from 'lucide-react';
+import { Button } from '../primitives/Button';
 
 export interface ChunkViewerProps {
   chunk: CodeChunk;
@@ -46,13 +47,15 @@ export function ChunkViewer({
         <div className="flex gap-2">
           <CopyButton text={chunk.content} />
           {onClose && (
-            <button
+            <Button
+              variant="ghost"
+              size="icon-sm"
               onClick={onClose}
-              className="p-1.5 rounded-md hover:bg-surface-raised text-text-muted hover:text-text transition-colors"
-              title="Close"
+              className="text-text-muted hover:text-text"
+              aria-label="Close"
             >
               <X className="w-4 h-4" />
-            </button>
+            </Button>
           )}
         </div>
       </div>

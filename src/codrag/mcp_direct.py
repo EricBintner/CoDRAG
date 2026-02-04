@@ -15,7 +15,7 @@ import threading
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
-from codrag.core import CodeIndex, OllamaEmbedder, TraceIndex
+from codrag.core import CodeIndex, OllamaEmbedder, FakeEmbedder, TraceIndex, Embedder
 from codrag.mcp_tools import TOOLS
 
 # Configure logging to stderr (stdout reserved for MCP JSON-RPC)
@@ -64,6 +64,7 @@ class DirectMCPServer:
         index_dir: Optional[Path | str] = None,
         ollama_url: str = "http://localhost:11434",
         model: str = "nomic-embed-text",
+        embedder: Optional[Embedder] = None,
     ):
         self.repo_root = Path(repo_root).resolve()
         
@@ -75,6 +76,7 @@ class DirectMCPServer:
             
         self.ollama_url = ollama_url
         self.model = model
+        self._injected_embedder = embedder  # For testing without Ollama
         
         self._index: Optional[CodeIndex] = None
         self._trace_index: Optional[TraceIndex] = None
@@ -95,7 +97,7 @@ class DirectMCPServer:
     def _load_index(self):
         """Synchronous load of index components."""
         try:
-            embedder = OllamaEmbedder(model=self.model, base_url=self.ollama_url)
+            embedder = self._injected_embedder or OllamaEmbedder(model=self.model, base_url=self.ollama_url)
             self._index = CodeIndex(index_dir=self.index_dir, embedder=embedder)
             
             # Trace index shares the same dir usually

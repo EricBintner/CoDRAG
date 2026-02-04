@@ -1,5 +1,6 @@
 import { cn } from '../../lib/utils';
 import { HardDrive, GitBranch, AlertTriangle, CheckCircle, Folder, RefreshCw } from 'lucide-react';
+import { Button } from '../primitives/Button';
 
 export interface EmbeddedModeIndicatorProps {
   isEmbedded: boolean;
@@ -72,13 +73,14 @@ export function EmbeddedModeIndicator({
               <p className="font-medium text-error mb-1">Merge Conflicts Detected</p>
               <p className="text-error/90 text-xs mb-2">The embedded index has git merge conflicts and is invalid.</p>
               {onRebuild && (
-                <button 
+                <Button 
                   onClick={onRebuild}
-                  className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded bg-error text-white text-xs font-medium hover:bg-error-hover transition-colors"
+                  variant="destructive"
+                  size="sm"
+                  icon={RefreshCw}
                 >
-                  <RefreshCw className="w-3.5 h-3.5" />
                   Rebuild Index
-                </button>
+                </Button>
               )}
             </div>
           </div>
@@ -93,13 +95,15 @@ export function EmbeddedModeIndicator({
               <p className="font-medium text-warning mb-1">Index Not Built</p>
               <p className="text-warning/90 text-xs mb-2">Build the index to enable search.</p>
               {onRebuild && (
-                <button 
+                <Button 
                   onClick={onRebuild}
-                  className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded bg-surface hover:bg-surface-raised text-warning border border-warning/20 text-xs font-medium transition-colors shadow-sm"
+                  variant="outline"
+                  size="sm"
+                  icon={RefreshCw}
+                  className="border-warning/20 text-warning hover:bg-warning-muted/10 hover:text-warning"
                 >
-                  <RefreshCw className="w-3.5 h-3.5" />
                   Build Index
-                </button>
+                </Button>
               )}
             </div>
           </div>

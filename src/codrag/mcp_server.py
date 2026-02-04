@@ -18,11 +18,20 @@ from __future__ import annotations
 import asyncio
 import json
 import logging
+from logging.handlers import RotatingFileHandler
 import sys
+import uuid
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
 import httpx
+try:
+    from fastapi import FastAPI, Request, Response
+    from fastapi.responses import StreamingResponse
+    import uvicorn
+except ImportError:
+    FastAPI = None
+    uvicorn = None
 
 # Configure logging to stderr (stdout reserved for MCP JSON-RPC)
 logging.basicConfig(
@@ -31,6 +40,32 @@ logging.basicConfig(
     stream=sys.stderr,
 )
 logger = logging.getLogger(__name__)
+
+
+def configure_logging(*, debug: bool = False, log_file: Optional[str] = None) -> None:
+    stderr_level = logging.DEBUG if debug else logging.WARNING
+    root = logging.getLogger()
+    for h in root.handlers:
+        if isinstance(h, logging.StreamHandler) and getattr(h, "stream", None) is sys.stderr:
+            h.setLevel(stderr_level)
+
+    if log_file:
+        path = Path(str(log_file)).expanduser().resolve()
+        path.parent.mkdir(parents=True, exist_ok=True)
+
+        for h in root.handlers:
+            if isinstance(h, RotatingFileHandler) and getattr(h, "baseFilename", "") == str(path):
+                break
+        else:
+            fh = RotatingFileHandler(str(path), maxBytes=1_000_000, backupCount=3)
+            fh.setLevel(logging.DEBUG)
+            fh.setFormatter(
+                logging.Formatter("%(asctime)s %(levelname)s %(name)s: %(message)s")
+            )
+            root.addHandler(fh)
+
+    root.setLevel(logging.DEBUG if (debug or log_file) else logging.WARNING)
+    logger.setLevel(logging.DEBUG if (debug or log_file) else logging.WARNING)
 
 
 # =============================================================================
@@ -52,6 +87,11 @@ DAEMON_UNAVAILABLE = -32000
 INDEX_NOT_READY = -32001
 BUILD_IN_PROGRESS = -32002
 PROJECT_NOT_FOUND = -32003
+PROJECT_SELECTION_AMBIGUOUS = -32004
+
+MAX_SEARCH_K = 50
+MAX_CONTEXT_K = 50
+MAX_CONTEXT_CHARS = 20_000
 
 
 from codrag.mcp_tools import TOOLS
@@ -127,6 +167,7 @@ class MCPServer:
         if not path.startswith("/"):
             path = "/" + path
         url = f"{self.daemon_url}{path}"
+        logger.debug(f"GET {url}")
         try:
             resp = await client.get(url)
             resp.raise_for_status()
@@ -153,6 +194,7 @@ class MCPServer:
         if not path.startswith("/"):
             path = "/" + path
         url = f"{self.daemon_url}{path}"
+        logger.debug(f"POST {url} payload_keys={list(payload.keys())}")
         try:
             resp = await client.post(url, json=payload)
             resp.raise_for_status()
@@ -191,23 +233,51 @@ class MCPServer:
         if not projects:
             raise ProjectNotFoundError("No projects configured in daemon")
 
+        def _project_lines() -> List[str]:
+            lines: List[str] = []
+            for p in projects:
+                pid = str(p.get("id") or "").strip()
+                if not pid:
+                    continue
+                name = str(p.get("name") or "").strip() or "(unnamed)"
+                path = str(p.get("path") or "").strip()
+                lines.append(f"- {pid}: {name} ({path})")
+            return lines
+
         if self.auto_detect:
-            best_id: Optional[str] = None
-            best_len = -1
+            matches: List[Dict[str, Any]] = []
             for p in projects:
                 pid = p.get("id")
                 p_path = str(p.get("path") or "").rstrip("/")
                 if not pid or not p_path:
                     continue
                 if cwd == p_path or cwd.startswith(p_path + "/"):
-                    if len(p_path) > best_len:
-                        best_id = str(pid)
-                        best_len = len(p_path)
+                    matches.append(p)
 
-            if best_id:
-                self._resolved_project_id = best_id
-                self._resolved_project_cwd = cwd
-                return best_id
+            if matches:
+                max_len = max(len(str(p.get("path") or "").rstrip("/")) for p in matches)
+                best = [
+                    p
+                    for p in matches
+                    if len(str(p.get("path") or "").rstrip("/")) == max_len
+                ]
+                if len(best) == 1 and best[0].get("id"):
+                    best_id = str(best[0].get("id"))
+                    self._resolved_project_id = best_id
+                    self._resolved_project_cwd = cwd
+                    logger.debug(
+                        f"Auto-detected project_id={best_id} cwd={cwd} path={best[0].get('path')}"
+                    )
+                    return best_id
+
+                msg = (
+                    "PROJECT_SELECTION_AMBIGUOUS: Multiple projects match current working directory.\n"
+                    f"cwd: {cwd}\n\n"
+                    "Projects:\n"
+                    + "\n".join(_project_lines())
+                    + "\n\nHint: Run MCP with --project <id> to pin a project."
+                )
+                raise ProjectSelectionAmbiguousError(msg)
 
         if len(projects) == 1 and projects[0].get("id"):
             pid = str(projects[0].get("id"))
@@ -216,7 +286,24 @@ class MCPServer:
                 self._resolved_project_cwd = cwd
             return pid
 
-        raise ProjectNotFoundError("Multiple projects available; pin a project_id or enable auto_detect")
+        lines = _project_lines()
+        if self.auto_detect:
+            msg = (
+                "PROJECT_NOT_FOUND: No project matched current working directory.\n"
+                f"cwd: {cwd}\n\n"
+                "Projects:\n"
+                + "\n".join(lines)
+                + "\n\nHint: Run MCP with --project <id>, or run MCP with --auto from inside a project directory."
+            )
+            raise ProjectNotFoundError(msg)
+
+        msg = (
+            "PROJECT_SELECTION_AMBIGUOUS: Multiple projects are configured; selection is ambiguous.\n\n"
+            "Projects:\n"
+            + "\n".join(lines)
+            + "\n\nHint: Run MCP with --project <id> to pin a project, or use --auto to select based on cwd."
+        )
+        raise ProjectSelectionAmbiguousError(msg)
 
     # -------------------------------------------------------------------------
     # Tool Implementations
@@ -267,6 +354,22 @@ class MCPServer:
         if not query.strip():
             raise InvalidParamsError("query is required")
 
+        try:
+            k = int(k)
+        except Exception:
+            raise InvalidParamsError("k must be an integer")
+        if k < 1:
+            raise InvalidParamsError("k must be >= 1")
+        if k > MAX_SEARCH_K:
+            raise InvalidParamsError(f"k too large (max {MAX_SEARCH_K})")
+
+        try:
+            min_score = float(min_score)
+        except Exception:
+            raise InvalidParamsError("min_score must be a number")
+        if min_score < 0.0 or min_score > 1.0:
+            raise InvalidParamsError("min_score must be between 0 and 1")
+
         project_id = await self._resolve_project_id()
         data = await self._api_post(f"/projects/{project_id}/search", {
             "query": query,
@@ -300,6 +403,24 @@ class MCPServer:
         """Get assembled context."""
         if not query.strip():
             raise InvalidParamsError("query is required")
+
+        try:
+            k = int(k)
+        except Exception:
+            raise InvalidParamsError("k must be an integer")
+        if k < 1:
+            raise InvalidParamsError("k must be >= 1")
+        if k > MAX_CONTEXT_K:
+            raise InvalidParamsError(f"k too large (max {MAX_CONTEXT_K})")
+
+        try:
+            max_chars = int(max_chars)
+        except Exception:
+            raise InvalidParamsError("max_chars must be an integer")
+        if max_chars < 1:
+            raise InvalidParamsError("max_chars must be >= 1")
+        if max_chars > MAX_CONTEXT_CHARS:
+            raise InvalidParamsError(f"max_chars too large (max {MAX_CONTEXT_CHARS})")
 
         project_id = await self._resolve_project_id()
         data = await self._api_post(f"/projects/{project_id}/context", {
@@ -463,6 +584,10 @@ class ProjectNotFoundError(DaemonError):
     code = PROJECT_NOT_FOUND
 
 
+class ProjectSelectionAmbiguousError(DaemonError):
+    code = PROJECT_SELECTION_AMBIGUOUS
+
+
 # =============================================================================
 # stdio Transport
 # =============================================================================
@@ -516,6 +641,88 @@ async def run_stdio(server: MCPServer) -> None:
         await server.close()
 
 
+async def run_http(
+    daemon_url: str,
+    project_id: Optional[str],
+    auto_detect: bool,
+    host: str,
+    port: int
+) -> None:
+    """Run the MCP server over HTTP SSE transport."""
+    if not FastAPI or not uvicorn:
+        logger.error("FastAPI/Uvicorn not installed. Cannot run HTTP transport.")
+        sys.exit(1)
+
+    app = FastAPI()
+    
+    # Session state: sessionId -> {"queue": asyncio.Queue, "server": MCPServer}
+    sessions: Dict[str, Dict[str, Any]] = {}
+
+    @app.get("/sse")
+    async def sse(request: Request):
+        session_id = uuid.uuid4().hex
+        queue = asyncio.Queue()
+        
+        server = MCPServer(
+            daemon_url=daemon_url,
+            project_id=project_id,
+            auto_detect=auto_detect
+        )
+        sessions[session_id] = {"queue": queue, "server": server}
+        
+        async def event_generator():
+            endpoint = f"/message?sessionId={session_id}"
+            yield f"event: endpoint\ndata: {endpoint}\n\n"
+            
+            try:
+                while True:
+                    # Keep connection alive with periodic comments if needed,
+                    # but typically just wait for messages.
+                    # uvicorn/starlette handles disconnects via cancelled error.
+                    message = await queue.get()
+                    yield f"event: message\ndata: {json.dumps(message)}\n\n"
+            except asyncio.CancelledError:
+                pass
+            finally:
+                await server.close()
+                if session_id in sessions:
+                    del sessions[session_id]
+
+        return StreamingResponse(event_generator(), media_type="text/event-stream")
+
+    @app.post("/message")
+    async def handle_message(request: Request, sessionId: str):
+        if sessionId not in sessions:
+            return Response(status_code=404, content="Session not found")
+            
+        session = sessions[sessionId]
+        queue = session["queue"]
+        server = session["server"]
+        
+        try:
+            body = await request.json()
+            
+            async def process():
+                try:
+                    response = await server.handle_request(body)
+                    if response:
+                        await queue.put(response)
+                except Exception as e:
+                    logger.error(f"Error processing request: {e}")
+            
+            asyncio.create_task(process())
+            return Response(status_code=202)
+            
+        except Exception as e:
+            logger.error(f"Error handling message: {e}")
+            return Response(status_code=500, content=str(e))
+
+    print(f"[codrag] Starting MCP HTTP server at http://{host}:{port}/sse", file=sys.stderr)
+    config = uvicorn.Config(app, host=host, port=port, log_level="warning")
+    server = uvicorn.Server(config)
+    await server.serve()
+
+
 # =============================================================================
 # Entry Point
 # =============================================================================
@@ -524,14 +731,30 @@ def main(
     daemon_url: str = "http://127.0.0.1:8400",
     project_id: Optional[str] = None,
     auto_detect: bool = False,
+    debug: bool = False,
+    log_file: Optional[str] = None,
+    transport: str = "stdio",
+    host: str = "127.0.0.1",
+    port: int = 8401,
 ) -> None:
     """Run the MCP server."""
-    server = MCPServer(
-        daemon_url=daemon_url,
-        project_id=project_id,
-        auto_detect=auto_detect,
-    )
-    asyncio.run(run_stdio(server))
+    configure_logging(debug=bool(debug), log_file=log_file)
+    
+    if transport == "http":
+        asyncio.run(run_http(
+            daemon_url=daemon_url,
+            project_id=project_id,
+            auto_detect=auto_detect,
+            host=host,
+            port=port
+        ))
+    else:
+        server = MCPServer(
+            daemon_url=daemon_url,
+            project_id=project_id,
+            auto_detect=auto_detect,
+        )
+        asyncio.run(run_stdio(server))
 
 
 if __name__ == "__main__":

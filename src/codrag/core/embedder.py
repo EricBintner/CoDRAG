@@ -112,3 +112,29 @@ class OllamaEmbedder(Embedder):
     def embed_batch(self, texts: List[str]) -> List[EmbeddingResult]:
         """Generate embeddings for multiple texts (sequential for now)."""
         return [self.embed(t) for t in texts]
+
+
+class FakeEmbedder(Embedder):
+    """
+    Fake embedder for testing that generates deterministic pseudo-embeddings.
+    
+    Does NOT require Ollama or any external service.
+    """
+
+    def __init__(self, model: str = "fake-embed", dim: int = 384):
+        self.model = model
+        self.dim = dim
+
+    def embed(self, text: str) -> EmbeddingResult:
+        """Generate a deterministic embedding based on text hash."""
+        # Use hash of text to seed random for reproducibility
+        seed = hash(text) % (2**31)
+        rng = random.Random(seed)
+        vector = [rng.gauss(0, 1) for _ in range(self.dim)]
+        # Normalize to unit length
+        norm = sum(x * x for x in vector) ** 0.5
+        vector = [x / norm for x in vector]
+        return EmbeddingResult(vector=vector, model=self.model)
+
+    def embed_batch(self, texts: List[str]) -> List[EmbeddingResult]:
+        return [self.embed(t) for t in texts]

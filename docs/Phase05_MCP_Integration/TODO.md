@@ -31,13 +31,13 @@
 ### Project selection
 - [x] P05-I5 Pinned project mode (`--project <id>`) ✅ **DONE: `codrag mcp --project`**
 - [x] P05-I6 Auto-detect mode (`--auto`): longest-prefix rule for `cwd` vs registered project paths ✅ **DONE: `codrag mcp --auto`**
-- [ ] P05-I7 Ambiguity handling (`PROJECT_SELECTION_AMBIGUOUS`) with debuggable output
+- [x] P05-I7 Ambiguity handling (`PROJECT_SELECTION_AMBIGUOUS`) with debuggable output
 
 ### Token efficiency + robustness
 - [x] P05-I8 Never corrupt JSON-RPC output (no accidental stdout logging) ✅ **DONE: All logs to stderr**
 - [x] P05-I9 Lean outputs by default (optionally emit markdown summaries) ✅ **DONE**
 - [x] P05-I10 Enforce conservative defaults + hard caps (k/max_chars/neighbors) ✅ **DONE**
-- [ ] P05-I11 Debug mode writes logs to file (opt-in) for diagnosis
+- [x] P05-I11 Debug mode writes logs to file (opt-in) for diagnosis
 
 ### Config generation
 - [x] P05-I12 `codrag mcp-config` prints ready-to-paste client config (pinned + auto) ✅ **DONE: Multi-IDE support**
@@ -45,7 +45,7 @@
 ## Testing & validation (P05-T*)
 - [x] P05-T1 Integration test: MCP tool calls against known project (status/build/search/context) ✅ **DONE: `tests/test_mcp_server.py`**
 - [x] P05-T2 Failure test: daemon down → stable `DAEMON_UNAVAILABLE` error ✅ **DONE**
-- [ ] P05-T3 Budget test: large requests are rejected with actionable errors
+- [x] P05-T3 Budget test: large requests are rejected with actionable errors
 
 ## Cross-phase strategy alignment
 Relevant entries in `../MASTER_TODO.md`:
@@ -55,6 +55,9 @@ Relevant entries in `../MASTER_TODO.md`:
 ## Notes / blockers
 - [ ] Decide how MCP should behave when index is missing (prompt to build vs hard error)
 - [ ] Decide whether MCP should support an “assemble context as markdown” output mode for LLMs
+- [ ] Verify MCP Server mode remains aligned with canonical `/projects/*` routes (avoid legacy `/api/code-index/*` drift)
+- [ ] Smoke test: `codrag mcp --mode direct` against `tests/fixtures/mini_repo` (and decide if Direct Mode stays supported)
+- [ ] Track: CLI `ApiEnvelope` unwrap mismatch (master gap) impacts MCP only if MCP consumes CLI helpers
 
 ---
 
@@ -98,33 +101,31 @@ Relevant entries in `../MASTER_TODO.md`:
 
 | Client | Local MCP | Remote MCP | Transport | Notes |
 |--------|-----------|------------|-----------|-------|
-| **VS Code** (Copilot) | ✅ | ✅ (OAuth/PAT) | stdio, SSE | Native support |
-| **Cursor** | ✅ | ✅ (OAuth/PAT) | stdio, SSE | Tools, prompts, roots, elicitation |
-| **Windsurf** | ✅ | ✅ (PAT only) | stdio, SSE | Full tool support |
-| **JetBrains IDEs** | ✅ | ✅ | stdio | v2025.2+; also acts as MCP server |
-| **Claude Desktop** | ✅ | ✅ | stdio, SSE | Full resources, prompts, tools |
-| **Claude.ai** | — | ✅ | SSE | Remote only via integrations |
-| **Claude Code** | ✅ | ✅ | stdio | Full MCP + acts as MCP server |
-| **Cline** (VS Code) | ✅ | — | stdio | Natural language tool creation |
-| **Continue** | ✅ | — | stdio | VS Code + JetBrains |
-| **Amazon Q CLI/IDE** | ✅ | — | stdio | VS Code, JetBrains, VS, Eclipse |
-| **Xcode** | ✅ | ✅ (OAuth/PAT) | stdio, SSE | Apple ecosystem |
-| **Eclipse** | ✅ | ✅ (OAuth/PAT) | stdio, SSE | Via Amazon Q |
-| **Visual Studio** | ✅ | ✅ (OAuth/PAT) | stdio, SSE | Via Copilot |
-| **Emacs** | ✅ | — | stdio | Via emacs-mcp plugin |
-| **Neovim** | ✅ | — | stdio | Via Amp |
+| **VS Code** (Copilot) | | | stdio, SSE | Native support |
+| **Cursor** | | | stdio, SSE | Tools, prompts, roots, elicitation |
+| **Windsurf** | | | stdio, SSE | Full tool support |
+| **JetBrains IDEs** | | | stdio | v2025.2+; also acts as MCP server |
+| **Claude Desktop** | | | stdio, SSE | Full resources, prompts, tools |
+| **Claude.ai** | — | | SSE | Remote only via integrations |
+| **Claude Code** | | | stdio | Full MCP + acts as MCP server |
+| **Cline** (VS Code) | | — | stdio | Natural language tool creation |
+| **Continue** | | — | stdio | VS Code + JetBrains |
+| **Amazon Q CLI/IDE** | | — | stdio | VS Code, JetBrains, VS, Eclipse |
+| **Xcode** | | | stdio, SSE | Apple ecosystem |
+| **Eclipse** | | | stdio, SSE | Via Amazon Q |
+| **Visual Studio** | | | stdio, SSE | Via Copilot |
+| **Emacs** | | — | stdio | Via emacs-mcp plugin |
+| **Neovim** | | — | stdio | Via Amp |
 
 ### CoDRAG Compatibility Checklist
-- [x] P05-R4 Use official Python SDK (`mcp` package) ✅ **DONE: Custom impl following spec**
 - [ ] P05-R5 Support **both** stdio AND Streamable HTTP transports (stdio done, HTTP planned)
 - [ ] P05-R6 Implement proper `Origin` validation for HTTP transport
 - [ ] P05-R7 Consider async **Tasks** for `codrag_build` (long-running)
-- [x] P05-R8 Follow tool name guidance (SEP-986): lowercase, underscores, namespaced ✅ **DONE**
 - [ ] P05-R9 Provide tool icons via `_meta.icons` field
-- [x] P05-R10 Target MCP spec `2025-11-25` in capability negotiation ✅ **DONE**
 
 ### Config Generation for Major IDEs
 `codrag mcp-config` should output ready-to-paste JSON for:
+- [ ] P05-I19 Add verification info for PyPI package ownership
 - [x] P05-I13 Claude Desktop (`claude_desktop_config.json`) ✅ **DONE**
 - [x] P05-I14 Cursor (`.cursor/mcp.json`) ✅ **DONE**
 - [x] P05-I15 VS Code (`settings.json` or `.vscode/mcp.json`) ✅ **DONE**

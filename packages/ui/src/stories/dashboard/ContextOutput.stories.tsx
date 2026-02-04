@@ -1,53 +1,19 @@
 import type { Meta, StoryObj } from '@storybook/react';
-import { CopyButton } from '../../components/context/CopyButton';
-import { CitationBlock } from '../../components/context/CitationBlock';
 import { ContextViewer } from '../../components/context/ContextViewer';
 import type { ContextChunk } from '../../components/context/ContextViewer';
 
-// CopyButton Stories
-const copyButtonMeta: Meta<typeof CopyButton> = {
-  title: 'Components/Context/CopyButton',
-  component: CopyButton,
+const meta: Meta<typeof ContextViewer> = {
+  title: 'Dashboard/Widgets/ContextOutput',
+  component: ContextViewer,
   tags: ['autodocs'],
-};
-
-export default copyButtonMeta;
-type CopyButtonStory = StoryObj<typeof CopyButton>;
-
-export const Default: CopyButtonStory = {
-  args: {
-    text: 'Sample text to copy',
-    label: 'Copy',
+  parameters: {
+    layout: 'padded',
   },
 };
 
-export const CustomLabel: CopyButtonStory = {
-  args: {
-    text: 'Sample text to copy',
-    label: 'Copy to Clipboard',
-  },
-};
+export default meta;
+type Story = StoryObj<typeof ContextViewer>;
 
-// CitationBlock Stories
-export const Citation: CopyButtonStory = {
-  render: () => (
-    <div className="space-y-2">
-      <CitationBlock
-        sourcePath="src/codrag/core/indexer.py"
-        span={{ start_line: 45, end_line: 78 }}
-        score={0.92}
-        showScore
-      />
-      <CitationBlock
-        sourcePath="src/codrag/api/routes.py"
-        span={{ start_line: 120, end_line: 145 }}
-      />
-      <CitationBlock sourcePath="README.md" />
-    </div>
-  ),
-};
-
-// ContextViewer Stories
 const mockContext = `--- Source: src/codrag/core/indexer.py:45-78 ---
 def build_index(project_path: str, config: IndexConfig) -> Index:
     """Build a semantic index for the given project."""
@@ -82,7 +48,7 @@ const mockChunks: ContextChunk[] = [
   },
 ];
 
-export const ContextOutput: CopyButtonStory = {
+export const Default: Story = {
   render: () => (
     <ContextViewer
       context={mockContext}
@@ -95,7 +61,7 @@ export const ContextOutput: CopyButtonStory = {
   ),
 };
 
-export const ContextMinimal: CopyButtonStory = {
+export const Minimal: Story = {
   render: () => (
     <ContextViewer
       context={mockContext}
@@ -104,7 +70,7 @@ export const ContextMinimal: CopyButtonStory = {
   ),
 };
 
-export const ContextWithManySources: CopyButtonStory = {
+export const WithManySources: Story = {
   render: () => (
     <ContextViewer
       context={mockContext}

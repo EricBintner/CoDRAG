@@ -240,8 +240,102 @@ Add brief notes here after completing a sprint:
 - Tool naming: lowercase + underscores (per SEP-986)
 
 **Remaining for Phase05:**
-- [ ] P05-I7 Ambiguity handling for multi-project
-- [ ] P05-I11 Debug mode file logging
+- [x] P05-I7 Ambiguity handling for multi-project
+- [x] P05-I11 Debug mode file logging
 - [ ] P05-R5 Streamable HTTP transport (for remote/enterprise)
 - [ ] P05-R7 Async Tasks for long builds
 - [ ] P05-I19 PyPI verification for MCP Registry
+
+### 2026-02-02: Documentation alignment + CLI/MCP gaps identified
+
+**What was done:**
+- Aligned `docs/Phase12.../MCP-Shim-strategy-and-examples.md` with canonical domain (`codrag.io`), repo name (`codrag-mcp`), and attribution policy (optional/user-controlled).
+- Updated `docs/Phase14_MCP-CLI/PUBLIC_GITHUB_STRATEGY.md` with current implementation status.
+
+**Known gaps to resolve (CLI/daemon):**
+- [ ] CLI commands (`add`, `list`, `status`, `build`, `search`, `context`) do not unwrap `ApiEnvelope` from server responses — they expect raw dicts but daemon returns `{"success": true, "data": {...}}`.
+- [ ] CLI extras (`activity`, `coverage`, `overview`) call root-level endpoints (`/status`, `/activity`, `/coverage`, `/trace/stats`) that are not implemented on the daemon. Migrate to `/projects/{id}/*` or add compatibility aliases.
+
+### 2026-02-03: Dashboard “Pinned Files” feature groundwork
+
+**What was built:**
+- UI package groundwork for 2 new dashboard panels:
+  - `file-tree`
+  - `pinned-files`
+  - Added new panel category: `projects`
+  - Registered panels in `packages/ui/src/config/panelRegistry.ts`
+  - Added default layout entries (hidden by default) in `packages/ui/src/types/layout.ts`
+- UI behavior fix: `FolderTree` now propagates `onNodeClick` through nested nodes.
+- Backend capability: added canonical file-content endpoint:
+  - `GET /projects/{project_id}/file?path=<repo-root-relative-path>`
+  - Includes path traversal + repo-root containment protections and a `max_file_bytes` limit.
+
+**Research / gotchas discovered:**
+- Python `Path.match()` has surprising edge cases with patterns like `**/*.md` and `**/.git/**` at repo root.
+- Implemented glob checks using `fnmatch` with a normalization rule for patterns starting with `**/` (also test without that prefix) to ensure root-level files match as expected.
+
+**Remaining work (next):**
+- Implement `usePinnedFiles` (localStorage + fetch content) and wire `FolderTreePanel` + `PinnedTextFilesPanel` into:
+  - `src/codrag/dashboard/src/App.tsx`
+  - Storybook `FullDashboard` demo
+- Add missing scrollbar utilities + update UI package exports for new panels.
+- [ ] MCP direct mode (`codrag mcp --mode direct`) needs verification/smoke test.
+
+### 2026-02-03: Progress capture + next TODOs
+
+ **Progress captured/verified:**
+ - Websites monorepo scaffold exists under `websites/apps/*`:
+   - `websites/apps/marketing`, `websites/apps/docs`, `websites/apps/support`, `websites/apps/payments`
+   - Each is a Next.js app using `@codrag/ui` and the shared Tailwind preset.
+ - Dev-only website UI controls implemented:
+   - `DevToolbar` added (dev-only gated) to all 4 app layouts to switch `theme`, `dark`, and marketing `hero` variant via URL query params.
+   - Marketing homepage wired to render a hero variant dynamically in dev (via `DevMarketingHero`).
+ - Canonical daemon API uses `/projects/*` routes (legacy `/api/code-index/*` still exists in server but should be treated as compatibility only).
+
+ **What’s left (prioritized):**
+
+ #### Implementation
+ - [ ] Websites: fix Next.js dev static asset 404s on ports 3000–3003 (`/_next/static/css/app/layout.css`, `/_next/static/chunks/main-app.js`, `app-pages-internals.js`)
+   - Symptom: HTML can return `200`, but CSS/JS requests 404 causing unstyled/broken pages.
+   - First attempt: stop all website dev servers, wipe `.next`, restart via `scripts/run_websites.sh --clean --dev`.
+ - [x] Fix CLI HTTP client to unwrap `ApiEnvelope` everywhere (core commands and any remaining helpers). ✅ **DONE: `_unwrap_envelope` wired into all HTTP helpers**
+ - [x] Resolve CLI endpoint drift: ✅ **DONE: all CLI commands use `/projects/{project_id}/*` routes**
+ - [x] Project Primer MVP: ✅ **DONE**
+   - config schema in `repo_policy.py` (filenames, score_boost, always_include, max_primer_chars)
+   - score boost in `CodeIndex.search()` via `_primer_boosts()`
+   - always-include option in `get_context_structured()` with deduplication
+   - `FakeEmbedder` added for testing; 14 tests in `tests/test_primer.py`
+ - [x] Atomic build + last-known-good snapshot (temp dir + swap) and recovery behavior on crash/interruption. ✅ **DONE**
+   - Implemented in `CodeIndex.build()`: builds to `.index_build_<uuid>`, atomic swap via rename
+   - Added `_cleanup_stale_builds()` to auto-recover on init
+   - 4 tests in `tests/test_atomic_build.py`
+ - [x] Implement staleness semantics (`status.stale`) for watcher/index ✅ **DONE**
+   - `AutoRebuildWatcher.status()` now returns `stale` (bool) + `stale_since` (ISO timestamp)
+   - Added project watcher endpoints: `/projects/{project_id}/watch/start|stop|status`
+   - Project status endpoint exposes `stale` + `stale_since` at top level
+   - 9 tests in `tests/test_watcher_staleness.py`
+ - [x] MCP: add Streamable HTTP transport support (Phase05 P05-R5/P05-R7) ✅ **DONE**
+   - Added `codrag mcp --transport http --port 8401`
+   - Implemented SSE endpoint (`/sse`) and message endpoint (`/message`) using FastAPI/Uvicorn
+ - [x] MCP direct mode smoke test ✅ **DONE: `tests/test_mcp_direct_smoke.py` (10 tests, uses FakeEmbedder)**
+
+ ### 2026-02-04: Universal UI + Storybook-First Strategy
+
+ **What changed:**
+ - **Workflow Shift**: Switched from running 4x Next.js dev servers (fragile, slow) to Storybook-first development (fast, isolated).
+ - **Universal UI**: All marketing/docs components (`MarketingHero`, `FeatureBlocks`, `IndexStats`, `TraceGraph`) are now canonical in `@codrag/ui`.
+ - **Themes Ported**: All "Radical" visual directions (Neo-Brutalist, Retro, Glass, etc.) + required fonts are fully integrated into the shared package.
+
+ #### Research / decisions
+ - [ ] STR-01: finalize error code taxonomy + `hint` rules across daemon/UI/MCP/CLI.
+ - [ ] STR-03: manifest schema/versioning decision (per-file manifest fields vs format bump strategy).
+ - [ ] STR-04: atomic build + recovery contract (what gets swapped, how to detect partial builds).
+ - [ ] STR-05: budgets policy (server-enforced max caps) and alignment across UI + MCP + docs.
+ - [ ] Decide primer detection precedence (e.g. `AGENTS.md` vs `CODRAG_PRIMER.md`, root-only vs glob).
+
+ #### Planning / coordination
+ - [ ] Sprint S-01: choose the next “trust loop hardening” bundle:
+   - CLI envelope + endpoint drift fixes
+   - atomic build + recovery
+   - minimal integration tests (add project → build → search → context)
+ - [ ] Sprint S-08: publishable docs plan (Getting Started + MCP onboarding + Troubleshooting-first).

@@ -8,6 +8,7 @@ export interface ChunkPreviewProps {
   section?: string;
   placeholder?: string;
   className?: string;
+  bare?: boolean;
 }
 
 /**
@@ -24,13 +25,18 @@ export function ChunkPreview({
   section,
   placeholder = 'Select a result to view its content',
   className,
+  bare = false,
 }: ChunkPreviewProps) {
+  const Container = bare ? 'div' : Card;
+
   return (
-    <Card className={cn('border border-border bg-surface shadow-sm flex flex-col', className)}>
-      <Flex justifyContent="start" alignItems="center" className="mb-4 gap-2">
-        <FileText className="w-5 h-5 text-primary" />
-        <Title className="text-text">{content ? 'Chunk Content' : 'Preview'}</Title>
-      </Flex>
+    <Container className={cn(!bare && 'border border-border bg-surface shadow-sm', 'flex flex-col', className)}>
+      {!bare && (
+        <Flex justifyContent="start" alignItems="center" className="mb-4 gap-2">
+          <FileText className="w-5 h-5 text-primary" />
+          <Title className="text-text">{content ? 'Chunk Content' : 'Preview'}</Title>
+        </Flex>
+      )}
       
       {sourcePath && (
         <div className="mb-4 text-xs text-text truncate font-mono bg-surface-raised px-3 py-2 rounded border border-border">
@@ -50,6 +56,6 @@ export function ChunkPreview({
           {placeholder}
         </div>
       )}
-    </Card>
+    </Container>
   );
 }

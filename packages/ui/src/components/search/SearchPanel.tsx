@@ -1,5 +1,7 @@
-import { Search, Loader2 } from 'lucide-react';
-import { Card, Flex, Title, TextInput, NumberInput, Button } from '@tremor/react';
+import { Search } from 'lucide-react';
+import { Card, Flex, Title, TextInput } from '@tremor/react';
+import { Button } from '../primitives/Button';
+import { StepperNumberInput } from '../primitives/StepperNumberInput';
 import { cn } from '../../lib/utils';
 import type { KeyboardEvent } from 'react';
 
@@ -14,6 +16,7 @@ export interface SearchPanelProps {
   loading?: boolean;
   disabled?: boolean;
   className?: string;
+  bare?: boolean;
 }
 
 /**
@@ -36,6 +39,7 @@ export function SearchPanel({
   loading = false,
   disabled = false,
   className,
+  bare = false,
 }: SearchPanelProps) {
   const handleKeyDown = (e: KeyboardEvent) => {
     if (e.key === 'Enter' && !loading && !disabled && query.trim()) {
@@ -43,14 +47,18 @@ export function SearchPanel({
     }
   };
 
+  const Container = bare ? 'div' : Card;
+
   return (
-    <Card className={cn("border border-border bg-surface shadow-sm", className)}>
-      <Flex justifyContent="between" alignItems="center" className="mb-4">
-        <div className="flex items-center gap-2">
-          <Search className="w-5 h-5 text-primary" />
-          <Title className="text-text">Semantic Search</Title>
-        </div>
-      </Flex>
+    <Container className={cn(!bare && "border border-border bg-surface shadow-sm", className)}>
+      {!bare && (
+        <Flex justifyContent="between" alignItems="center" className="mb-4">
+          <div className="flex items-center gap-2">
+            <Search className="w-5 h-5 text-primary" />
+            <Title className="text-text">Semantic Search</Title>
+          </div>
+        </Flex>
+      )}
 
       <div className="space-y-6">
         <div>
@@ -68,46 +76,29 @@ export function SearchPanel({
           />
         </div>
         
-        <Flex className="gap-4" justifyContent="start" alignItems="end">
-          <div className="w-32">
+        <div className="flex flex-wrap gap-4 items-end">
+          <div className="flex-1 min-w-[12rem]">
             <label className="block text-sm font-medium text-text-muted mb-2">
               Results (K)
             </label>
-            <NumberInput
-              value={k}
-              onValueChange={onKChange}
-              min={1}
-              max={50}
-              placeholder="K"
-              disabled={disabled}
-              className="w-full"
-            />
+            <StepperNumberInput value={k} onValueChange={onKChange} min={1} max={50} disabled={disabled} />
           </div>
-          <div className="w-32">
+          <div className="flex-1 min-w-[12rem]">
             <label className="block text-sm font-medium text-text-muted mb-2">
               Min Score
             </label>
-             <NumberInput
-              value={minScore}
-              onValueChange={onMinScoreChange}
-              min={0}
-              max={1}
-              step={0.05}
-              placeholder="0.0 - 1.0"
-              disabled={disabled}
-              className="w-full"
-            />
+            <StepperNumberInput value={minScore} onValueChange={onMinScoreChange} min={0} max={1} step={0.05} disabled={disabled} />
           </div>
           <Button
             onClick={onSearch}
             disabled={loading || disabled || !query.trim()}
-            className="bg-primary hover:bg-primary-hover text-white border-none px-8"
-            icon={loading ? Loader2 : undefined}
+            className="px-8"
+            loading={loading}
           >
             {loading ? 'Searching...' : 'Search'}
           </Button>
-        </Flex>
+        </div>
       </div>
-    </Card>
+    </Container>
   );
 }

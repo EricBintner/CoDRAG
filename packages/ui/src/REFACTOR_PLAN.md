@@ -114,7 +114,7 @@ packages/ui/src/components/
 │   ├── IndexStatusCard.tsx  ✅
 │   ├── BuildCard.tsx        ✅
 │   └── index.ts
-├── llm/               # LLMStatusCard, ModelCard, EndpointManager, AIModelsSettings
+├── llm/               # LLMStatusWidget, ModelCard, EndpointManager, AIModelsSettings
 ├── navigation/        # AppShell, Sidebar, ProjectTabs
 ├── patterns/          # EmptyState, LoadingState, ErrorState
 ├── search/            # SearchInput, SearchResultRow, ChunkViewer, SearchPanel, ContextOptionsPanel

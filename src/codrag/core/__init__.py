@@ -13,7 +13,7 @@ TODO:
 - llm: LLM coordinator (Ollama, CLaRa)
 """
 
-from .embedder import Embedder, OllamaEmbedder, EmbeddingResult
+from .embedder import Embedder, OllamaEmbedder, FakeEmbedder, EmbeddingResult
 from .chunking import Chunk, chunk_markdown, chunk_code
 from .index import CodeIndex, SearchResult
 from .trace import TraceBuilder, TraceIndex, TraceNode, TraceEdge, build_trace
@@ -23,6 +23,7 @@ __all__ = [
     "SearchResult",
     "Embedder",
     "OllamaEmbedder",
+    "FakeEmbedder",
     "EmbeddingResult",
     "Chunk",
     "chunk_markdown",

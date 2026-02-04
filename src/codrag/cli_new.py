@@ -402,7 +402,8 @@ def search(
         console.print(f"[bold cyan]{i}. {path}:{lines}[/bold cyan] [dim](score: {score:.3f})[/dim]")
         if preview:
             # Simple syntax highlighting simulation
-            console.print(f"   [dim]{preview[:200].replace('\n', ' ')}...[/dim]")
+            preview_clean = preview[:200].replace("\n", " ")
+            console.print(f"   [dim]{preview_clean}...[/dim]")
         console.print()
 
 

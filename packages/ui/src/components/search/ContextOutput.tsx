@@ -12,6 +12,7 @@ export interface ContextOutputProps {
   context: string;
   meta?: ContextMeta | null;
   className?: string;
+  bare?: boolean;
 }
 
 /**
@@ -26,32 +27,43 @@ export function ContextOutput({
   context,
   meta,
   className,
+  bare = false,
 }: ContextOutputProps) {
   if (!context) {
     return null;
   }
 
+  const Container = bare ? 'div' : Card;
+
   return (
-    <Card className={cn('border border-border bg-surface shadow-sm', className)}>
-      <Flex justifyContent="between" alignItems="center" className="mb-4">
-        <Flex justifyContent="start" alignItems="center" className="gap-2">
-          <FileText className="w-5 h-5 text-primary" />
-          <Title className="text-text">Assembled Context</Title>
-        </Flex>
-        {meta && (
-          <Flex justifyContent="end" className="gap-2">
-             <Badge color="gray" size="xs">{meta.chunks?.length ?? 0} chunks</Badge>
-             <Badge color="gray" size="xs">{meta.total_chars?.toLocaleString()} chars</Badge>
-             <Badge color="blue" size="xs">~{meta.estimated_tokens?.toLocaleString()} tokens</Badge>
+    <Container className={cn(!bare && 'border border-border bg-surface shadow-sm', className)}>
+      {!bare && (
+        <Flex justifyContent="between" alignItems="center" className="mb-4">
+          <Flex justifyContent="start" alignItems="center" className="gap-2">
+            <FileText className="w-5 h-5 text-primary" />
+            <Title className="text-text">Assembled Context</Title>
           </Flex>
-        )}
-      </Flex>
+          {meta && (
+            <Flex justifyContent="end" className="gap-2">
+               <Badge color="gray" size="xs">{meta.chunks?.length ?? 0} chunks</Badge>
+               <Badge color="gray" size="xs">{meta.total_chars?.toLocaleString()} chars</Badge>
+               <Badge color="blue" size="xs">~{meta.estimated_tokens?.toLocaleString()} tokens</Badge>
+            </Flex>
+          )}
+        </Flex>
+      )}
       
-      <div className="bg-surface-raised border border-border rounded-lg overflow-hidden">
-        <pre className="p-4 text-xs whitespace-pre-wrap font-mono text-text max-h-96 overflow-y-auto custom-scrollbar">
+      <div className={cn(
+        "bg-surface-raised border border-border rounded-lg overflow-hidden",
+        bare && "h-full"
+      )}>
+        <pre className={cn(
+          "p-4 text-xs whitespace-pre-wrap font-mono text-text overflow-y-auto custom-scrollbar",
+          bare ? "h-full" : "max-h-96"
+        )}>
           {context}
         </pre>
       </div>
-    </Card>
+    </Container>
   );
 }

@@ -7,5 +7,5 @@ export type { BuildCardProps } from './BuildCard';
 export { IndexStats as IndexStatsDisplay } from './IndexStats';
 export type { IndexStatsProps, StatItem } from './IndexStats';
 
-export { LLMStatusCard } from './LLMStatusCard';
-export type { LLMStatusCardProps, LLMServiceStatus } from './LLMStatusCard';
+export { LLMStatusWidget } from './LLMStatusWidget';
+export type { LLMStatusWidgetProps, LLMServiceStatus } from './LLMStatusWidget';

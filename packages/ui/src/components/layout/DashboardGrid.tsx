@@ -3,7 +3,7 @@ import GridLayout from 'react-grid-layout';
 import type { Layout } from 'react-grid-layout';
 import type { ReactNode } from 'react';
 import { cn } from '../../lib/utils';
-import type { DashboardLayout, GridLayoutItem } from '../../types/layout';
+import type { DashboardLayout, GridLayoutItem, PanelDefinition } from '../../types/layout';
 import { toGridLayout, fromGridLayout } from '../../types/layout';
 
 import 'react-grid-layout/css/styles.css';
@@ -11,6 +11,7 @@ import 'react-resizable/css/styles.css';
 
 export interface DashboardGridProps {
   layout: DashboardLayout;
+  panelDefinitions?: PanelDefinition[];
   onLayoutChange: (layout: DashboardLayout) => void;
   children: ReactNode;
   className?: string;
@@ -20,6 +21,7 @@ export interface DashboardGridProps {
 
 export function DashboardGrid({
   layout,
+  panelDefinitions,
   onLayoutChange,
   children,
   className,
@@ -44,18 +46,24 @@ export function DashboardGrid({
   }, []);
 
   // Convert our layout format to react-grid-layout format
-  const gridLayout = toGridLayout(layout);
+  const gridLayout = toGridLayout(layout, panelDefinitions);
 
-  const handleLayoutChange = useCallback(
+  const handleLayoutCommit = useCallback(
     (newLayout: Layout[]) => {
-      const items: GridLayoutItem[] = newLayout.map((item) => ({
-        i: item.i,
-        x: item.x,
-        y: item.y,
-        w: item.w,
-        h: item.h,
-        minH: item.minH,
-      }));
+      const items: GridLayoutItem[] = newLayout.map((item) => {
+        const isResizableItem = (item as any).isResizable;
+        const existing = layout.panels.find((p) => p.id === item.i);
+
+        return {
+          i: item.i,
+          x: item.x,
+          y: item.y,
+          w: item.w,
+          h: isResizableItem === false && existing && !existing.collapsed ? existing.height : item.h,
+          minH: item.minH,
+          isResizable: isResizableItem,
+        };
+      });
       const updated = fromGridLayout(layout, items);
       onLayoutChange(updated);
     },
@@ -71,7 +79,9 @@ export function DashboardGrid({
         rowHeight={rowHeight}
         width={width}
         margin={margin}
-        onLayoutChange={handleLayoutChange}
+        onLayoutChange={handleLayoutCommit}
+        onDragStop={handleLayoutCommit}
+        onResizeStop={handleLayoutCommit}
         draggableHandle=".drag-handle"
         isResizable={true}
         resizeHandles={['s']}

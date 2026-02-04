@@ -10,7 +10,9 @@ import hashlib
 import json
 import logging
 import re
+import shutil
 import sqlite3
+import uuid
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
@@ -71,6 +73,7 @@ class CodeIndex:
         self._manifest: Dict[str, Any] = {}
 
         self._load()
+        self._cleanup_stale_builds()
 
     def _load(self) -> None:
         """Load existing index from disk."""
@@ -288,45 +291,100 @@ class CodeIndex:
 
         embeddings = np.array(vectors, dtype=np.float32)
 
-        self.index_dir.mkdir(parents=True, exist_ok=True)
-        with open(self.documents_path, "w") as f:
-            json.dump(docs, f)
-        np.save(self.embeddings_path, embeddings)
+        # Atomic build: write to temporary directory first
+        build_id = uuid.uuid4().hex
+        temp_dir = self.index_dir.parent / f".index_build_{build_id}"
+        temp_dir.mkdir(parents=True, exist_ok=True)
 
         try:
-            self._rebuild_fts(docs)
-        except Exception as e:
-            logger.warning(f"FTS rebuild failed (continuing without keyword index): {e}")
+            with open(temp_dir / "documents.json", "w") as f:
+                json.dump(docs, f)
+            np.save(temp_dir / "embeddings.npy", embeddings)
 
-        manifest = build_manifest(
-            model=str(getattr(self.embedder, "model", "unknown")),
-            embedding_dim=int(embeddings.shape[1]),
-            roots=list(selected_roots or []),
-            count=len(docs),
-            build=ManifestBuildStats(
-                mode="incremental" if files_reused > 0 else "full",
-                files_total=total_files,
-                files_reused=files_reused,
-                files_embedded=files_embedded,
-                chunks_total=len(docs),
-                chunks_reused=chunks_reused,
-                chunks_embedded=chunks_embedded,
-            ),
-            config={
-                "include_globs": include_globs,
-                "exclude_globs": exclude_globs,
-                "max_file_bytes": max_file_bytes,
-                "role_weights": role_weights,
-            },
-            built_at=datetime.now(timezone.utc).isoformat(),
-        )
-        write_manifest(self.manifest_path, manifest)
+            try:
+                self._rebuild_fts(docs, target_dir=temp_dir)
+            except Exception as e:
+                logger.warning(f"FTS rebuild failed (continuing without keyword index): {e}")
+
+            manifest = build_manifest(
+                model=str(getattr(self.embedder, "model", "unknown")),
+                embedding_dim=int(embeddings.shape[1]),
+                roots=list(selected_roots or []),
+                count=len(docs),
+                build=ManifestBuildStats(
+                    mode="incremental" if files_reused > 0 else "full",
+                    files_total=total_files,
+                    files_reused=files_reused,
+                    files_embedded=files_embedded,
+                    chunks_total=len(docs),
+                    chunks_reused=chunks_reused,
+                    chunks_embedded=chunks_embedded,
+                ),
+                config={
+                    "include_globs": include_globs,
+                    "exclude_globs": exclude_globs,
+                    "max_file_bytes": max_file_bytes,
+                    "role_weights": role_weights,
+                    "primer": policy.get("primer"),
+                },
+                built_at=datetime.now(timezone.utc).isoformat(),
+            )
+            write_manifest(temp_dir / "manifest.json", manifest)
+
+            # Atomic swap
+            self._swap_index_dir(temp_dir)
+
+        except Exception:
+            # Cleanup on failure
+            if temp_dir.exists():
+                shutil.rmtree(temp_dir, ignore_errors=True)
+            raise
 
         self._documents = docs
         self._embeddings = embeddings
         self._manifest = manifest
 
         return manifest
+
+    def _swap_index_dir(self, new_dir: Path) -> None:
+        """Atomically swap the new index directory with the current one."""
+        # Ensure parent exists
+        self.index_dir.parent.mkdir(parents=True, exist_ok=True)
+        
+        backup_dir = self.index_dir.parent / f".index_backup_{uuid.uuid4().hex}"
+        
+        # If index_dir exists, move it to backup
+        if self.index_dir.exists():
+            self.index_dir.rename(backup_dir)
+        
+        # Move new_dir to index_dir
+        new_dir.rename(self.index_dir)
+        
+        # Cleanup backup
+        if backup_dir.exists():
+            shutil.rmtree(backup_dir, ignore_errors=True)
+
+    def _cleanup_stale_builds(self) -> None:
+        """Cleanup stale temporary build directories."""
+        if not self.index_dir.parent.exists():
+            return
+            
+        try:
+            for item in self.index_dir.parent.iterdir():
+                if not item.is_dir():
+                    continue
+                name = item.name
+                if name.startswith(".index_build_") or name.startswith(".index_backup_"):
+                    # Check age - if older than 1 hour, delete
+                    try:
+                        mtime = item.stat().st_mtime
+                        age = datetime.now().timestamp() - mtime
+                        if age > 3600:  # 1 hour
+                            shutil.rmtree(item, ignore_errors=True)
+                    except Exception:
+                        pass
+        except Exception:
+            pass
 
     def _classify_query_intent(self, query: str) -> str:
         q = query.lower()
@@ -479,6 +537,9 @@ class CodeIndex:
         sims = sims + self._keyword_boosts(query, docs)
         sims = sims + self._fts_boosts(query, docs, limit=max(10, k * 4))
 
+        # Apply primer score boost
+        sims = sims + self._primer_boosts(docs)
+
         intent = self._classify_query_intent(query)
         intent_mult = self._intent_role_multipliers(intent)
         role_weights = (self._manifest.get("config") or {}).get("role_weights")
@@ -575,7 +636,58 @@ class CodeIndex:
     ) -> Dict[str, Any]:
         policy = self.query_policy(query)
         results = self.search(query, k=k, min_score=min_score)
-        if not results:
+        
+        parts: List[str] = []
+        chunks_meta: List[Dict[str, Any]] = []
+        total = 0
+        
+        # Check if we should always include primer chunks
+        config = self._manifest.get("config") or {}
+        primer_cfg = config.get("primer") or {}
+        always_include = primer_cfg.get("always_include", False)
+        max_primer_chars = int(primer_cfg.get("max_primer_chars", 2000))
+        
+        # Track which chunk IDs we've already included (to avoid duplicates)
+        included_ids: set = set()
+        
+        if always_include and self.is_loaded():
+            primer_chunks = self.get_primer_chunks()
+            primer_chars_used = 0
+            
+            for d in primer_chunks:
+                chunk_id = d.get("id")
+                if chunk_id:
+                    included_ids.add(chunk_id)
+                
+                header_bits: List[str] = ["PRIMER"]
+                if d.get("section"):
+                    header_bits.append(str(d.get("section") or ""))
+                if d.get("source_path"):
+                    header_bits.append(f"@{d.get('source_path')}")
+                header = " | ".join(header_bits)
+                content = d.get("content", "")
+                
+                # Respect max_primer_chars budget
+                if primer_chars_used + len(content) > max_primer_chars:
+                    remaining = max_primer_chars - primer_chars_used
+                    if remaining > 100:
+                        content = content[:remaining] + "..."
+                    else:
+                        break
+                
+                block = f"[{header}]\n{content}"
+                parts.append(block)
+                total += len(block)
+                primer_chars_used += len(content)
+                chunks_meta.append({
+                    "source_path": d.get("source_path", ""),
+                    "section": d.get("section", ""),
+                    "score": 1.0,  # Primer chunks always get max score
+                    "truncated": content.endswith("..."),
+                    "is_primer": True,
+                })
+        
+        if not results and not parts:
             return {
                 "context": "",
                 "chunks": [],
@@ -584,12 +696,14 @@ class CodeIndex:
                 "meta": {"query": query, "policy": policy},
             }
 
-        parts: List[str] = []
-        chunks_meta: List[Dict[str, Any]] = []
-        total = 0
-
         for r in results:
             d = r.doc
+            
+            # Skip if this chunk was already included as a primer
+            chunk_id = d.get("id")
+            if chunk_id and chunk_id in included_ids:
+                continue
+            
             header_bits: List[str] = []
             if d.get("section"):
                 header_bits.append(str(d.get("section") or ""))
@@ -782,6 +896,57 @@ class CodeIndex:
             boosts[i] = min(0.25, score)
         return boosts
 
+    def _primer_boosts(self, docs: List[Dict[str, Any]]) -> np.ndarray:
+        """Compute score boosts for primer documents (e.g., AGENTS.md)."""
+        config = self._manifest.get("config") or {}
+        primer_cfg = config.get("primer") or {}
+        
+        if not primer_cfg.get("enabled", True):
+            return np.zeros(len(docs), dtype=np.float32)
+        
+        filenames = primer_cfg.get("filenames") or ["AGENTS.md", "CODRAG_PRIMER.md", "PROJECT_PRIMER.md"]
+        score_boost = float(primer_cfg.get("score_boost", 0.25))
+        
+        # Normalize filenames to lowercase for comparison
+        primer_names = {f.lower() for f in filenames}
+        
+        boosts = np.zeros(len(docs), dtype=np.float32)
+        for i, d in enumerate(docs):
+            sp = str(d.get("source_path") or "")
+            if not sp:
+                continue
+            # Check if file is in repo root (no directory separators) and matches primer name
+            if "/" not in sp and "\\" not in sp:
+                if sp.lower() in primer_names:
+                    boosts[i] = score_boost
+        
+        return boosts
+
+    def get_primer_chunks(self) -> List[Dict[str, Any]]:
+        """Get all chunks from primer documents for always-include functionality."""
+        if not self.is_loaded():
+            return []
+        
+        config = self._manifest.get("config") or {}
+        primer_cfg = config.get("primer") or {}
+        
+        if not primer_cfg.get("enabled", True):
+            return []
+        
+        filenames = primer_cfg.get("filenames") or ["AGENTS.md", "CODRAG_PRIMER.md", "PROJECT_PRIMER.md"]
+        primer_names = {f.lower() for f in filenames}
+        
+        primer_chunks = []
+        for d in (self._documents or []):
+            sp = str(d.get("source_path") or "")
+            if not sp:
+                continue
+            if "/" not in sp and "\\" not in sp:
+                if sp.lower() in primer_names:
+                    primer_chunks.append(d)
+        
+        return primer_chunks
+
     def _ensure_fts_schema(self, conn: sqlite3.Connection) -> None:
         """Ensure the FTS5 table exists."""
         conn.execute(
@@ -793,15 +958,17 @@ class CodeIndex:
             ")"
         )
 
-    def _rebuild_fts(self, docs: List[Dict[str, Any]]) -> None:
+    def _rebuild_fts(self, docs: List[Dict[str, Any]], target_dir: Optional[Path] = None) -> None:
         """Rebuild the FTS5 keyword index."""
-        self.fts_path.parent.mkdir(parents=True, exist_ok=True)
+        out_dir = target_dir or self.index_dir
+        out_dir.mkdir(parents=True, exist_ok=True)
+        db_path = out_dir / "fts.sqlite3"
 
-        conn = sqlite3.connect(str(self.fts_path))
+        conn = sqlite3.connect(str(db_path), isolation_level=None)
         try:
             self._ensure_fts_schema(conn)
-            conn.execute("DELETE FROM fts")
             conn.execute("BEGIN")
+            conn.execute("DELETE FROM fts")
             conn.executemany(
                 "INSERT INTO fts(chunk_id, content, source_path, section) VALUES (?, ?, ?, ?)",
                 [
@@ -815,6 +982,9 @@ class CodeIndex:
                 ],
             )
             conn.execute("COMMIT")
+        except Exception:
+            conn.execute("ROLLBACK")
+            raise
         finally:
             conn.close()
 

@@ -25,8 +25,8 @@ export function DashboardGrid({
   onLayoutChange,
   children,
   className,
-  rowHeight = 60,
-  margin = [0, 16],
+  rowHeight = 20,
+  margin = [24, 24],
 }: DashboardGridProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [width, setWidth] = useState(1200);
@@ -79,6 +79,7 @@ export function DashboardGrid({
         rowHeight={rowHeight}
         width={width}
         margin={margin}
+        containerPadding={margin}
         onLayoutChange={handleLayoutCommit}
         onDragStop={handleLayoutCommit}
         onResizeStop={handleLayoutCommit}

@@ -18,6 +18,7 @@ import { TraceGraph, TraceGraphMini, SymbolSearchInput, type TraceNode } from '.
 import { ModularDashboard } from '../../components/layout/ModularDashboard';
 import type { PanelDefinition } from '../../types/layout';
 import { ProjectSettingsPanel } from '../../components/project/ProjectSettingsPanel';
+import { WatchControlPanel } from '../../components/watch/WatchControlPanel';
 
 const meta: Meta = {
   title: 'Dashboard/Layouts/FullDashboard',
@@ -182,74 +183,64 @@ export const FullDashboard: StoryObj = {
 
     const panelContent = useMemo(() => ({
       status: (
-        <div className="p-4">
-          <IndexStatusCard
-            stats={{
-              loaded: true,
-              total_documents: 1234,
-              model: 'nomic-embed-text',
-              built_at: new Date().toISOString(),
-              index_dir: 'LinuxBrain',
-            }}
-            building={building}
-            bare
-          />
-        </div>
+        <IndexStatusCard
+          stats={{
+            loaded: true,
+            total_documents: 1234,
+            model: 'nomic-embed-text',
+            built_at: new Date().toISOString(),
+            index_dir: 'LinuxBrain',
+          }}
+          building={building}
+          bare
+        />
       ),
       build: (
-        <div className="p-4">
-          <BuildCard
-            repoRoot={repoRoot}
-            onRepoRootChange={setRepoRoot}
-            onBuild={handleBuild}
-            building={building}
-            bare
-          />
-        </div>
+        <BuildCard
+          repoRoot={repoRoot}
+          onRepoRootChange={setRepoRoot}
+          onBuild={handleBuild}
+          building={building}
+          bare
+        />
       ),
       'llm-status': (
-        <div className="p-4">
-          <LLMStatusWidget services={sampleLLMServices} bare />
-        </div>
+        <LLMStatusWidget services={sampleLLMServices} bare />
       ),
       search: (
-        <div className="p-4">
-          <SearchPanel
-            query={query}
-            onQueryChange={setQuery}
-            k={searchK}
-            onKChange={setSearchK}
-            minScore={minScore}
-            onMinScoreChange={setMinScore}
-            onSearch={handleSearch}
-            loading={searchLoading}
-            bare
-          />
-        </div>
+        <SearchPanel
+          query={query}
+          onQueryChange={setQuery}
+          k={searchK}
+          onKChange={setSearchK}
+          minScore={minScore}
+          onMinScoreChange={setMinScore}
+          onSearch={handleSearch}
+          loading={searchLoading}
+          bare
+        />
       ),
       'context-options': (
-        <div className="p-4">
-          <ContextOptionsPanel
-            k={contextK}
-            onKChange={setContextK}
-            maxChars={maxChars}
-            onMaxCharsChange={setMaxChars}
-            includeSources={includeSources}
-            onIncludeSourcesChange={setIncludeSources}
-            includeScores={includeScores}
-            onIncludeScoresChange={setIncludeScores}
-            structured={structured}
-            onStructuredChange={setStructured}
-            onGetContext={handleGetContext}
-            onCopyContext={() => navigator.clipboard.writeText(context)}
-            hasContext={!!context}
-            disabled={!query.trim()}
-            bare
-          />
-        </div>
+        <ContextOptionsPanel
+          k={contextK}
+          onKChange={setContextK}
+          maxChars={maxChars}
+          onMaxCharsChange={setMaxChars}
+          includeSources={includeSources}
+          onIncludeSourcesChange={setIncludeSources}
+          includeScores={includeScores}
+          onIncludeScoresChange={setIncludeScores}
+          structured={structured}
+          onStructuredChange={setStructured}
+          onGetContext={handleGetContext}
+          onCopyContext={() => navigator.clipboard.writeText(context)}
+          hasContext={!!context}
+          disabled={!query.trim()}
+          bare
+        />
       ),
       results: (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 h-full overflow-hidden p-4">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 h-full overflow-hidden">
           <div className="h-full overflow-y-auto min-h-0">
             <SearchResultsList
               results={results}
@@ -275,57 +266,58 @@ export const FullDashboard: StoryObj = {
         />
       ),
       roots: (
-        <div className="h-full p-0">
-          <FolderTreePanel
-            data={sampleFileTree}
-            includedPaths={includedPaths}
-            onToggleInclude={handleToggleInclude}
-            className="h-full border-0 shadow-none"
-            title="Index Scope"
-            bare
-          />
-        </div>
+        <FolderTreePanel
+          data={sampleFileTree}
+          includedPaths={includedPaths}
+          onToggleInclude={handleToggleInclude}
+          className="h-full border-0 shadow-none"
+          title="Index Scope"
+          bare
+        />
       ),
       'file-tree': (
-        <div className="h-full p-0">
-          <FolderTreePanel
-            data={sampleFileTree}
-            includedPaths={includedPaths}
-            onToggleInclude={handleToggleInclude}
-            className="h-full border-0 shadow-none"
-            title="Project Files"
-            bare
-          />
-        </div>
+        <FolderTreePanel
+          data={sampleFileTree}
+          includedPaths={includedPaths}
+          onToggleInclude={handleToggleInclude}
+          className="h-full border-0 shadow-none"
+          title="Project Files"
+          bare
+        />
       ),
       'pinned-files': (
-        <div className="h-full p-0">
-          <PinnedTextFilesPanel
-            files={pinnedFiles}
-            onUnpin={handleUnpin}
-            className="h-full border-0 shadow-none"
-            bare
-          />
-        </div>
+        <PinnedTextFilesPanel
+          files={pinnedFiles}
+          onUnpin={handleUnpin}
+          className="h-full border-0 shadow-none"
+          bare
+        />
       ),
       settings: (
-         <div className="p-4">
-           <ProjectSettingsPanel
-             config={{
-               include_globs: ['**/*.ts'],
-               exclude_globs: ['**/node_modules/**'],
-               max_file_bytes: 1024,
-               trace: { enabled: true },
-               auto_rebuild: { enabled: false }
-             }}
-             onChange={() => {}}
-             onSave={() => {}}
-             bare
-           />
-         </div>
+        <ProjectSettingsPanel
+          config={{
+            include_globs: ['**/*.ts'],
+            exclude_globs: ['**/node_modules/**'],
+            max_file_bytes: 1024,
+            trace: { enabled: true },
+            auto_rebuild: { enabled: false }
+          }}
+          onChange={() => {}}
+          onSave={() => {}}
+          bare
+        />
+      ),
+      watch: (
+        <WatchControlPanel
+          status={{ enabled: true, state: 'idle', stale: false, pending: false }}
+          onStartWatch={() => {}}
+          onStopWatch={() => {}}
+          onRebuildNow={() => {}}
+          bare
+        />
       ),
       'trace-mini': (
-        <div className="space-y-4 p-4">
+        <div className="space-y-4">
           <div className="flex justify-between items-center">
             <Badge color="blue" size="xs">Pro</Badge>
           </div>
@@ -333,7 +325,7 @@ export const FullDashboard: StoryObj = {
         </div>
       ),
       'trace-explorer': (
-        <div className="h-full flex flex-col p-4">
+        <div className="h-full flex flex-col">
           <div className="mb-4">
             <SymbolSearchInput 
               value={symbolQuery}

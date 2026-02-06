@@ -183,6 +183,15 @@
   --primary-hover: 221 83% 46%;        /* #2563eb */
   --primary-muted: 221 83% 53% / 15%;
 
+  --primary-foreground: var(--background);
+  --secondary: var(--surface-raised);
+  --secondary-foreground: var(--text);
+  --accent: var(--surface-raised);
+  --accent-foreground: var(--text);
+  --destructive: var(--error);
+  --destructive-foreground: var(--background);
+  --input: var(--border);
+
   /* Semantic: Success (Fresh) */
   --success: 142 71% 45%;              /* #22c55e */
   --success-muted: 142 71% 45% / 15%;
@@ -234,6 +243,15 @@
   --primary: 217 91% 60%;              /* #60a5fa */
   --primary-hover: 217 91% 55%;
   --primary-muted: 217 91% 60% / 15%;
+
+  --primary-foreground: var(--background);
+  --secondary: var(--surface-raised);
+  --secondary-foreground: var(--text);
+  --accent: var(--surface-raised);
+  --accent-foreground: var(--text);
+  --destructive: var(--error);
+  --destructive-foreground: var(--background);
+  --input: var(--border);
 
   /* Semantic colors (same hues, adjusted lightness) */
   --success: 142 70% 50%;

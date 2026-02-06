@@ -70,4 +70,51 @@ export type AssembleContextResponse =
   | AssembleContextResponseText
   | AssembleContextResponseStructured;
 
+// ── Project CRUD ──────────────────────────────────────────
+
+export interface CreateProjectRequest {
+  path: string;
+  name?: string;
+  mode?: 'standalone' | 'embedded';
+}
+
+export interface CreateProjectResponse {
+  project: ProjectListItem;
+}
+
+export interface UpdateProjectRequest {
+  name?: string;
+  config?: Partial<{
+    include_globs: string[];
+    exclude_globs: string[];
+    max_file_bytes: number;
+    trace: { enabled: boolean };
+    auto_rebuild: { enabled: boolean; debounce_ms?: number };
+  }>;
+}
+
+export interface UpdateProjectResponse {
+  project: ProjectListItem;
+}
+
+export interface DeleteProjectResponse {
+  removed: boolean;
+  purged: boolean;
+}
+
+// ── Build ─────────────────────────────────────────────────
+
+export interface BuildProjectResponse {
+  started: boolean;
+  building: boolean;
+  build_id?: string;
+}
+
+// ── Watch ─────────────────────────────────────────────────
+
+export interface WatchActionResponse {
+  enabled: boolean;
+  state: string;
+}
+
 export type { ProjectStatus, TraceStatus, LLMStatus };

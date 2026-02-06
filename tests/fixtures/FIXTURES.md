@@ -2,6 +2,31 @@
 
 This document explains how test fixtures work in CoDRAG and how to use them effectively.
 
+## Shared Pytest Fixtures (conftest.py)
+
+The following fixtures are automatically available to all test files:
+
+### `mini_repo`
+Creates a minimal test repository with deterministic content (main.py, utils.py, README.md).
+```python
+def test_something(mini_repo: Path):
+    server = DirectMCPServer(repo_root=mini_repo)
+```
+
+### `fake_embedder`
+Provides a FakeEmbedder for testing without Ollama dependency.
+```python
+def test_something(fake_embedder):
+    idx = CodeIndex(index_dir=..., embedder=fake_embedder)
+```
+
+### `clean_codrag_dir`
+Ensures `.codrag` directory is clean before and after test.
+```python
+def test_something(clean_codrag_dir):
+    repo = clean_codrag_dir  # .codrag is guaranteed clean
+```
+
 ## What are Test Fixtures?
 
 Test fixtures are **deterministic, self-contained data directories** that tests use as input. They provide:

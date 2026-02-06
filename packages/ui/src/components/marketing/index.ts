@@ -1,2 +1,2 @@
 export { MarketingHero, type MarketingHeroProps } from './MarketingHero';
-export { FeatureBlocks, type FeatureBlocksProps, type Feature } from './FeatureBlocks';
+export { FeatureBlocks, codragFeatures, marketingFeatures, type FeatureBlocksProps, type Feature } from './FeatureBlocks';

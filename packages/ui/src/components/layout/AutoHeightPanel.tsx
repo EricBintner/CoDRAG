@@ -45,7 +45,12 @@ export function AutoHeightPanel({
     };
 
     const measureAndReport = () => {
-      const contentHeight = el.scrollHeight;
+      const headerEl = el.querySelector('.codrag-panel-header') as HTMLElement | null;
+      const bodyEl = el.querySelector('.codrag-panel-body') as HTMLElement | null;
+      const contentHeight =
+        headerEl && bodyEl
+          ? headerEl.offsetHeight + bodyEl.scrollHeight
+          : el.scrollHeight;
       const newGridHeight = calculateGridHeight(contentHeight);
 
       if (newGridHeight !== lastReportedHeight.current) {
@@ -79,7 +84,10 @@ export function AutoHeightPanel({
   }, [panelId, rowHeight, marginY, minHeight, onHeightChange]);
 
   return (
-    <div ref={contentRef} className={className}>
+    <div
+      ref={contentRef}
+      className={className ? `h-full ${className}` : 'h-full'}
+    >
       {children}
     </div>
   );

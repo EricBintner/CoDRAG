@@ -1,7 +1,6 @@
 import { Copy, Settings2 } from 'lucide-react';
-import { Card, Title, Text } from '@tremor/react';
+import { Card, Title, Text, Flex, Switch } from '@tremor/react';
 import { Button } from '../primitives/Button';
-import { Toggle } from '../primitives/Toggle';
 import { StepperNumberInput } from '../primitives/StepperNumberInput';
 import { cn } from '../../lib/utils';
 
@@ -103,7 +102,7 @@ export function ContextOptionsPanel({
             </label>
             <StepperNumberInput value={maxChars} onValueChange={onMaxCharsChange} min={200} max={200000} step={100} disabled={disabled} />
           </div>
-        </Flex>
+        </div>
 
         <div className="border-t border-border" />
 

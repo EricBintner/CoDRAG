@@ -8,6 +8,9 @@ export interface PanelConfig {
   visible: boolean;
   height: number;      // Grid row units
   collapsed: boolean;
+  x?: number;
+  y?: number;
+  w?: number;
 }
 
 /**
@@ -34,6 +37,7 @@ export interface PanelDefinition {
   defaultHeight: number;
   category: PanelCategory;
   closeable?: boolean;  // Can be hidden (default true)
+  resizable?: boolean;
 }
 
 /**
@@ -49,19 +53,20 @@ export interface PanelProps {
  */
 export interface GridLayoutItem {
   i: string;      // Panel ID
-  x: number;      // Always 0 (single column)
+  x: number;
   y: number;      // Row position
-  w: number;      // Always 12 (full width)
+  w: number;
   h: number;      // Height in grid units
   minH?: number;  // Minimum height
   static?: boolean;
+  isResizable?: boolean;
 }
 
 /**
  * Default layout configuration
  */
 export const DEFAULT_LAYOUT: DashboardLayout = {
-  version: 1,
+  version: 5,
   panels: [
     { id: 'status', visible: true, height: 6, collapsed: false, x: 0, y: 0, w: 8 },
     { id: 'build', visible: true, height: 7, collapsed: false, x: 0, y: 6, w: 8 },
@@ -86,54 +91,59 @@ export const LAYOUT_STORAGE_KEY = 'codrag_dashboard_layout';
  * Convert DashboardLayout to react-grid-layout format
  */
 export function toGridLayout(layout: DashboardLayout, definitions?: PanelDefinition[]): GridLayoutItem[] {
-  // Group panels by column (x position) to maintain order within columns
-  const panelsByColumn = new Map<number, typeof layout.panels>();
-  
-  for (const panel of layout.panels.filter(p => p.visible)) {
-    const defaultPanel = DEFAULT_LAYOUT.panels.find((p) => p.id === panel.id);
-    const x = typeof panel.x === 'number' ? panel.x : (defaultPanel?.x ?? 0);
-    const list = panelsByColumn.get(x) ?? [];
-    list.push(panel);
-    panelsByColumn.set(x, list);
+  const visiblePanels = layout.panels.filter((p) => p.visible);
+  const defaultById = new Map(DEFAULT_LAYOUT.panels.map((p) => [p.id, p] as const));
+
+  // Group by (x,w) so each column stacks independently.
+  const groups = new Map<string, PanelConfig[]>();
+  for (const p of visiblePanels) {
+    const def = defaultById.get(p.id);
+    const x = typeof p.x === 'number' ? p.x : (def?.x ?? 0);
+    const w = typeof p.w === 'number' ? p.w : (def?.w ?? 12);
+    const key = `${x}:${w}`;
+    const list = groups.get(key);
+    if (list) list.push(p);
+    else groups.set(key, [p]);
   }
 
-  // Sort each column by the default order (y position in DEFAULT_LAYOUT)
-  const getDefaultY = (id: string): number => {
-    const def = DEFAULT_LAYOUT.panels.find(p => p.id === id);
-    return def?.y ?? 999;
+  const orderKeyFor = (id: string): number => {
+    const def = defaultById.get(id);
+    if (!def) return Number.POSITIVE_INFINITY;
+    return typeof def.y === 'number' ? def.y : DEFAULT_LAYOUT.panels.findIndex((p) => p.id === id);
   };
 
   const result: GridLayoutItem[] = [];
-  
-  for (const [x, panels] of panelsByColumn) {
-    // Sort by default y position to maintain intended order
-    const sorted = [...panels].sort((a, b) => getDefaultY(a.id) - getDefaultY(b.id));
-    
-    // Stack items in this column - let compactType handle actual positioning
-    let columnY = 0;
+
+  for (const group of groups.values()) {
+    const sorted = [...group].sort((a, b) => orderKeyFor(a.id) - orderKeyFor(b.id));
+    let nextY = 0;
+
     for (const panel of sorted) {
-      const defaultPanel = DEFAULT_LAYOUT.panels.find((p) => p.id === panel.id);
+      const defaultPanel = defaultById.get(panel.id);
+      const def = definitions?.find((d) => d.id === panel.id);
+      const x = typeof panel.x === 'number' ? panel.x : (defaultPanel?.x ?? 0);
       const w = typeof panel.w === 'number' ? panel.w : (defaultPanel?.w ?? 12);
-      
-      // Look up definition from passed array or registry
-      const panelDef = definitions?.find(d => d.id === panel.id) ?? getPanelDefinition(panel.id);
-      
-      const minH = panelDef?.minHeight ?? 1;
-      const isResizable = panelDef?.resizable ?? true;
+      const y = typeof panel.y === 'number' ? panel.y : nextY;
+      const h = panel.collapsed ? 1 : Math.max(1, panel.height);
+      const minH = def?.minHeight ?? 1;
+      const isResizable = def?.resizable ?? true;
 
       result.push({
         i: panel.id,
-        x: 0,
+        x,
         y,
-        w: 12,
-        h: panel.collapsed ? 1 : panel.height,
-        minH: 1,
-      };
-      y += item.h;
-      return item;
-    });
-}
+        w,
+        h,
+        minH,
+        isResizable,
+      });
 
+      nextY = Math.max(nextY, y + h);
+    }
+  }
+
+  return result;
+}
 /**
  * Update DashboardLayout from react-grid-layout changes
  */

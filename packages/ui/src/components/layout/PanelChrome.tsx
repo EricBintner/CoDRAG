@@ -12,6 +12,7 @@ export interface PanelChromeProps {
   onDetails?: () => void;
   closeable?: boolean;
   onClose?: () => void;
+  fillHeight?: boolean;
   children: ReactNode;
   className?: string;
 }
@@ -24,6 +25,7 @@ export function PanelChrome({
   onDetails,
   closeable = true,
   onClose,
+  fillHeight = false,
   children,
   className,
 }: PanelChromeProps) {

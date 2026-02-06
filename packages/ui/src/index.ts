@@ -15,6 +15,8 @@ export type {
   SavedEndpoint, 
   EndpointTestResult,
   ProjectStatus,
+  WatchStatus,
+  WatchState,
   ApiError
 } from './types';
 
@@ -45,16 +47,25 @@ export type { IndexStatusCardProps, IndexStats, BuildCardProps, IndexStatsProps,
 // Components - LLM
 export { ModelCard, EndpointManager, AIModelsSettings } from './components/llm';
 
+// Components - Primitives
+export { Button } from './components/primitives/Button';
+export { Select } from './components/primitives/Select';
+export type { SelectProps, SelectOption } from './components/primitives/Select';
+
 // Components - Project
-export { FolderTree, sampleFileTree, ProjectSettingsPanel, FolderTreePanel, PinnedTextFilesPanel } from './components/project';
-export type { FolderTreeProps, TreeNode, FileStatus, ProjectSettingsPanelProps, FolderTreePanelProps, PinnedTextFilesPanelProps, PinnedTextFile } from './components/project';
+export { FolderTree, sampleFileTree, ProjectSettingsPanel, FolderTreePanel, PinnedTextFilesPanel, AddProjectModal } from './components/project';
+export type { FolderTreeProps, TreeNode, FileStatus, ProjectSettingsPanelProps, FolderTreePanelProps, PinnedTextFilesPanelProps, PinnedTextFile, AddProjectModalProps } from './components/project';
+
+// Components - Watch (Phase 03)
+export { WatchStatusIndicator, WatchControlPanel } from './components/watch';
+export type { WatchStatusIndicatorProps, WatchControlPanelProps } from './components/watch';
 
 // Components - Layout (Modular Dashboard - Phase 15)
 export { PanelChrome, DashboardGrid, PanelPicker, ModularDashboard, useLayoutPersistence } from './components/layout';
 export type { PanelChromeProps, DashboardGridProps, PanelPickerProps, ModularDashboardProps, PanelContentMap } from './components/layout';
 
 // Components - Marketing & Site (Phase 12)
-export { MarketingHero, FeatureBlocks } from './components/marketing';
+export { MarketingHero, FeatureBlocks, codragFeatures, marketingFeatures } from './components/marketing';
 export type { MarketingHeroProps, FeatureBlocksProps, Feature } from './components/marketing';
 export { SiteHeader, SiteFooter } from './components/site';
 export type { SiteHeaderProps, SiteFooterProps, NavLink, FooterSection, FooterLink } from './components/site';

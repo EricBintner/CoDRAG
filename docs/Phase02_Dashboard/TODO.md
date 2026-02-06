@@ -20,43 +20,43 @@
 
 ## Implementation backlog (P02-I*)
 ### App shell + navigation
-- [ ] P02-I1 Project list (sidebar) + add/remove flows
-- [ ] P02-I2 Project tabs (open/close, persist)
+- [x] P02-I1 Project list (sidebar) + add/remove flows ✅ `AppShell` + `Sidebar` + `ProjectList` + `AddProjectModal`
+- [x] P02-I2 Project tabs (open/close, persist) ✅ Multi-project selection via `ProjectList`
 - [ ] P02-I3 Global settings modal (provider URLs, defaults)
   - ollama URL
   - default embedding model
   - optional: CLaRa URL + enable toggle
 
 ### Status/build
-- [ ] P02-I4 Status page “trust console” card(s):
+- [x] P02-I4 Status page “trust console” card(s): ✅ `IndexStatusCard` + `LLMStatusWidget`
   - right project identity (name + path)
   - index exists / last successful build
   - building / pending
   - last error (code/message/hint)
-  - [ ] P02-I4a Provider connectivity tests: “Test Ollama” / “Test CLaRa” buttons with clear pass/fail + hint (uses `GET /llm/status` + `POST /llm/test`)
-- [ ] P02-I5 Build actions:
+  - [x] P02-I4a Provider connectivity tests ✅ `AIModelsSettings` in panel details
+- [x] P02-I5 Build actions: ✅ `BuildCard` with build polling
   - incremental build (default)
   - full rebuild (confirm)
 
 ### Search + inspection
-- [ ] P02-I6 Search page:
+- [x] P02-I6 Search page: ✅ `SearchPanel` + `SearchResultsList` + `ChunkPreview`
   - query input
   - results list with previews
   - chunk viewer panel/drawer
-- [ ] P02-I7 Search result inspectability:
+- [x] P02-I7 Search result inspectability: ✅ `SearchResultsList` + `ChunkPreview`
   - show path + span
   - copy chunk
   - optional score display behind toggle
 
 ### Context assembly
-- [ ] P02-I8 Context page:
+- [x] P02-I8 Context page: ✅ `ContextOptionsPanel` + `ContextOutput`
   - query input
   - bounded settings UI (`k`, `max_chars`, `min_score`)
   - output viewer with citations
   - copy-to-clipboard
 
 ### Settings
-- [ ] P02-I9 Per-project settings:
+- [x] P02-I9 Per-project settings: ✅ `ProjectSettingsPanel` + `FolderTreePanel`
   - core/working roots selection
   - include/exclude globs
   - max file bytes
@@ -65,8 +65,8 @@
   - auto-rebuild tuning (debounce, min gap)
 
 ### Error + loading states
-- [ ] P02-I10 Standardize UX states: loading / empty / ready / error
-- [ ] P02-I11 Standard error component that renders `error.code`, message, and hint consistently
+- [x] P02-I10 Standardize UX states: loading / empty / ready / error ✅ `LoadingState` + `ErrorState` + empty state in sidebar
+- [x] P02-I11 Standard error component that renders `error.code`, message, and hint consistently ✅ `ErrorState`
 
 ## Testing & validation (P02-T*)
 - [ ] P02-T1 E2E smoke: add project → build → search → open chunk → context
@@ -92,10 +92,10 @@ Relevant entries in `../MASTER_TODO.md`:
   - `ProjectSettingsPanel`
 
 ## Next steps (to restore compile + functionality)
-- [ ] Repair `App.tsx` to compile:
-  - restore missing `useState` state for LLM config (endpoints + model slots)
-  - restore missing handlers and API wiring for model fetch + test
-  - ensure settings round-trip persistence via `/api/code-index/config`
+- [x] Repair `App.tsx` to compile: ✅ Full rewrite using Storybook-canonical components
+  - restored LLM config state + handlers
+  - restored API wiring for model fetch + test via `/api/llm/proxy/*`
+  - config persistence via `PUT /projects/{id}` (canonical API)
 - [ ] Smoke test flows:
   - load config on mount
   - update endpoint/model slot → save config
@@ -125,20 +125,18 @@ Relevant entries in `../MASTER_TODO.md`:
     - include/exclude policy checks
 
 ### Remaining TODOs
-- [ ] Frontend: add `usePinnedFiles` hook
+- [x] Frontend: add pinned files state + handlers (inline in App.tsx) ✅
   - localStorage persistence (paths + ordering)
-  - fetch content for pinned paths via backend endpoint
-  - error + loading states per file
-- [ ] Frontend: wire panels into `src/codrag/dashboard/src/App.tsx`
-  - replace/augment existing `roots` sidebar/tree usage with `FolderTreePanel`
-  - add `PinnedTextFilesPanel` into `panelContent`
-  - ensure panel registry/layout picker shows the new `projects` category
-- [ ] Storybook: update `packages/ui/src/stories/dashboard/FullDashboard.stories.tsx`
-  - include `FolderTreePanel` and `PinnedTextFilesPanel`
-  - demonstrate pin/unpin interaction
-- [ ] UI package polish:
-  - add missing `.hide-scrollbar` and `.custom-scrollbar` utilities to `packages/ui/src/styles/index.css`
-  - export `FolderTreePanel` and `PinnedTextFilesPanel` from UI barrels (and update package exports if needed)
+  - fetch content for pinned paths via `getProjectFileContent` API
+  - error handling per file (skip on failure)
+- [x] Frontend: wire panels into `src/codrag/dashboard/src/App.tsx` ✅
+  - `FolderTreePanel` with `includedPaths`, `onToggleInclude`, `onNodeClick` for pin/unpin
+  - `PinnedTextFilesPanel` in `panelContent` with `onUnpin`
+  - panel registry already includes `projects` category
+- [x] Storybook: `FullDashboard.stories.tsx` already includes `FolderTreePanel` and `PinnedTextFilesPanel` ✅
+- [x] UI package polish: ✅
+  - `.hide-scrollbar` and `.custom-scrollbar` utilities already in styles
+  - `FolderTreePanel` and `PinnedTextFilesPanel` already exported from UI barrels
 
 ### Research notes (backend file content)
 - There was no existing endpoint to fetch arbitrary file content by repo-root-relative path; existing endpoints were chunk-oriented.

@@ -1,44 +1,8 @@
-import { MarketingHero, FeatureBlocks } from '@codrag/ui';
-import { Search, GitBranch, Zap, Lock, RefreshCw, Plug } from 'lucide-react';
-import { DevMarketingHero } from './DevMarketingHero';
+"use client";
 
-const codragFeatures = [
-  {
-    icon: <Search className="w-8 h-8" />,
-    title: 'Semantic Search',
-    description: 'Find code by meaning, not just keywords. Ask questions like "where does authentication happen?" and get accurate results.',
-    badge: 'Core',
-    highlight: true,
-  },
-  {
-    icon: <GitBranch className="w-8 h-8" />,
-    title: 'Trace Index',
-    description: 'Understand code relationships. See imports, calls, and symbol dependencies at a glance.',
-    badge: 'Pro',
-  },
-  {
-    icon: <Zap className="w-8 h-8" />,
-    title: 'Instant Context',
-    description: 'Assemble LLM-ready context in under 200ms. Perfect chunks with citations, every time.',
-  },
-  {
-    icon: <Lock className="w-8 h-8" />,
-    title: 'Local-First',
-    description: 'Your code never leaves your machine. No cloud, no telemetry, no compromises on privacy.',
-    highlight: true,
-  },
-  {
-    icon: <RefreshCw className="w-8 h-8" />,
-    title: 'Auto-Rebuild',
-    description: 'File watcher keeps your index fresh. Edit code, get updated search results instantly.',
-  },
-  {
-    icon: <Plug className="w-8 h-8" />,
-    title: 'MCP Integration',
-    description: 'Works seamlessly with Cursor, Windsurf, and any MCP-compatible IDE.',
-    badge: 'New',
-  },
-];
+import { MarketingHero, FeatureBlocks, codragFeatures, marketingFeatures } from '@codrag/ui';
+import { Terminal, ArrowRight } from 'lucide-react';
+import { DevMarketingHero } from './DevMarketingHero';
 
 export default function Page() {
   const showDevToolbar = process.env.NODE_ENV !== 'production';
@@ -49,17 +13,89 @@ export default function Page() {
         {/* Hero Section */}
         {showDevToolbar ? <DevMarketingHero /> : <MarketingHero variant="split" />}
 
-        {/* Features Section */}
+        {/* Why CoDRAG — Problem / Solution / Result */}
         <section>
           <div className="text-center mb-16">
+            <p className="text-sm font-semibold uppercase tracking-widest text-primary mb-3">Why developers need this</p>
             <h2 className="text-3xl font-bold tracking-tight text-text sm:text-4xl">
-              Everything you need for local context
+              If you use AI to write code, you need CoDRAG
             </h2>
-            <p className="mt-4 text-lg text-text-muted">
-              Built for privacy, speed, and deep understanding of your codebase.
+            <p className="mt-4 text-lg text-text-muted max-w-2xl mx-auto">
+              AI assistants are only as good as the context they receive. CoDRAG makes sure they get the right context, every time.
+            </p>
+          </div>
+          <FeatureBlocks features={marketingFeatures} variant="list" />
+        </section>
+
+        {/* Core Features */}
+        <section>
+          <div className="text-center mb-16">
+            <p className="text-sm font-semibold uppercase tracking-widest text-primary mb-3">Capabilities</p>
+            <h2 className="text-3xl font-bold tracking-tight text-text sm:text-4xl">
+              Everything your AI tools are missing
+            </h2>
+            <p className="mt-4 text-lg text-text-muted max-w-2xl mx-auto">
+              Semantic search, structural code understanding, and instant context assembly — running locally, integrated with every major AI coding tool.
             </p>
           </div>
           <FeatureBlocks features={codragFeatures} variant="cards" />
+        </section>
+
+        {/* How It Works — Quick visual */}
+        <section className="rounded-2xl border border-border bg-surface p-8 md:p-12">
+          <div className="text-center mb-12">
+            <p className="text-sm font-semibold uppercase tracking-widest text-primary mb-3">Get started in 60 seconds</p>
+            <h2 className="text-3xl font-bold tracking-tight text-text sm:text-4xl">
+              Three commands. Done.
+            </h2>
+          </div>
+          <div className="max-w-2xl mx-auto font-mono text-sm bg-background rounded-xl border border-border p-6 space-y-3">
+            <div className="flex items-center gap-2">
+              <Terminal className="w-4 h-4 text-text-subtle flex-shrink-0" />
+              <span className="text-text-muted"># Install and start the daemon</span>
+            </div>
+            <div className="text-success">$ codrag serve</div>
+            <div className="text-text-muted mt-2"># Point it at your project</div>
+            <div className="text-success">$ codrag add ./my-app --name &quot;MyApp&quot;</div>
+            <div className="text-text-muted mt-2"># Start using it with your AI tools</div>
+            <div className="text-success">$ codrag mcp --auto</div>
+            <div className="mt-4 pt-4 border-t border-border text-text-muted text-xs">
+              Works with Cursor, Windsurf, VS Code, Claude Desktop, and any MCP-compatible editor.
+            </div>
+          </div>
+        </section>
+
+        {/* Trust / social proof strip */}
+        <section className="text-center space-y-8">
+          <h2 className="text-2xl font-bold tracking-tight text-text sm:text-3xl">
+            Built for professionals who take their code seriously
+          </h2>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-8 max-w-3xl mx-auto">
+            <div>
+              <div className="text-3xl font-bold text-primary">&lt;100ms</div>
+              <div className="text-sm text-text-muted mt-1">Search latency</div>
+            </div>
+            <div>
+              <div className="text-3xl font-bold text-primary">0 bytes</div>
+              <div className="text-sm text-text-muted mt-1">Sent to the cloud</div>
+            </div>
+            <div>
+              <div className="text-3xl font-bold text-primary">BYOK</div>
+              <div className="text-sm text-text-muted mt-1">No token markup</div>
+            </div>
+            <div>
+              <div className="text-3xl font-bold text-primary">Perpetual</div>
+              <div className="text-sm text-text-muted mt-1">License available</div>
+            </div>
+          </div>
+          <div className="pt-4">
+            <a
+              href="/download"
+              className="inline-flex items-center gap-2 rounded-md bg-primary px-6 py-3 text-sm font-semibold text-white shadow-lg shadow-primary/25 hover:bg-primary-hover transition-colors"
+            >
+              Get CoDRAG <ArrowRight className="w-4 h-4" />
+            </a>
+          </div>
         </section>
       </div>
     </main>

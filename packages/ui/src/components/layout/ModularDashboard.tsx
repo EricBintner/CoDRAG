@@ -1,4 +1,4 @@
-import { useCallback, useMemo } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import type { ReactNode } from 'react';
 import { X } from 'lucide-react';
 import { DashboardGrid } from './DashboardGrid';
@@ -40,7 +40,7 @@ export function ModularDashboard({
   headerLeft,
   headerRight,
   rowHeight = 20,
-  margin = [12, 12],
+  margin = [24, 24],
   storageKey,
 }: ModularDashboardProps) {
   const {
@@ -57,7 +57,7 @@ export function ModularDashboard({
 
   const handleAutoHeight = useCallback(
     (panelId: string, gridUnits: number) => {
-      setPendingHeights((prev) => {
+      setPendingHeights((prev: Record<string, number>) => {
         if (prev[panelId] === gridUnits) return prev;
         return { ...prev, [panelId]: gridUnits };
       });
@@ -66,7 +66,7 @@ export function ModularDashboard({
   );
 
   useEffect(() => {
-    const entries = Object.entries(pendingHeights);
+    const entries = Object.entries(pendingHeights) as Array<[string, number]>;
     if (entries.length === 0) return;
 
     for (const [panelId, height] of entries) {
@@ -160,6 +160,7 @@ export function ModularDashboard({
         panelDefinitions={panelDefinitions}
         onLayoutChange={updateLayout}
         rowHeight={rowHeight}
+        margin={margin}
       >
         {visiblePanels.map((panel) => {
           const def = getDefinition(panel.id);
@@ -172,6 +173,19 @@ export function ModularDashboard({
 
           const isPanelResizable = def.resizable ?? true;
 
+          const contentNode = (
+            <div
+              className={cn(
+                'codrag-panel-body p-4 flex flex-col',
+                isPanelResizable && 'h-full min-h-0 overflow-hidden'
+              )}
+            >
+              {content ?? (
+                <div className="text-sm text-text-muted">Panel content not provided</div>
+              )}
+            </div>
+          );
+
           const panelNode = (
             <PanelChrome
               title={def.title}
@@ -181,13 +195,9 @@ export function ModularDashboard({
               onDetails={canShowDetails ? () => setDetailsPanelId(panel.id) : undefined}
               closeable={def.closeable}
               onClose={def.closeable ? () => togglePanelVisibility(panel.id) : undefined}
-              fillHeight={isPanelResizable}
+              fillHeight={true}
             >
-              {content ?? (
-                <div className="p-4 text-sm text-text-muted">
-                  Panel content not provided
-                </div>
-              )}
+              {contentNode}
             </PanelChrome>
           );
 

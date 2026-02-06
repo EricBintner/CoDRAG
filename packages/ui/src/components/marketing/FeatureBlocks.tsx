@@ -147,57 +147,56 @@ function BentoGrid({ features }: { features: Feature[] }) {
 export const codragFeatures: Feature[] = [
   {
     icon: <Search className="w-8 h-8" />,
-    title: 'Semantic Search',
-    description: 'Find code by meaning, not just keywords. Ask questions like "where does authentication happen?" and get accurate results.',
+    title: 'Semantic Code Search',
+    description: 'Ask natural-language questions like "where is the auth middleware?" and get ranked results in under 100 ms—across every project you manage.',
     badge: 'Core',
     highlight: true,
   },
   {
     icon: <GitBranch className="w-8 h-8" />,
-    title: 'Trace Index',
-    description: 'Understand code relationships. See imports, calls, and symbol dependencies at a glance.',
+    title: 'Structural Trace Index',
+    description: 'Goes beyond vector search. CoDRAG maps imports, call graphs, and symbol hierarchies so your AI sees how code connects—not just where keywords appear.',
     badge: 'Pro',
-  },
-  {
-    icon: <Zap className="w-8 h-8" />,
-    title: 'Instant Context',
-    description: 'Assemble LLM-ready context in under 200ms. Perfect chunks with citations, every time.',
-  },
-  {
-    icon: <Lock className="w-8 h-8" />,
-    title: 'Local-First',
-    description: 'Your code never leaves your machine. No cloud, no telemetry, no compromises on privacy.',
     highlight: true,
   },
   {
+    icon: <Zap className="w-8 h-8" />,
+    title: 'Instant Context Assembly',
+    description: 'One command assembles perfectly chunked, citation-rich context for any LLM. No more copy-pasting files or guessing what to include.',
+  },
+  {
+    icon: <Lock className="w-8 h-8" />,
+    title: 'Runs 100% on Your Machine',
+    description: 'Your code never leaves localhost. No cloud upload, no telemetry, no API-key markup. Bring your own Ollama—CoDRAG never charges you for tokens.',
+  },
+  {
     icon: <RefreshCw className="w-8 h-8" />,
-    title: 'Auto-Rebuild',
-    description: 'File watcher keeps your index fresh. Edit code, get updated search results instantly.',
+    title: 'Always-Fresh Index',
+    description: 'A real-time file watcher detects edits and rebuilds incrementally. Your search results and AI context are never stale.',
   },
   {
     icon: <Plug className="w-8 h-8" />,
-    title: 'MCP Integration',
-    description: 'Works seamlessly with Cursor, Windsurf, and any MCP-compatible IDE.',
-    badge: 'New',
+    title: 'Works With Every AI Tool',
+    description: 'Native MCP integration means CoDRAG plugs directly into Cursor, Windsurf, VS Code, and Claude Desktop—no config gymnastics.',
+    badge: 'MCP',
   },
-  ];
+];
 
 export const marketingFeatures: Feature[] = [
   {
     icon: <AlertTriangle className="w-8 h-8" />,
-    title: 'Problem: AI hallucinations from missing context',
-    description: 'Your AI assistant makes mistakes because it can\'t see your entire codebase. Manual copy-pasting is slow and error-prone.',
+    title: 'The Problem: AI Can\'t See Your Codebase',
+    description: 'Every AI coding assistant hallucinates when it lacks context. You waste time fixing bad suggestions, re-explaining architecture, and manually pasting files into chat windows.',
     highlight: true,
   },
   {
     icon: <Lightbulb className="w-8 h-8" />,
-    title: 'Solution: Semantic indexing + smart context',
-    description: 'CoDRAG builds a semantic understanding of your code and delivers exactly the right context to your AI tools.',
+    title: 'The Fix: Give AI a Structural Map',
+    description: 'CoDRAG indexes your entire codebase—semantics, symbols, and call graphs—then assembles exactly the right context for every prompt, automatically.',
   },
   {
     icon: <TrendingUp className="w-8 h-8" />,
-    title: 'Result: 60%+ fewer AI mistakes',
-    description: 'Teams using CoDRAG report dramatically fewer hallucinations and faster iteration cycles.',
-    badge: 'Measured',
+    title: 'The Result: AI That Actually Gets It',
+    description: 'Fewer hallucinations, fewer re-prompts, faster iteration. Developers using structured context report dramatically better AI output across Cursor, Windsurf, and Copilot.',
   },
 ];

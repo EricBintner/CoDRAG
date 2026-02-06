@@ -3,18 +3,51 @@ import type {
   ApiEnvelope,
   AssembleContextRequest,
   AssembleContextResponse,
+  CreateProjectRequest,
+  CreateProjectResponse,
+  UpdateProjectRequest,
+  UpdateProjectResponse,
+  DeleteProjectResponse,
+  BuildProjectResponse,
   ListProjectsResponse,
   SearchRequest,
   SearchResponse,
+  WatchActionResponse,
 } from './types';
-import type { LLMStatus, ProjectStatus, TraceStatus } from '../types';
+import type { LLMStatus, Project, ProjectStatus, TraceStatus, WatchStatus } from '../types';
 
 export interface ApiClient {
+  // Health
+  getHealth(): Promise<{ status: string; version: string }>;
+
+  // Projects CRUD
   listProjects(): Promise<ListProjectsResponse>;
+  createProject(request: CreateProjectRequest): Promise<CreateProjectResponse>;
+  getProject(projectId: string): Promise<{ project: Project }>;
+  updateProject(projectId: string, request: UpdateProjectRequest): Promise<UpdateProjectResponse>;
+  deleteProject(projectId: string, purge?: boolean): Promise<DeleteProjectResponse>;
+
+  // Project status & build
   getProjectStatus(projectId: string): Promise<ProjectStatus>;
+  buildProject(projectId: string, full?: boolean): Promise<BuildProjectResponse>;
+
+  // Search & context
   search(projectId: string, request: SearchRequest): Promise<SearchResponse>;
   assembleContext(projectId: string, request: AssembleContextRequest): Promise<AssembleContextResponse>;
+
+  // Trace
   getTraceStatus(projectId: string): Promise<TraceStatus>;
+
+  // Roots & Files
+  getProjectRoots(projectId: string): Promise<{ roots: string[] }>;
+  getProjectFileContent(projectId: string, path: string): Promise<{ content: string; path: string; size: number }>;
+
+  // Watch
+  startWatch(projectId: string): Promise<WatchActionResponse>;
+  stopWatch(projectId: string): Promise<WatchActionResponse>;
+  getWatchStatus(projectId: string): Promise<WatchStatus>;
+
+  // LLM
   getLLMStatus(): Promise<LLMStatus>;
 }
 
@@ -35,13 +68,62 @@ export class CodragApiClient implements ApiClient {
     this.fetchImpl = config?.fetchImpl ?? fetch;
   }
 
+  // ── Health ──────────────────────────────────────────────────
+
+  async getHealth(): Promise<{ status: string; version: string }> {
+    // /health returns raw JSON, not an envelope
+    const res = await this.fetchImpl(new URL('/health', this.baseUrl).toString(), {
+      headers: { Accept: 'application/json' },
+    });
+    if (!res.ok) throw new ApiClientError(`Health check failed: HTTP ${res.status}`);
+    return res.json();
+  }
+
+  // ── Projects CRUD ──────────────────────────────────────────
+
   async listProjects(): Promise<ListProjectsResponse> {
     return this.requestEnvelope<ListProjectsResponse>('/projects');
   }
 
+  async createProject(request: CreateProjectRequest): Promise<CreateProjectResponse> {
+    return this.requestEnvelope<CreateProjectResponse>('/projects', {
+      method: 'POST',
+      body: request,
+    });
+  }
+
+  async getProject(projectId: string): Promise<{ project: Project }> {
+    return this.requestEnvelope<{ project: Project }>(`/projects/${encodeURIComponent(projectId)}`);
+  }
+
+  async updateProject(projectId: string, request: UpdateProjectRequest): Promise<UpdateProjectResponse> {
+    return this.requestEnvelope<UpdateProjectResponse>(`/projects/${encodeURIComponent(projectId)}`, {
+      method: 'PUT',
+      body: request,
+    });
+  }
+
+  async deleteProject(projectId: string, purge = false): Promise<DeleteProjectResponse> {
+    return this.requestEnvelope<DeleteProjectResponse>(`/projects/${encodeURIComponent(projectId)}`, {
+      method: 'DELETE',
+      query: { purge },
+    });
+  }
+
+  // ── Status & Build ─────────────────────────────────────────
+
   async getProjectStatus(projectId: string): Promise<ProjectStatus> {
     return this.requestEnvelope<ProjectStatus>(`/projects/${encodeURIComponent(projectId)}/status`);
   }
+
+  async buildProject(projectId: string, full = false): Promise<BuildProjectResponse> {
+    return this.requestEnvelope<BuildProjectResponse>(`/projects/${encodeURIComponent(projectId)}/build`, {
+      method: 'POST',
+      query: { full },
+    });
+  }
+
+  // ── Search & Context ───────────────────────────────────────
 
   async search(projectId: string, request: SearchRequest): Promise<SearchResponse> {
     return this.requestEnvelope<SearchResponse>(`/projects/${encodeURIComponent(projectId)}/search`, {
@@ -57,9 +139,43 @@ export class CodragApiClient implements ApiClient {
     });
   }
 
+  // ── Trace ──────────────────────────────────────────────────
+
   async getTraceStatus(projectId: string): Promise<TraceStatus> {
     return this.requestEnvelope<TraceStatus>(`/projects/${encodeURIComponent(projectId)}/trace/status`);
   }
+
+  // ── Roots ──────────────────────────────────────────────────
+
+  async getProjectRoots(projectId: string): Promise<{ roots: string[] }> {
+    return this.requestEnvelope<{ roots: string[] }>(`/projects/${encodeURIComponent(projectId)}/roots`);
+  }
+
+  async getProjectFileContent(projectId: string, path: string): Promise<{ content: string; path: string; size: number }> {
+    return this.requestEnvelope<{ content: string; path: string; size: number }>(
+      `/projects/${encodeURIComponent(projectId)}/file?path=${encodeURIComponent(path)}`
+    );
+  }
+
+  // ── Watch ──────────────────────────────────────────────────
+
+  async startWatch(projectId: string): Promise<WatchActionResponse> {
+    return this.requestEnvelope<WatchActionResponse>(`/projects/${encodeURIComponent(projectId)}/watch/start`, {
+      method: 'POST',
+    });
+  }
+
+  async stopWatch(projectId: string): Promise<WatchActionResponse> {
+    return this.requestEnvelope<WatchActionResponse>(`/projects/${encodeURIComponent(projectId)}/watch/stop`, {
+      method: 'POST',
+    });
+  }
+
+  async getWatchStatus(projectId: string): Promise<WatchStatus> {
+    return this.requestEnvelope<WatchStatus>(`/projects/${encodeURIComponent(projectId)}/watch/status`);
+  }
+
+  // ── LLM ────────────────────────────────────────────────────
 
   async getLLMStatus(): Promise<LLMStatus> {
     return this.requestEnvelope<LLMStatus>('/llm/status');

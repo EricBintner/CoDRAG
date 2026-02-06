@@ -1,5 +1,6 @@
 import { 
   Database, 
+  Eye,
   Hammer, 
   Search, 
   Settings2, 
@@ -119,6 +120,16 @@ export const PANEL_REGISTRY: PanelDefinition[] = [
     defaultHeight: 10,
     category: 'projects',
     closeable: true,
+  },
+  {
+    id: 'watch',
+    title: 'File Watcher',
+    icon: Eye,
+    minHeight: 2,
+    defaultHeight: 3,
+    category: 'status',
+    closeable: true,
+    resizable: false,
   },
 ];
 

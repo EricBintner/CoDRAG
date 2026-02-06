@@ -75,26 +75,26 @@ These sprints are intentionally cross-phase. Each sprint should end with:
 - [ ] S-00.5 Close Phase05 research blockers (tool schemas, selection rules, budgets)
   - See: `Phase05_MCP_Integration/TODO.md` (P05-R*)
 
-### Sprint S-01: Core trust loop (engine + contracts)
+### Sprint S-01: Core trust loop (engine + contracts) 
 **Goal:** make “add → build → search → context” reliable and contract-stable.
 
-- [ ] S-01.1 Core persistence + atomic build contract (Phase01)
-- [ ] S-01.2 Error envelope + error code taxonomy alignment (Phase01/02/05/07)
-- [ ] S-01.3 Output budgets policy (k/max_chars/min_score) alignment (Phase01/02/05)
+- [x] S-01.1 Core persistence + atomic build contract (Phase01) 
+- [x] S-01.2 Error envelope + error code taxonomy alignment (Phase01/02/05/07)
+- [x] S-01.3 Output budgets policy (k/max_chars/min_score) alignment (Phase01/02/05)
 
-### Sprint S-02: Trust console UX (dashboard)
+### Sprint S-02: Trust console UX (dashboard) 
 **Goal:** a dashboard that answers “right project / fresh index / verifiable sources”.
 
-- [ ] S-02.1 Project navigation + tab model (Phase02)
-- [ ] S-02.2 Build/status UX + error playbooks (Phase02/07)
-- [ ] S-02.3 Search + chunk viewer + context output UX (Phase02)
+- [x] S-02.1 Project navigation + tab model (Phase02) `AppShell` + `Sidebar` + `ProjectList` + `AddProjectModal`
+- [x] S-02.2 Build/status UX + error playbooks (Phase02/07) `IndexStatusCard` + `BuildCard` + `ErrorState` + build polling
+- [x] S-02.3 Search + chunk viewer + context output UX (Phase02) `SearchPanel` + `SearchResultsList` + `ChunkPreview` + `ContextOutput` + `ContextOptionsPanel`
 
 ### Sprint S-03: Freshness loop (auto-rebuild)
 **Goal:** predictable staleness detection and bounded incremental rebuild.
 
-- [ ] S-03.1 Watcher + debounce + throttling behaviors (Phase03)
+- [x] S-03.1 Watcher + debounce + throttling behaviors (Phase03)
 - [ ] S-03.2 Incremental rebuild (hash + stable IDs) (Phase01/03)
-- [ ] S-03.3 Freshness UI and “what changed?” surfaces (Phase02/03)
+- [x] S-03.3 Freshness UI and "what changed?" surfaces (Phase02/03) `WatchControlPanel` + `WatchStatusIndicator` + watch panel in dashboard
 
 ### Sprint S-04: Trace foundations + bounded expansion
 **Goal:** structural grounding that stays small, inspectable, and safe.
@@ -115,9 +115,9 @@ These sprints are intentionally cross-phase. Each sprint should end with:
 ### Sprint S-06: Reliability baseline + evaluation harness
 **Goal:** prevent regressions; make failures actionable; define perf envelope.
 
-- [ ] S-06.1 Test fixtures + unit/integration test baseline (Phase07/01–05)
-- [ ] S-06.2 Recovery + corruption detection behaviors (Phase07/01)
-- [ ] S-06.3 “Gold queries” and manual eval loop (Phase07/04/05)
+- [x] S-06.1 Test fixtures + unit/integration test baseline (Phase07/01–05)  `tests/test_trust_loop_integration.py` + `tests/conftest.py`
+- [x] S-06.2 Recovery + corruption detection behaviors (Phase07/01)  `tests/test_index_recovery.py` (13 tests)
+- [x] S-06.3 "Gold queries" and manual eval loop (Phase07/04/05)  `tests/eval/` (10 gold queries + runner)
 
 ### Sprint S-07: Desktop packaging + deployment readiness
 **Goal:** Tauri app + sidecar lifecycle + signed distribution path.
@@ -326,16 +326,77 @@ Add brief notes here after completing a sprint:
  - **Universal UI**: All marketing/docs components (`MarketingHero`, `FeatureBlocks`, `IndexStats`, `TraceGraph`) are now canonical in `@codrag/ui`.
  - **Themes Ported**: All "Radical" visual directions (Neo-Brutalist, Retro, Glass, etc.) + required fonts are fully integrated into the shared package.
 
+ ### 2026-02-05: Frontend-Backend Integration (S-02)
+
+ **What was built:**
+ - **Typed API Client** (`packages/ui/src/api/client.ts`): Extended `CodragApiClient` with 9 new methods:
+   - Project CRUD: `createProject`, `getProject`, `updateProject`, `deleteProject`
+   - Build: `buildProject` (with polling)
+   - Roots: `getProjectRoots`
+   - Watch: `startWatch`, `stopWatch`, `getWatchStatus`
+   - Health: `getHealth`
+ - **New API types** (`packages/ui/src/api/types.ts`): `CreateProjectRequest/Response`, `UpdateProjectRequest/Response`, `DeleteProjectResponse`, `BuildProjectResponse`, `WatchActionResponse`
+ - **App.tsx full rewrite** (`src/codrag/dashboard/src/App.tsx`): 1009→573 lines, exclusively Storybook components:
+   - `AppShell` + `Sidebar` + `ProjectList` for multi-project navigation
+   - `AddProjectModal` for project creation via `POST /projects`
+   - `LoadingState` / `ErrorState` pattern components
+   - `Button` atomic primitive (newly exported from `@codrag/ui`)
+   - `FolderTreePanel` wired to `/projects/{id}/roots`
+   - All API calls via `useApiClient()` → canonical `/projects/{id}/*` routes
+   - Removed: legacy `/api/code-index` routes, hand-rolled fetch, inline tree logic, raw HTML buttons
+ - **main.tsx**: Wrapped with `ApiClientProvider` using `CodragApiClient`
+ - **New exports from `@codrag/ui`**: `Button`, `AddProjectModal`, `AddProjectModalProps`
+
+ **Additional work (same session):**
+ - **Select primitive** (`packages/ui/src/components/primitives/Select.tsx`): New Storybook component with variants (default, ghost) and sizes
+ - **Panel details**: Restored `panelDetails` prop with `AIModelsSettings` (LLM expanded view) and `FolderTree` (roots expanded view)
+ - **LLM config handlers**: Full endpoint management (add/edit/delete/test), model fetching via `/api/llm/proxy/*`, model testing
+ - **Pinned Files feature**: 
+   - Added `getProjectFileContent` to API client (uses `GET /projects/{id}/file?path=...`)
+   - Pinned files state with localStorage persistence
+   - `FolderTreePanel` wired with `includedPaths`, `onToggleInclude`, `onNodeClick` for pin/unpin
+   - `PinnedTextFilesPanel` in `panelContent` with `onUnpin`
+   - Content fetched from backend on pin
+
+ **Decisions:**
+ - Dashboard uses `window.location.origin` as API base (works when served by daemon)
+ - Build polling at 2s intervals until `status.building === false`
+ - Project config loaded from `GET /projects/{id}` on project selection
+ - Pinned file paths persisted in `localStorage` under key `codrag_pinned_files`
+
+ ### 2026-02-05: HTTP API Integration Tests (S-06.1)
+
+ **What was built:**
+ - `tests/test_trust_loop_integration.py` — 18 tests covering the **core trust loop** HTTP API:
+   - **Project Lifecycle**: add, get, list, delete, 404 handling
+   - **Build Operations**: trigger build, wait for completion, status before build
+   - **Search Operations**: search after build, search before build (409), min_score filtering
+   - **Context Operations**: context assembly, max_chars limiting
+   - **End-to-End**: full add → build → search → context flow
+   - **Error Handling**: invalid project IDs across all endpoints
+
+ **Test coverage now includes:**
+ - `test_trust_loop_integration.py` (18 tests) — HTTP API integration
+ - `test_mcp_direct_smoke.py` (10 tests) — MCP direct mode
+ - `test_atomic_build.py` (4 tests) — Atomic build/recovery
+ - `test_primer.py` (14 tests) — Primer feature
+ - `test_watcher_staleness.py` (9 tests) — Watcher staleness
+ - `test_trace_endpoints.py` — Trace API endpoints
+ - `test_api_envelope.py` — Error envelope formatting
+
  #### Research / decisions
- - [ ] STR-01: finalize error code taxonomy + `hint` rules across daemon/UI/MCP/CLI.
- - [ ] STR-03: manifest schema/versioning decision (per-file manifest fields vs format bump strategy).
- - [ ] STR-04: atomic build + recovery contract (what gets swapped, how to detect partial builds).
- - [ ] STR-05: budgets policy (server-enforced max caps) and alignment across UI + MCP + docs.
- - [ ] Decide primer detection precedence (e.g. `AGENTS.md` vs `CODRAG_PRIMER.md`, root-only vs glob).
+ - [x] STR-01: finalize error code taxonomy + `hint` rules across daemon/UI/MCP/CLI. ✅ **DONE: `docs/ERROR_CODES.md`**
+ - [x] STR-03: manifest schema/versioning decision (per-file manifest fields vs format bump strategy). ✅ **DONE: `docs/MANIFEST_SCHEMA.md`**
+ - [x] STR-04: atomic build + recovery contract (what gets swapped, how to detect partial builds). ✅ **DONE: `docs/ATOMIC_BUILD.md`**
+ - [x] STR-05: budgets policy (server-enforced max caps) and alignment across UI + MCP + docs. ✅ **DONE: `docs/BUDGETS_POLICY.md`**
+ - [x] Decide primer detection precedence (e.g. `AGENTS.md` vs `CODRAG_PRIMER.md`, root-only vs glob). ✅ **DONE: `docs/PRIMER_DETECTION.md`**
 
  #### Planning / coordination
- - [ ] Sprint S-01: choose the next “trust loop hardening” bundle:
+ - [x] Sprint S-01: choose the next “trust loop hardening” bundle: ✅ **DONE**
    - CLI envelope + endpoint drift fixes
    - atomic build + recovery
-   - minimal integration tests (add project → build → search → context)
- - [ ] Sprint S-08: publishable docs plan (Getting Started + MCP onboarding + Troubleshooting-first).
+   - minimal integration tests (add project → build → search → context) ✅ `tests/test_trust_loop_integration.py`
+ - [x] Sprint S-08: publishable docs plan (Getting Started + MCP onboarding + Troubleshooting-first). ✅ **DONE**
+   - `docs/GETTING_STARTED.md` — Installation and quick start
+   - `docs/MCP_ONBOARDING.md` — AI assistant integration guide
+   - `docs/TROUBLESHOOTING.md` — Common issues and solutions

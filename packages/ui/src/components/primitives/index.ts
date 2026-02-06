@@ -9,3 +9,6 @@ export type { StepperNumberInputProps } from './StepperNumberInput';
 
 export { Button, buttonVariants } from './Button';
 export type { ButtonProps } from './Button';
+
+export { Select, selectVariants } from './Select';
+export type { SelectProps, SelectOption } from './Select';

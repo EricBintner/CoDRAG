@@ -59,24 +59,24 @@ function CenteredHero() {
 
         {/* Headline */}
         <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-text leading-tight max-w-4xl mx-auto">
-          Semantic search for your codebase.{' '}
-          <span className="text-primary">Instant context for AI.</span>
+          Your AI writes better code{' '}
+          <span className="text-primary">when it can see yours.</span>
         </h1>
 
         {/* Subheadline */}
         <p className="mt-6 text-lg md:text-xl text-text-muted max-w-2xl mx-auto leading-relaxed">
-          CoDRAG indexes your code locally, delivers trace-aware search results, 
-          and assembles perfect context for Cursor, Windsurf, and Copilot—all without 
-          sending your code to the cloud.
+          CoDRAG indexes your entire codebase locally — semantics, symbols, and call
+          graphs — then feeds the right context to Cursor, Windsurf, and Claude Desktop.
+          No cloud. No token markup. Just better AI output.
         </p>
 
         {/* CTAs */}
         <Flex className="mt-10 gap-4" justifyContent="center" alignItems="center">
           <Button size="lg" className="shadow-lg shadow-primary/25">
-            Download for macOS
+            Download for Free
           </Button>
           <Button size="lg" variant="outline" className="border-2">
-            View Documentation
+            See How It Works
           </Button>
         </Flex>
 
@@ -86,7 +86,7 @@ function CenteredHero() {
             <Zap className="w-4 h-4 text-success" /> Works offline
           </span>
           <span className="flex items-center gap-2">
-            <Database className="w-4 h-4 text-success" /> Bring your own LLM
+            <Database className="w-4 h-4 text-success" /> BYOK — no token markup
           </span>
           <span className="flex items-center gap-2">
             <Lock className="w-4 h-4 text-success" /> Perpetual license available
@@ -140,15 +140,15 @@ function NeoBrutalistHero() {
           </div>
           
           <h1 className="text-5xl md:text-7xl font-bold text-text leading-none uppercase tracking-tighter">
-            Stop<br/>
-            Feeding<br/>
-            <span className="bg-primary text-white px-2">The AI</span><br/>
-            Beast.
+            Your AI<br/>
+            Is Flying<br/>
+            <span className="bg-primary text-white px-2">Blind.</span><br/>
+            Fix That.
           </h1>
           
           <p className="mt-6 text-xl text-text font-mono border-l-4 border-primary pl-4">
-            CoDRAG runs locally. Your code stays yours. 
-            Semantic search that actually respects your privacy.
+            CoDRAG gives your AI tools a structural map of your entire codebase.
+            Local indexing. Zero cloud. Dramatically fewer hallucinations.
           </p>
 
           <div className="mt-8 flex flex-col sm:flex-row gap-4">
@@ -157,7 +157,7 @@ function NeoBrutalistHero() {
               className="border-2 border-border bg-primary text-white font-bold text-lg hover:translate-x-1 hover:translate-y-1 hover:shadow-none shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] transition-all rounded-none"
               icon={Download}
             >
-              DOWNLOAD_NOW.EXE
+              GET_CODRAG
             </Button>
             <Button 
               size="lg"
@@ -165,7 +165,7 @@ function NeoBrutalistHero() {
               className="border-2 border-border bg-surface text-text font-bold text-lg hover:translate-x-1 hover:translate-y-1 hover:shadow-none shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] transition-all rounded-none"
               icon={FileText}
             >
-              READ_MANIFESTO
+              SEE_HOW_IT_WORKS
             </Button>
           </div>
         </div>
@@ -180,12 +180,13 @@ function NeoBrutalistHero() {
               </div>
             </div>
             <div className="font-mono text-sm space-y-2 p-2">
-              <div className="text-success">$ codrag index --watch</div>
-              <div className="text-text-muted">[info] watching 1,245 files</div>
-              <div className="text-text-muted">[info] embedding model loaded (CPU)</div>
-              <div className="text-success">$ codrag search "auth flow"</div>
+              <div className="text-success">$ codrag serve</div>
+              <div className="text-text-muted">[info] daemon started on :8400</div>
+              <div className="text-success">$ codrag add ./my-app</div>
+              <div className="text-text-muted">[info] indexing 1,245 files (semantic + trace)</div>
+              <div className="text-success">$ codrag mcp --auto</div>
               <div className="bg-primary/20 p-2 border-2 border-primary border-dashed text-primary-dark">
-                &gt; Found 3 matches in src/auth/
+                &gt; MCP ready — Cursor, Windsurf, Claude Desktop connected
               </div>
             </div>
           </div>
@@ -208,11 +209,11 @@ function SwissHero() {
           <div className="mt-12 grid grid-cols-2 gap-8 border-t border-text pt-6">
             <div>
               <p className="text-sm font-bold uppercase mb-2 flex items-center gap-2"><Hash className="w-4 h-4" /> Problem</p>
-              <p className="text-lg leading-snug text-text-muted">AI hallucinations due to missing context.</p>
+              <p className="text-lg leading-snug text-text-muted">AI coding tools hallucinate because they can’t see your full codebase.</p>
             </div>
             <div>
               <p className="text-sm font-bold uppercase mb-2 flex items-center gap-2"><LayoutGrid className="w-4 h-4" /> Solution</p>
-              <p className="text-lg leading-snug text-text-muted">Semantic indexing on your own machine.</p>
+              <p className="text-lg leading-snug text-text-muted">Local semantic + structural indexing that feeds perfect context to every AI tool you use.</p>
             </div>
           </div>
         </div>
@@ -220,7 +221,7 @@ function SwissHero() {
           <div className="text-6xl font-bold"><LayoutGrid className="w-16 h-16" /></div>
           <div className="space-y-4">
             <p className="text-2xl font-medium">CoDRAG v1.0</p>
-            <p className="opacity-80">International Typographic Style applied to developer tools.</p>
+            <p className="opacity-80">Structural codebase intelligence for Cursor, Windsurf, and Claude Desktop.</p>
             <Button 
               className="mt-8 bg-white text-primary rounded-full font-bold w-full flex items-center justify-between group hover:bg-white/90 border-none"
             >
@@ -242,24 +243,24 @@ function GlassHero() {
       <div className="relative z-10 flex flex-col items-center text-center">
         <div className="backdrop-blur-xl bg-white/30 border border-white/50 shadow-xl rounded-2xl p-8 md:p-12 max-w-4xl w-full">
           <Badge className="bg-white/50 text-text border-white/60 backdrop-blur-md mb-6 shadow-sm gap-2">
-            <Zap className="w-4 h-4 text-warning" /> The future of local search
+            <Zap className="w-4 h-4 text-warning" /> Must-have for AI-assisted development
           </Badge>
           
           <h1 className="text-5xl md:text-7xl font-bold text-text bg-clip-text text-transparent bg-gradient-to-r from-text to-primary mb-6">
-            Crystal Clear Context
+            Context Your AI Can Trust
           </h1>
           
           <p className="text-xl text-text-muted mb-8 max-w-2xl mx-auto">
-            A beautiful, translucent layer between your code and your AI. 
-            See through the noise with semantic understanding.
+            CoDRAG sits between your codebase and your AI tools, delivering
+            structurally-aware context that eliminates hallucinations. Runs entirely on your machine.
           </p>
 
           <Flex className="gap-4" justifyContent="center">
             <Button size="lg" className="backdrop-blur-md bg-primary/80 hover:bg-primary text-white rounded-xl shadow-lg hover:shadow-primary/30 border border-white/20">
-              Download Beta
+              Download Free
             </Button>
             <Button size="lg" variant="ghost" className="backdrop-blur-md bg-white/40 hover:bg-white/60 text-text rounded-xl border border-white/40">
-              Explore Features
+              See How It Works
             </Button>
           </Flex>
         </div>
@@ -314,23 +315,24 @@ function RetroHero() {
           CODRAG
         </h1>
         <p className="text-2xl text-primary font-bold tracking-[0.5em] mt-2 mb-12 uppercase drop-shadow-md">
-          System Online
+          Context Engine
         </p>
 
         <div className="max-w-3xl mx-auto bg-black/50 backdrop-blur-sm border border-primary/50 p-6 rounded-lg shadow-[0_0_30px_rgba(255,0,255,0.2)]">
           <p className="text-lg text-white font-mono leading-relaxed">
-            <span className="text-success">INITIALIZING...</span><br/>
-            &gt; LOCAL INDEX: <span className="text-success">ONLINE</span><br/>
-            &gt; CLOUD UPLOAD: <span className="text-error">DISABLED</span><br/>
-            &gt; SYMBOL TRACING: <span className="text-info">ACTIVE</span><br/><br/>
-            <span className="animate-pulse flex items-center justify-center gap-2">_READY FOR INPUT <Terminal className="w-4 h-4" /></span>
+            <span className="text-success">BOOT SEQUENCE...</span><br/>
+            &gt; SEMANTIC INDEX: <span className="text-success">ONLINE</span><br/>
+            &gt; TRACE GRAPH: <span className="text-success">MAPPED</span><br/>
+            &gt; CLOUD UPLOAD: <span className="text-error">BLOCKED</span><br/>
+            &gt; MCP BRIDGE: <span className="text-info">CURSOR / WINDSURF / CLAUDE</span><br/><br/>
+            <span className="animate-pulse flex items-center justify-center gap-2">_YOUR AI CAN SEE YOUR CODE NOW <Terminal className="w-4 h-4" /></span>
           </p>
         </div>
 
         <Button 
           className="mt-12 bg-transparent border-2 border-primary text-primary hover:bg-primary hover:text-white px-10 py-4 text-xl font-bold uppercase tracking-widest transition-all shadow-[0_0_20px_rgba(255,0,255,0.4)] hover:shadow-[0_0_40px_rgba(255,0,255,0.8)] rounded-none h-auto"
         >
-          Jack In
+          Get CoDRAG
         </Button>
       </div>
     </div>
@@ -343,7 +345,7 @@ function SplitHero() {
       {/* Left: Content */}
       <div>
         <Badge size="lg" className="bg-primary/10 text-primary border border-primary/20 mb-6 gap-2">
-          <Zap className="w-4 h-4" /> Now in Public Beta
+          <Zap className="w-4 h-4" /> The missing layer for AI coding
         </Badge>
         
         <h1 className="text-4xl md:text-5xl font-bold text-text leading-tight">
@@ -353,23 +355,24 @@ function SplitHero() {
         </h1>
 
         <p className="mt-6 text-lg text-text-muted leading-relaxed">
-          Stop wrestling with AI hallucinations. CoDRAG builds a semantic index 
-          of your codebase and delivers precisely relevant context—locally and instantly.
+          AI assistants hallucinate when they lack context. CoDRAG builds a semantic
+          and structural index of your entire codebase, then delivers exactly the right
+          context to your AI tools—locally and in under 100 ms.
         </p>
 
         <div className="mt-8 space-y-4">
-          <FeaturePoint icon={<Search className="w-5 h-5 text-primary" />} text="Semantic search across all your projects" />
-          <FeaturePoint icon={<Layers className="w-5 h-5 text-primary" />} text="Trace-aware context with symbol relationships" />
-          <FeaturePoint icon={<Zap className="w-5 h-5 text-primary" />} text="Sub-100ms search, works completely offline" />
-          <FeaturePoint icon={<Shield className="w-5 h-5 text-primary" />} text="Your code never leaves your machine" />
+          <FeaturePoint icon={<Search className="w-5 h-5 text-primary" />} text="Semantic search across every project you manage" />
+          <FeaturePoint icon={<Layers className="w-5 h-5 text-primary" />} text="Trace Index maps imports, calls, and symbol hierarchies" />
+          <FeaturePoint icon={<Zap className="w-5 h-5 text-primary" />} text="Sub-100ms results, works completely offline" />
+          <FeaturePoint icon={<Shield className="w-5 h-5 text-primary" />} text="Zero cloud upload — BYOK, no token markup" />
         </div>
 
         <Flex className="mt-10 gap-4">
           <Button size="lg" className="font-semibold">
-            Get Early Access
+            Download for Free
           </Button>
           <Button size="lg" variant="outline" className="font-semibold">
-            Watch Demo
+            See How It Works
           </Button>
         </Flex>
       </div>
@@ -427,19 +430,19 @@ function StudioHero() {
         <div className="col-span-12 md:col-span-7 space-y-6">
           <div className="inline-block bg-surface border border-border px-4 py-2 shadow-sm">
             <span className="font-mono text-xs uppercase tracking-widest text-text-muted flex items-center gap-2">
-              <Code className="w-3 h-3" /> Experimental Build v0.9
+              <Code className="w-3 h-3" /> Local-First Developer Tool
             </span>
           </div>
           
           <h1 className="text-6xl md:text-8xl font-serif text-text leading-[0.9] tracking-tight">
-            Code as <br/>
-            <span className="italic text-primary">material.</span>
+            See your code <br/>
+            <span className="italic text-primary">the way AI should.</span>
           </h1>
           
           <div className="max-w-md bg-surface/80 backdrop-blur-sm p-6 border-l-4 border-primary mt-8">
             <p className="text-lg font-sans text-text leading-relaxed">
-              CoDRAG reclaims your codebase from the cloud. A local-first studio for 
-              semantic indexing and intelligent retrieval.
+              CoDRAG maps the semantics, symbols, and structure of your codebase
+              so every AI prompt gets the context it needs. Local-first. Always.
             </p>
           </div>
 
@@ -448,13 +451,13 @@ function StudioHero() {
               className="px-8 py-6 bg-text text-background font-mono text-sm hover:bg-primary transition-colors gap-2 rounded-none"
               icon={Download}
             >
-              [ DOWNLOAD_STUDIO ]
+              [ GET_CODRAG ]
             </Button>
             <Button 
               variant="outline"
               className="px-8 py-6 border-text text-text font-serif italic hover:bg-surface-raised transition-colors gap-2 rounded-none"
             >
-              Read the manifesto <ArrowRight className="w-4 h-4 ml-2" />
+              How it works <ArrowRight className="w-4 h-4 ml-2" />
             </Button>
           </div>
         </div>
@@ -484,9 +487,9 @@ function StudioHero() {
           </div>
 
           <div className="absolute top-32 left-0 w-72 bg-surface-raised border border-border p-6 shadow-lg z-10">
-            <h3 className="font-serif text-2xl italic mb-2 flex items-center gap-2"><Eye className="w-5 h-5" /> Context Awareness</h3>
+            <h3 className="font-serif text-2xl italic mb-2 flex items-center gap-2"><Eye className="w-5 h-5" /> Structural Trace</h3>
             <p className="font-sans text-sm text-text-muted">
-              The machine sees what you see. Local traces enable deep understanding without data egress.
+              Maps imports, call graphs, and symbol hierarchies so AI understands how your code connects.
             </p>
           </div>
 
@@ -514,12 +517,12 @@ function YaleHero() {
           </div>
           <div className="col-span-12 md:col-span-6">
             <h1 className="font-sans text-5xl md:text-6xl font-normal text-text leading-tight tracking-tight mb-8">
-              Semantic indexing infrastructure for local development environments.
+              The context layer every AI coding tool should have had from day one.
             </h1>
           </div>
           <div className="col-span-12 md:col-span-3 flex flex-col justify-end items-start md:items-end">
             <span className="font-mono text-xs text-text-muted mb-2">RELEASE 2025.1</span>
-            <span className="font-mono text-xs text-text-muted">MACOS / LINUX</span>
+            <span className="font-mono text-xs text-text-muted">MACOS / WINDOWS</span>
           </div>
         </div>
 
@@ -527,8 +530,8 @@ function YaleHero() {
           {/* Column 1: Description */}
           <div className="col-span-12 md:col-span-3 md:col-start-4">
             <p className="font-sans text-base text-text leading-relaxed mb-6">
-              CoDRAG provides a unified interface for code retrieval and generation 
-              context, operating entirely within the local filesystem to ensure data sovereignty.
+              CoDRAG indexes your codebase locally—semantics, symbols, and call graphs—then
+              feeds precisely the right context to Cursor, Windsurf, and Claude Desktop. No cloud. No token markup.
             </p>
             <a href="#" className="font-sans font-medium text-primary hover:underline underline-offset-4 decoration-2 flex items-center gap-1">
               Documentation <ArrowRight className="w-3 h-3" />
@@ -566,7 +569,7 @@ function YaleHero() {
                   Download Installer
                 </Button>
                 <Button variant="ghost" className="justify-start px-0 hover:bg-transparent hover:text-primary h-auto py-2" icon={Code}>
-                  View Source
+                  Documentation
                 </Button>
               </div>
             </div>
@@ -583,17 +586,17 @@ function FocusHero() {
       <div className="w-full max-w-4xl mx-auto px-6 text-center z-10">
         <div className="mb-8 inline-flex items-center gap-2 px-4 py-2 rounded-full bg-info/10 text-info font-medium text-sm border border-info/20">
           <Eye className="w-4 h-4" />
-          <span>Accessible Context Intelligence</span>
+          <span>Essential for AI-Assisted Development</span>
         </div>
 
         <h1 className="text-5xl md:text-7xl font-bold text-text mb-8 tracking-tight">
-          Clear code context.<br/>
-          <span className="text-primary underline decoration-4 underline-offset-8 decoration-primary/30">Zero distractions.</span>
+          Better context in.<br/>
+          <span className="text-primary underline decoration-4 underline-offset-8 decoration-primary/30">Better code out.</span>
         </h1>
 
         <p className="text-xl md:text-2xl text-text-muted max-w-2xl mx-auto mb-12 leading-relaxed font-medium">
-          CoDRAG helps you focus by handling the complexity of code context automatically. 
-          Local, fast, and designed for clarity.
+          CoDRAG indexes your entire codebase and feeds structurally-aware context
+          to Cursor, Windsurf, and Claude Desktop. Fewer hallucinations, faster iteration.
         </p>
 
         <div className="flex flex-col sm:flex-row gap-6 justify-center items-center">
@@ -601,32 +604,32 @@ function FocusHero() {
             size="lg" 
             className="w-full sm:w-auto px-8 py-6 text-lg font-bold shadow-lg transform hover:-translate-y-1 h-auto"
           >
-            Install for macOS
+            Download for Free
           </Button>
           <Button 
             size="lg" 
             variant="outline" 
             className="w-full sm:w-auto px-8 py-6 text-lg font-bold border-2 h-auto"
           >
-            View Live Demo
+            See How It Works
           </Button>
         </div>
 
         <div className="mt-16 grid grid-cols-1 md:grid-cols-3 gap-8 text-left">
           <div className="bg-surface p-6 rounded-xl border border-border shadow-sm">
             <div className="w-12 h-12 bg-success/20 rounded-lg flex items-center justify-center text-2xl mb-4 text-success"><Lock className="w-6 h-6" /></div>
-            <h3 className="font-bold text-lg text-text mb-2">Private by Design</h3>
-            <p className="text-text-muted">Your code never leaves your device. We prioritize privacy and security first.</p>
+            <h3 className="font-bold text-lg text-text mb-2">100% Local</h3>
+            <p className="text-text-muted">Your code never leaves your machine. No cloud upload, no telemetry. BYOK means no token markup.</p>
           </div>
           <div className="bg-surface p-6 rounded-xl border border-border shadow-sm">
             <div className="w-12 h-12 bg-warning/20 rounded-lg flex items-center justify-center text-2xl mb-4 text-warning"><Zap className="w-6 h-6" /></div>
-            <h3 className="font-bold text-lg text-text mb-2">Instant Retrieval</h3>
-            <p className="text-text-muted">Sub-100ms semantic search means you never lose your flow state.</p>
+            <h3 className="font-bold text-lg text-text mb-2">Sub-100ms Search</h3>
+            <p className="text-text-muted">Semantic search across every project you manage. Results before you finish typing.</p>
           </div>
           <div className="bg-surface p-6 rounded-xl border border-border shadow-sm">
             <div className="w-12 h-12 bg-primary/20 rounded-lg flex items-center justify-center text-2xl mb-4 text-primary"><Eye className="w-6 h-6" /></div>
-            <h3 className="font-bold text-lg text-text mb-2">High Visibility</h3>
-            <p className="text-text-muted">Trace-aware visualization shows you exactly how your code connects.</p>
+            <h3 className="font-bold text-lg text-text mb-2">Structural Trace Index</h3>
+            <p className="text-text-muted">Goes beyond vector search. Maps imports, calls, and symbol hierarchies so AI sees how code connects.</p>
           </div>
         </div>
       </div>
@@ -657,26 +660,27 @@ function EnterpriseHero() {
           <div className="mb-6">
             <span className="text-primary font-mono text-sm font-semibold mb-2 block">PLATFORM_V1.0</span>
             <h1 className="text-4xl md:text-5xl font-sans font-semibold text-text leading-tight mb-4">
-              Scale your development context securely.
+              Give every engineer AI that understands your codebase.
             </h1>
             <p className="text-text-muted text-lg leading-relaxed">
-              Standardize semantic indexing across your engineering organization. 
-              Enforce governance, manage access, and accelerate onboarding with shared context layers.
+              CoDRAG Enterprise standardizes semantic + structural indexing across your
+              organization. Shared context layers accelerate onboarding, reduce AI hallucinations,
+              and keep all code on-premise.
             </p>
           </div>
 
           <div className="space-y-4 mb-8">
             <div className="flex items-center gap-3 p-3 bg-background border border-border border-l-4 border-l-primary shadow-sm">
               <span className="text-primary font-bold">01</span>
-              <span className="font-medium text-text">Centralized Governance & Compliance</span>
+              <span className="font-medium text-text">Air-Gapped Deployment & Governance</span>
             </div>
             <div className="flex items-center gap-3 p-3 bg-background border border-border border-l-4 border-l-border shadow-sm opacity-70">
               <span className="text-text-subtle font-bold">02</span>
-              <span className="font-medium text-text">On-Premise Deployment Options</span>
+              <span className="font-medium text-text">Shared Context Across Teams</span>
             </div>
             <div className="flex items-center gap-3 p-3 bg-background border border-border border-l-4 border-l-border shadow-sm opacity-70">
               <span className="text-text-subtle font-bold">03</span>
-              <span className="font-medium text-text">SSO & Audit Logging</span>
+              <span className="font-medium text-text">SSO, SCIM & Audit Logging</span>
             </div>
           </div>
 

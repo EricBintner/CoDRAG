@@ -1,8 +1,16 @@
 # CoDRAG
 
-**Code Documentation and RAG** — A standalone, multi-project semantic search and codebase intelligence platform.
+**Code Documentation and RAG** — Local-first codebase intelligence for developers and AI coding agents.
 
-> *Proprietary Software — All Rights Reserved*
+AI assistants are only as good as the context they receive. Most tools send fragments — a single file, a keyword match — and the model fills in the gaps with hallucinations. CoDRAG fixes this by building a **persistent, semantic index** of your entire codebase (or multiple repos) and serving bounded, source-cited context on demand.
+
+### Core capabilities
+
+- **Semantic search** — find code by intent, not just keywords. Results are ranked by relevance across every file in the project.
+- **Trace Index** — a structural code graph (symbols, imports, call chains) so agents can reason about *how* code connects, not just *where* it lives.
+- **Context assembly** — returns bounded, LLM-ready chunks with source attribution. No more "which file was that from?"
+- **MCP for IDEs** — plug into Cursor, Windsurf, Claude Desktop, VS Code, or JetBrains via Model Context Protocol. The agent gets the same index you do.
+- **Local-first** — your code never leaves your machine. Indexes are built and queried locally; nothing is uploaded.
 
 ---
 
